@@ -1,0 +1,11 @@
+name: effcaps-pt
+channels:
+  - defaults
+dependencies:
+  - python=3.8
+  - cpuonly
+  - torchvision
+  - torchaudio
+  - pytorch
+  - jupyter
+  - matplotlib
