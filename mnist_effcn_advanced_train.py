@@ -34,15 +34,14 @@ def main():
     #  PREPROCESSING & DATA
     #########################
     transform_train = T.Compose([
-        T.RandomRotation(degrees=(-30, 30)),
+        T.RandomAffine(
+            degrees=(-35, 35),
+            translate=(0.1, 0.1)
+        ),
         T.RandomResizedCrop(
             28,
             scale=(0.8, 1.0),
             ratio=(1, 1),
-        ),
-        T.RandomAffine(
-            degrees=(-30, 30),
-            translate=(0.1, 0.1)
         ),
         T.ToTensor()
     ])
@@ -76,7 +75,7 @@ def main():
     model = model.to(device)
 
     print("#params: {}".format(count_parameters(model)))
-    optimizer = optim.Adam(model.parameters(), lr = 5e-4 * 4)
+    optimizer = optim.Adam(model.parameters(), lr = 5e-4 * 8)
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.96)
 
     # checkpointing
@@ -91,7 +90,7 @@ def main():
         'acc_valid': [],
     }
 
-    num_epochs = 150
+    num_epochs = 10000
     for epoch_idx in range(1, num_epochs+1):
         # 
         # TRAIN LOOP
@@ -135,7 +134,7 @@ def main():
                      'acc': acc.item()
                     }
             )
-        stats["acc_train"].append(epoch_correct/epoch_total)
+        stats["acc_train"].append((epoch_correct/epoch_total).item())
 
         #
         #  EVAL LOOP
@@ -156,7 +155,7 @@ def main():
                 epoch_total += y_true.shape[0]
         
         print("   acc_valid: {:.3f}".format(epoch_correct / epoch_total))
-        stats["acc_valid"].append(epoch_correct/epoch_total)
+        stats["acc_valid"].append((epoch_correct/epoch_total).item())
     
         #
         #  save reconstructions as imgs
@@ -178,16 +177,19 @@ def main():
         lr_scheduler.step()
 
         # save model during training in each epoch
-        model_name = "ecn_mnist_epoch_{}.ckpt".format(epoch_idx)
-        p_model = p_ckpts / model_name
-        torch.save(model.state_dict(), p_model)
+        if epoch_idx % 100 == 0:
+            print("Save ckpt!")
+            model_name = "ecn_mnist_epoch_{}.ckpt".format(epoch_idx)
+            p_model = p_ckpts / model_name
+            torch.save(model.state_dict(), p_model)
 
     #########################
     #  VIS STATS
     #########################
     xx = list(range(1, epoch_idx + 1))
-    plt.plot(xx, stats["acc_train"].cpu(), label="train")
-    plt.plot(xx, stats["acc_valid"].cpu(), label="valid")
+
+    plt.plot(xx, stats["acc_train"], label="train")
+    plt.plot(xx, stats["acc_valid"], label="valid")
     plt.ylim(0, 1)
     plt.legend()
     plt.savefig(p_ckpts / "acc.png")

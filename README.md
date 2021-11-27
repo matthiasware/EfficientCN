@@ -31,6 +31,9 @@ conda env create -f environment.yml
 
 #### ECN Implementation
 
+ACC=0.xxx, LR=5e-4,     BS=16
+ACC=0.995, LR=5e-4 * 8, BS=256  data/ckpts/run_2021-11-27_23-23-16
+
 #### EfficientCapsNet Paper
 The paper reports a mean performance of 0.9974 acc for single model predictions.
 

@@ -34,15 +34,14 @@ def main():
     #  PREPROCESSING & DATA
     #########################
     transform_train = T.Compose([
-        T.RandomRotation(degrees=(-30, 30)),
+        T.RandomAffine(
+            degrees=(-30, 30),
+            #translate=(0.1, 0.1)
+        ),
         T.RandomResizedCrop(
             28,
             scale=(0.8, 1.0),
             ratio=(1, 1),
-        ),
-        T.RandomAffine(
-            degrees=(-30, 30),
-            #translate=(0.1, 0.1)
         ),
         T.ToTensor()
     ])
@@ -55,11 +54,11 @@ def main():
     ds_valid = datasets.MNIST(root="./data", train=False, download=True, transform=transform_valid)
 
     dl_train = torch.utils.data.DataLoader(ds_train, 
-                                        batch_size=512, 
+                                        batch_size=16, 
                                         shuffle=True, 
                                         num_workers=8)
     dl_valid = torch.utils.data.DataLoader(ds_valid, 
-                                        batch_size=512, 
+                                        batch_size=16, 
                                         shuffle=True, 
                                         num_workers=8)
     
@@ -76,7 +75,7 @@ def main():
     model = model.to(device)
 
     print("#params: {}".format(count_parameters(model)))
-    optimizer = optim.Adam(model.parameters(), lr = 1e-3)
+    optimizer = optim.Adam(model.parameters(), lr = 5e-4)
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.96)
 
     # checkpointing
@@ -135,7 +134,7 @@ def main():
                      'acc': acc.item()
                     }
             )
-        stats["acc_train"].append(epoch_correct/epoch_total)
+        stats["acc_train"].append((epoch_correct/epoch_total).item())
 
         #
         #  EVAL LOOP
@@ -156,7 +155,7 @@ def main():
                 epoch_total += y_true.shape[0]
         
         print("   acc_valid: {:.3f}".format(epoch_correct / epoch_total))
-        stats["acc_valid"].append(epoch_correct/epoch_total)
+        stats["acc_valid"].append((epoch_correct/epoch_total).item())
     
         #
         #  save reconstructions as imgs
@@ -186,8 +185,8 @@ def main():
     #  VIS STATS
     #########################
     xx = list(range(1, epoch_idx + 1))
-    plt.plot(xx, stats["acc_train"].cpu(), label="train")
-    plt.plot(xx, stats["acc_valid"].cpu(), label="valid")
+    plt.plot(xx, stats["acc_train"], label="train")
+    plt.plot(xx, stats["acc_valid"], label="valid")
     plt.ylim(0, 1)
     plt.legend()
     plt.savefig(p_ckpts / "acc.png")
