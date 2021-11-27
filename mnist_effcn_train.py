@@ -16,6 +16,7 @@ import time
 from effcn.models import MnistEcnBackbone, MnistEcnDecoder, MnistEffCapsNet
 from effcn.layers import PrimaryCaps, FCCaps
 from effcn.functions import margin_loss, max_norm_masking
+from effcn.utils import count_parameters
 
 
 def main():
@@ -27,6 +28,7 @@ def main():
     else:  
         dev = "cpu"  
     device = torch.device(dev)
+    print("Using device: {}".format(device))
 
     #########################
     #  PREPROCESSING & DATA
@@ -55,11 +57,11 @@ def main():
     dl_train = torch.utils.data.DataLoader(ds_train, 
                                         batch_size=16, 
                                         shuffle=True, 
-                                        num_workers=4)
+                                        num_workers=8)
     dl_valid = torch.utils.data.DataLoader(ds_valid, 
                                         batch_size=16, 
                                         shuffle=True, 
-                                        num_workers=4)
+                                        num_workers=8)
     
 
     #
@@ -71,6 +73,7 @@ def main():
     #  TRAIN MODEL
     #########################
     model = MnistEffCapsNet()
+    print("#params: {}".format(count_parameters(model)))
     optimizer = optim.Adam(model.parameters(), lr = 5e-4)
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.96)
 
@@ -86,7 +89,7 @@ def main():
         'acc_valid': [],
     }
 
-    num_epochs = 50
+    num_epochs = 150
     for epoch_idx in range(1, num_epochs+1):
         # 
         # TRAIN LOOP

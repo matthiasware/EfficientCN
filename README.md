@@ -25,3 +25,14 @@ conda env create -f environment.yml
 - training without augementation?
 - how to speedup training?
 - can i get the same results as in the paper?
+
+
+### Results
+
+#### Baseline CNN
+
+The baseline CNN uses 28938 trainable parameters and after training yields an acc of 0.993 on the test with 82 misclassified samples using the following setting:
+- bs: 256
+- optimizer: Adam
+- learning rate: 0.01
+- exponential decay scheduler with 0.96

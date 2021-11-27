@@ -6,8 +6,10 @@ import torchvision.datasets as datasets
 import torchvision.transforms as T
 import torch.nn as nn
 from torch import optim
+
 import numpy as np
 from effcn.models import MnistBaselineCNN
+from effcn.utils import count_parameters
 
 if torch.cuda.is_available():  
     dev = "cuda:0" 
@@ -15,28 +17,33 @@ else:
     dev = "cpu"  
 device = torch.device(dev)
 
+print("Using device: {}".format(device))
+
 
 def main():
     ds_train = datasets.MNIST(root='./data', train=True, download=True, transform=T.ToTensor())
     ds_valid = datasets.MNIST(root="./data", train=False, download=True, transform=T.ToTensor())
 
     dl_train = torch.utils.data.DataLoader(ds_train, 
-                                            batch_size=256, 
+                                            batch_size=64, 
                                             shuffle=True, 
-                                            num_workers=4)
+                                            num_workers=8)
     dl_valid = torch.utils.data.DataLoader(ds_valid, 
-                                            batch_size=256, 
+                                            batch_size=64, 
                                             shuffle=True, 
-                                            num_workers=4)
+                                            num_workers=8)
 
     model = MnistBaselineCNN()
     model = model.to(device)
 
+    print("#params: {}".format(count_parameters(model)))
+
     loss_func = nn.CrossEntropyLoss() 
-    optimizer = optim.Adam(model.parameters(), lr = 0.01) 
+    optimizer = optim.Adam(model.parameters(), lr = 0.01)
+    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.96)
 
     print("Train ...", flush="True")
-    num_epochs = 1
+    num_epochs = 150
     model.train()
     for epoch in range(num_epochs):
         for idx, (x, y_true) in enumerate(dl_train):
@@ -49,7 +56,8 @@ def main():
             optimizer.step()
             
             if idx % 1000 == 0:
-                print("Epoch[{}/{}] - step {} loss: {:.4f}".format(epoch, num_epochs, idx, loss.item()))
+                print("Epoch[{}/{}] - step {} loss: {:.6f}".format(epoch, num_epochs, idx, loss.item()))
+        lr_scheduler.step()
 
     print("Eval ...", flush="True")
     model.eval()
