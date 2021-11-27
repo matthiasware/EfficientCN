@@ -11,3 +11,14 @@ conda env create -f environment.yml
 - check attention scores
 - add SmallNORBS example
 - add MultiMNIST example
+
+
+### Questions
+
+#### MNIST
+- what is my best baseline?
+- how do attention scores look like?
+- how do attention scores vary over training process?
+- training without augementation?
+- how to speedup training?
+- can i get the same results as in the paper?

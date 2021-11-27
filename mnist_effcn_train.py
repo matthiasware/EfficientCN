@@ -62,6 +62,11 @@ def main():
                                         num_workers=4)
     
 
+    #
+    # Data for visualization of the rec.
+    #
+    x_vis, y_vis = next(iter(dl_valid))
+
     #########################
     #  TRAIN MODEL
     #########################
@@ -69,14 +74,28 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr = 5e-4)
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.96)
 
+    # checkpointing
+    st = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
+    p_ckpts = Path("./data/ckpts/run_{}".format(st))
+    p_ckpts.mkdir(exist_ok=True, parents=True)
+    print("\nWriting results to: {}\n".format(p_ckpts))
 
-    num_epochs = 2
+    # training statistics
+    stats = {
+        'acc_train': [],
+        'acc_valid': [],
+    }
 
-    for epoch_idx in range(num_epochs):
+    num_epochs = 3
+    for epoch_idx in range(1, num_epochs+1):
+        # 
+        # TRAIN LOOP
+        #
         model.train()
+        epoch_correct = 0
+        epoch_total = 0
         desc = "Train [{:3}/{:3}]:".format(epoch_idx, num_epochs)
         pbar = tqdm(dl_train, bar_format=desc + '{bar:10}{r_bar}{bar:-10b}')
-        
         for x,y_true in pbar:
             x = x.to(device)
             y_true = y_true.to(device)
@@ -89,65 +108,84 @@ def main():
             loss_margin = margin_loss(u_h, y_one_hot)
             loss_rec = torch.nn.functional.mse_loss(x, x_rec)
             
+            # param from paper
             loss = loss_margin + 0.392 * loss_rec
             loss.backward()
             
             optimizer.step()
             
             y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
-            acc = (y_true == y_pred).sum() / y_true.shape[0]
-            
+
+            batch_correct = (y_true == y_pred).sum()
+            batch_total = y_true.shape[0]
+            acc = batch_correct / batch_total
+
+            epoch_correct += batch_correct
+            epoch_total += batch_total
+
             pbar.set_postfix(
                     {'loss': loss.item(),
-                    'mar': loss_margin.item(),
-                    'rec': loss_rec.item(),
-                    'acc': acc.item()
+                     'mar': loss_margin.item(),
+                     'rec': loss_rec.item(),
+                     'acc': acc.item()
                     }
             )
+        stats["acc_train"].append(epoch_correct/epoch_total)
+
+        #
+        #  EVAL LOOP
+        #
+        model.eval()
+            
+        epoch_correct = 0
+        epoch_total = 0
+
+        for x,y_true in dl_valid:
+            x = x.to(device)
+            y_true = y_true.to(device)
+                
+            with torch.no_grad():
+                u_h, x_rec = model.forward(x)
+                y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
+                epoch_correct += (y_true == y_pred).sum()
+                epoch_total += y_true.shape[0]
+        
+        print("   acc_valid: {:.3f}".format(epoch_correct / epoch_total))
+        stats["acc_valid"].append(epoch_correct/epoch_total)
+    
+        #
+        #  save reconstructions as imgs
+        #
+        with torch.no_grad():
+            _, x_rec = model.forward(x_vis)
+        img = torchvision.utils.make_grid(torch.concat([x_vis[:16], x_rec[:16]], dim=0), nrow=16)
+        img = img.permute(1,2,0)
+        plt.figure(figsize=(16, 2))
+        plt.tight_layout()
+        plt.axis('off')
+        plt.imshow(img)
+        plt.savefig(p_ckpts / "rec_{}.png".format(epoch_idx))
+        plt.close()
+        
+        
         # I guess this is done once per epoch
         lr_scheduler.step()
 
+        # save model during training in each epoch
+        model_name = "ecn_mnist_epoch_{}.ckpt".format(epoch_idx)
+        p_model = p_ckpts / model_name
+        torch.save(model.state_dict(), p_model)
 
     #########################
-    #  EVAL MODEL
+    #  VIS STATS
     #########################
-    model.eval()
-        
-    total_correct = 0
-    total = 0
-
-    for x,y_true in dl_valid:
-        x = x.to(device)
-        y_true = y_true.to(device)
-            
-        with torch.no_grad():
-            u_h, x_rec = model.forward(x)
-            y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
-            total_correct += (y_true == y_pred).sum()
-            total += y_true.shape[0]
-    print("   acc_valid: {:.3f}".format(total_correct / total))
-
-
-    #########################
-    #  VIS RECONSTRUCTIONS
-    #########################
-    img = torchvision.utils.make_grid(torch.concat([x[:16], x_rec[:16]], dim=0), nrow=16)
-    img = img.permute(1,2,0)
-    plt.figure(figsize=(16, 2))
-    plt.tight_layout()
-    plt.axis('off')
-    plt.imshow(img)
-    plt.savefig("rec.png")
-
-    #########################
-    #  SAVE PARAMS
-    #########################
-    p_ckpts = Path("./data/ckpts")
-    p_ckpts.mkdir(exist_ok=True, parents=True)
-    st = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
-    model_name = "ecn_mnist_epoch_{}_{}.ckpt".format(epoch_idx, st)
-    p_model = p_ckpts / model_name
-    torch.save(model.state_dict(), p_model)
+    xx = list(range(1, epoch_idx + 1))
+    plt.plot(xx, stats["acc_train"], label="train")
+    plt.plot(xx, stats["acc_valid"], label="valid")
+    plt.ylim(0, 1)
+    plt.legend()
+    plt.savefig(p_ckpts / "acc.png")
+    plt.close()
     
 
 if __name__ == '__main__':
