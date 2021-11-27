@@ -27,7 +27,12 @@ conda env create -f environment.yml
 - can i get the same results as in the paper?
 
 
-### Results
+### Results MNIST
+
+#### ECN Implementation
+
+#### EfficientCapsNet Paper
+The paper reports a mean performance of 0.9974 acc for single model predictions.
 
 #### Baseline CNN
 

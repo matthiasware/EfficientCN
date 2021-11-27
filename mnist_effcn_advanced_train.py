@@ -24,7 +24,7 @@ def main():
     #  DEVICE SETTINGS
     #########################
     if torch.cuda.is_available():  
-        dev = "cuda:1" 
+        dev = "cuda:0" 
     else:  
         dev = "cpu"  
     device = torch.device(dev)
@@ -42,7 +42,7 @@ def main():
         ),
         T.RandomAffine(
             degrees=(-30, 30),
-            #translate=(0.1, 0.1)
+            translate=(0.1, 0.1)
         ),
         T.ToTensor()
     ])
@@ -55,11 +55,11 @@ def main():
     ds_valid = datasets.MNIST(root="./data", train=False, download=True, transform=transform_valid)
 
     dl_train = torch.utils.data.DataLoader(ds_train, 
-                                        batch_size=512, 
+                                        batch_size=256, 
                                         shuffle=True, 
                                         num_workers=8)
     dl_valid = torch.utils.data.DataLoader(ds_valid, 
-                                        batch_size=512, 
+                                        batch_size=256, 
                                         shuffle=True, 
                                         num_workers=8)
     
@@ -76,7 +76,7 @@ def main():
     model = model.to(device)
 
     print("#params: {}".format(count_parameters(model)))
-    optimizer = optim.Adam(model.parameters(), lr = 1e-3)
+    optimizer = optim.Adam(model.parameters(), lr = 5e-4 * 4)
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.96)
 
     # checkpointing

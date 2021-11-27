@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 from .functions import squash_func
@@ -87,6 +88,9 @@ class FCCaps(nn.Module):
         torch.nn.init.kaiming_normal_(self.W, a=0, mode='fan_in', nonlinearity='leaky_relu')
         torch.nn.init.kaiming_normal_(self.B, a=0, mode="fan_in", nonlinearity="leaky_relu")
 
+
+        self.attention_scaling = np.sqrt(self.d_l)
+
     def forward(self, U_l):
         """
         einsum convenventions:
@@ -108,7 +112,8 @@ class FCCaps(nn.Module):
         """
         U_hat = torch.einsum('...ij,ikjl->...ikl', U_l, self.W)
         A = torch.einsum("...ikl, ...hkl -> ...hik", U_hat, U_hat)
-        A = A / torch.sqrt(torch.Tensor([self.d_l]))
+        #A = A / torch.sqrt(torch.Tensor([self.d_l]))
+        A = A / self.attention_scaling
         A_sum = torch.einsum("...hij->...hj",A)
         C = torch.softmax(A_sum,dim=-1)
         CB = C + self.B
