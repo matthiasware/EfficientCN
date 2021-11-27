@@ -8,6 +8,9 @@ import torch.nn.functional as F
 from torch import optim
 import numpy as np
 from tqdm import tqdm
+from pathlib import Path
+import datetime
+import time
 
 # local imports
 from effcn.models import MnistEcnBackbone, MnistEcnDecoder, MnistEffCapsNet
@@ -67,7 +70,7 @@ def main():
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.96)
 
 
-    num_epochs = 1
+    num_epochs = 2
 
     for epoch_idx in range(num_epochs):
         model.train()
@@ -124,11 +127,27 @@ def main():
             total += y_true.shape[0]
     print("   acc_valid: {:.3f}".format(total_correct / total))
 
-    img = torchvision.utils.make_grid(torch.concat([x, x_rec], dim=0), nrow=16)
+
+    #########################
+    #  VIS RECONSTRUCTIONS
+    #########################
+    img = torchvision.utils.make_grid(torch.concat([x[:16], x_rec[:16]], dim=0), nrow=16)
     img = img.permute(1,2,0)
+    plt.figure(figsize=(16, 2))
+    plt.tight_layout()
+    plt.axis('off')
     plt.imshow(img)
     plt.savefig("rec.png")
-    plt.close()
+
+    #########################
+    #  SAVE PARAMS
+    #########################
+    p_ckpts = Path("./data/ckpts")
+    p_ckpts.mkdir(exist_ok=True, parents=True)
+    st = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
+    model_name = "ecn_mnist_epoch_{}_{}.ckpt".format(epoch_idx, st)
+    p_model = p_ckpts / model_name
+    torch.save(model.state_dict(), p_model)
     
 
 if __name__ == '__main__':
