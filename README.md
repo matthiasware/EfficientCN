@@ -12,6 +12,9 @@ conda env create -f environment.yml
 - add SmallNORBS example
 - add MultiMNIST example
 
+### Features
+- batch vs epoch statistics
+
 
 ### Questions
 

@@ -86,7 +86,7 @@ def main():
         'acc_valid': [],
     }
 
-    num_epochs = 3
+    num_epochs = 50
     for epoch_idx in range(1, num_epochs+1):
         # 
         # TRAIN LOOP
