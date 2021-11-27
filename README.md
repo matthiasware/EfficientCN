@@ -7,5 +7,7 @@ conda env create -f environment.yml
 ### Todo
 - check hyperparameter
 - preprocessing!
+- check calculations!
+- check attention scores
 - add SmallNORBS example
 - add MultiMNIST example
