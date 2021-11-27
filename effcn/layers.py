@@ -81,6 +81,12 @@ class FCCaps(nn.Module):
         self.B = torch.nn.Parameter(torch.rand(n_l, n_h), requires_grad=True)
         self.squash = Squash(eps=1e-20)
 
+        # init custom weights
+        # i'm relly unsure about this initialization scheme
+        # i don't think it makes sense in our case, but the paper says so ...
+        torch.nn.init.kaiming_normal_(self.W, a=0, mode='fan_in', nonlinearity='leaky_relu')
+        torch.nn.init.kaiming_normal_(self.B, a=0, mode="fan_in", nonlinearity="leaky_relu")
+
     def forward(self, U_l):
         """
         einsum convenventions:
