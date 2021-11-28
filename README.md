@@ -2,10 +2,19 @@
 Pytorch Implementation for [Efficient-CapsNet](https://arxiv.org/abs/2101.12491).
 
 ## Install:
+
+on linux:
 ```sh
-conda env create -f environment.yml --name=effcn
+conda env create -f environment-linux.yml --name=effcn
 conda activate effcn
 ```
+
+on windows:
+```sh
+conda env create -f environment-windows.yml --name=effcn
+conda activate effcn
+```
+
 
 ## Usage
 
@@ -64,3 +73,14 @@ The baseline CNN uses 28938 trainable parameters and after training yields an ac
 - optimizer: Adam
 - learning rate: 0.01
 - exponential decay scheduler with 0.96
+
+
+## Notes
+
+Export environments for different platforms via:
+
+```sh
+conda env export --no-builds > environment.yml
+```
+
+and delete the prefix in the end of the file.

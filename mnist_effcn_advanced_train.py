@@ -19,6 +19,22 @@ from effcn.functions import margin_loss, max_norm_masking
 from effcn.utils import count_parameters
 
 
+"""
+    DISCLAIMER: WIP
+
+    Ideas:
+    - better parametrization of training procedure via config file 
+    - use aggressive code optimizatiosn to speed up training
+    - change model slightly to speed up training and get better results
+    - advanced logging training statistics
+    - tensorboard support
+    - advanced augmentation techniques
+    
+    Some features might not work yet ;)
+
+    Also we drop CPU support here and focus on GPU!
+"""
+
 def main():
     #########################
     #  DEVICE SETTINGS

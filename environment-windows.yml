@@ -1,4 +1,4 @@
-name: effcaps-pt
+name: effcaps
 channels:
   - conda-forge
   - pytorch
