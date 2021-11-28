@@ -1,24 +1,42 @@
 # EfficientCN
 Pytorch Implementation for [Efficient-CapsNet](https://arxiv.org/abs/2101.12491).
-### Install:
+
+## Install:
 ```sh
-conda env create -f environment.yml
+conda env create -f environment.yml --name=effcn && conda activate effcn
 ```
-### Todo
-- check hyperparameter
-- preprocessing!
-- check calculations!
+
+## Usage
+
+For training Efficient-CapsNet on MNIST with the original settings from the paper, run:
+```sh
+python mnist_effcn_train.py
+```
+
+For advanced training options use:
+```sh
+python mnist_eecn_advanced.py
+```
+
+## TODO
+
+#### Small Stuff
+- controll used hypterparamters 
+- use original preprocessing and augmentation
+- unittest routing and masking opterations
 - check attention scores
+
+#### Feature Request
+- batch vs epoch statistics
+- tensorboard support
+- animated recs
+- save training statistics data
 - add SmallNORBS example
 - add MultiMNIST example
 
-### Features
-- batch vs epoch statistics
+## Experimental and Conceptual Questions
 
-
-### Questions
-
-#### MNIST
+well we should answer those:
 - what is my best baseline?
 - how do attention scores look like?
 - how do attention scores vary over training process?
@@ -27,15 +45,16 @@ conda env create -f environment.yml
 - can i get the same results as in the paper?
 
 
-### Results MNIST
+## MNIST Results
 
-#### ECN Implementation
-
-ACC=0.xxx, LR=5e-4,     BS=16
-ACC=0.995, LR=5e-4 * 8, BS=256  data/ckpts/run_2021-11-27_23-23-16
-
-#### EfficientCapsNet Paper
+### EfficientCapsNet Paper
 The paper reports a mean performance of 0.9974 acc for single model predictions.
+
+### Our Pytorch Implementation
+
+Runs:
+- ACC=0.997, LR=5e-4,     BS=16  epchs=150     (data/ckpts/run_2021-11-27_23-49-25)
+- ACC=0.996, LR=53-4 * 8, BS=256 epochs=10000  (data/ckpts/run_2021-11-27_23-56-50)
 
 #### Baseline CNN
 
