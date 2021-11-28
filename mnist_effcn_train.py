@@ -98,7 +98,7 @@ def main():
     # checkpointing
     st = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
     p_run = Path(P_CKTPS) / "run_{}".format(st)
-    p_run.mkdir(exist_ok=True)
+    p_run.mkdir(exist_ok=True, parents=True)
 
     # training statistics
     stats = {
