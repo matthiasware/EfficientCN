@@ -25,7 +25,7 @@ python mnist_effcn_train.py
 
 For advanced training options use:
 ```sh
-python mnist_eecn_advanced.py
+python mnist_effcn_advanced_train.py
 ```
 
 ## TODO
