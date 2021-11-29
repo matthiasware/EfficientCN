@@ -190,7 +190,7 @@ def main():
         with torch.no_grad():
             _, x_rec = model.forward(x_vis.to(DEVICE))
         x_rec = x_rec.cpu()
-        img = torchvision.utils.make_grid(torch.concat([x_vis[:16], x_rec[:16]], dim=0), nrow=16)
+        img = torchvision.utils.make_grid(torch.cat([x_vis[:16], x_rec[:16]], dim=0), nrow=16)
         img = img.permute(1,2,0)
         plt.figure(figsize=(16, 2))
         plt.tight_layout()
