@@ -26,7 +26,7 @@ from effcn.utils import count_parameters
 #########################
 
 #  using params from paper
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 NUM_EPOCHS = 150
 LEARNING_RATE = 5e-4
 SCHEDULER_GAMMA = 0.96
