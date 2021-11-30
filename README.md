@@ -33,6 +33,7 @@ python mnist_effcn_advanced_train.py
 ## TODO
 
 #### Todo queue (Matthias)
+- refactor ImbaCaps notes and understand the different approaches and methods
 - implement advanced training script which is more customizable
 - train on MNIST with original preprocessing and test on affNIST
 - train on MNIST without preprocessing and test on affNIST
