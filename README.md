@@ -39,14 +39,16 @@ python mnist_effcn_advanced_train.py
 - train on MNIST without preprocessing and test on affNIST
 - train on CIFAR10
 - check attention scores
+- visualize capsules
 
 ### Todo queue (Marcel)
 - add code for SmallNORBS with original parameters
 - add code for MultiMNIST with orignal parameters
 - label masking function
 - try train with max_norm_masking + label_norm_masking
-- (unit)test attention layer
-- (unit)test masking
+- research: unit testing
+- (unit) test attention layer
+- (unit) test masking
 
 #### Small Stuff
 - neural turing machine paper > memory extension
