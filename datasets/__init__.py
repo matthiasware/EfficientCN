@@ -1,0 +1,1 @@
+from .affnist import AffNIST
