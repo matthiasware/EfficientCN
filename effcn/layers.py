@@ -3,10 +3,12 @@ import torch
 import torch.nn as nn
 from .functions import squash_func
 
+
 class Squash(nn.Module):
     def __init__(self, eps=10e-21):
         super().__init__()
         self.eps = eps
+
     def forward(self, x):
         """
          IN:  (b, n, d)
@@ -33,6 +35,7 @@ class PrimaryCaps(nn.Module):
         D: int primary capsules dimension (number of properties)
         s: int depthwise conv strides
     """
+
     def __init__(self, F, K, N, D, s=1):
         super().__init__()
         self.F = F
@@ -41,13 +44,16 @@ class PrimaryCaps(nn.Module):
         self.D = D
         self.s = s
         #
-        self.dw_conv2d = nn.Conv2d(F, F, kernel_size=K, stride=s, groups=F, padding="valid")
+        self.dw_conv2d = nn.Conv2d(
+            F, F, kernel_size=K, stride=s, groups=F, padding="valid")
         #
+        self.squash = Squash(eps=1e-20)
+
     def forward(self, x):
         """
         IN:  (B,C,H,W)
         OUT: (B, N, D)
-        
+
         therefore for x, we have the following constraints:
             (B,C,H,W) = (B, F,F,K)
         """
@@ -56,6 +62,7 @@ class PrimaryCaps(nn.Module):
 
         # (B,C,H,W) -> (B, N, D)
         x = x.view((-1, self.N, self.D))
+        x = self.squash(x)
         return x
 
 
@@ -71,6 +78,7 @@ class FCCaps(nn.Module):
         W   (n_l, n_h, d_l, d_h) ... weight tensor
         B   (n_l, n_h)           ... bias tensor
     """
+
     def __init__(self, n_l, n_h, d_l, d_h):
         super().__init__()
         self.n_l = n_l
@@ -78,16 +86,18 @@ class FCCaps(nn.Module):
         self.n_h = n_h
         self.d_h = d_h
 
-        self.W = torch.nn.Parameter(torch.rand(n_l, n_h, d_l, d_h), requires_grad=True)
+        self.W = torch.nn.Parameter(torch.rand(
+            n_l, n_h, d_l, d_h), requires_grad=True)
         self.B = torch.nn.Parameter(torch.rand(n_l, n_h), requires_grad=True)
         self.squash = Squash(eps=1e-20)
 
         # init custom weights
         # i'm relly unsure about this initialization scheme
         # i don't think it makes sense in our case, but the paper says so ...
-        torch.nn.init.kaiming_normal_(self.W, a=0, mode='fan_in', nonlinearity='leaky_relu')
-        torch.nn.init.kaiming_normal_(self.B, a=0, mode="fan_in", nonlinearity="leaky_relu")
-
+        torch.nn.init.kaiming_normal_(
+            self.W, a=0, mode='fan_in', nonlinearity='leaky_relu')
+        torch.nn.init.kaiming_normal_(
+            self.B, a=0, mode="fan_in", nonlinearity="leaky_relu")
 
         self.attention_scaling = np.sqrt(self.d_l)
 
@@ -98,7 +108,7 @@ class FCCaps(nn.Module):
           d_l = j
           n_h = k
           d_h = l
-        
+
         Data tensors:
             IN:  U_l ... lower layer capsules
             OUT: U_h ... higher layer capsules
@@ -114,8 +124,8 @@ class FCCaps(nn.Module):
         A = torch.einsum("...ikl, ...hkl -> ...hik", U_hat, U_hat)
         #A = A / torch.sqrt(torch.Tensor([self.d_l]))
         A = A / self.attention_scaling
-        A_sum = torch.einsum("...hij->...hj",A)
-        C = torch.softmax(A_sum,dim=-1)
+        A_sum = torch.einsum("...hij->...hj", A)
+        C = torch.softmax(A_sum, dim=-1)
         CB = C + self.B
         U_h = torch.einsum('...ikl,...ik->...kl', U_hat, CB)
         return self.squash(U_h)
