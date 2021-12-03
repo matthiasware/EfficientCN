@@ -22,11 +22,13 @@ conda activate effcn
 
 For training Efficient-CapsNet on MNIST with the original settings from the paper, run:
 ```sh
+cd train
 python mnist_effcn_train.py
 ```
 
 For advanced training options use:
 ```sh
+cd train
 python mnist_effcn_advanced_train.py
 ```
 
@@ -70,6 +72,7 @@ python mnist_effcn_advanced_train.py
 ## Experimental and Conceptual Questions
 well we should answer these questions:
 - what is my best baseline?
+- burn in for scheduler?
 - how do attention scores look like?
 - how do attention scores vary over training process?
 - training without augementation?

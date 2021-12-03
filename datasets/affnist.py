@@ -4,6 +4,7 @@ import hashlib
 # external libraries
 import torch
 from torch.utils.data import Dataset
+from PIL import Image
 
 # local
 from .download_utils import download_file_from_google_drive
@@ -85,13 +86,17 @@ class AffNIST(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        """
-            It may be necessary to convert the img Tensor
-            to a PIL.Image to be consistent with 
-            different implementations, but here we
-            try to work without that first
-        """
         img, target = self.data[idx], self.targets[idx]
+
+        # could be doing this so that it is consistent with all other datasets
+        # to return a PIL Image
+
+        # img = Image.fromarray(img.squeeze().numpy(), mode="L")
+
+
+        # this should be much faster than the PIL version
+        img = img.to(dtype=torch.float32).div(255)
+
         if self.transform is not None:
             img = self.transform(img)
         if self.target_transform is not None:
