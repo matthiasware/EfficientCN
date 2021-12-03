@@ -12,7 +12,7 @@ class Squash(nn.Module):
     def forward(self, x):
         """
          IN:  (b, n, d)
-         OUT: (b, n, d)
+         OUT: squash(x(b,n,d))
         """
         return squash_func(x, self.eps)
 
@@ -129,3 +129,57 @@ class FCCaps(nn.Module):
         CB = C + self.B
         U_h = torch.einsum('...ikl,...ik->...kl', U_hat, CB)
         return self.squash(U_h)
+
+
+class FCCaps2(nn.Module):
+    """
+    Fully-connected caps layer. It exploites the routing mechanism, explained in 'Efficient-CapsNet: Capsule Network with Self-Attention Routing', 
+    to create a parent layer of capsules. 
+    
+    nl: number of input capsuls          (nl...i)(nl...h)
+    dl: dimension of input capsuls       (dl...j)
+    nh: number of output capsuls         (nh...k)
+    dh: dimension of output capsuls      (dh...l)
+    b: batch size                        (...)
+
+    W: weigth tensor                     (W->ikjl)
+    B: bias matrix                       (B->1ik)
+    U_l: input capsuls matrix            (U->...ij)    
+    U_hat: weigthed input capsuls matrix (U_hat->...ikl)
+    A: covariance tensor                 (A->...hik)
+    C: couplimg coefficients             (C->...ik)
+    
+    input: nl, dl, nh, dh
+    
+    """
+    
+    def __init__(self, nl, nh, dl, dh):
+        super().__init__()
+        self.nl = nl
+        self.dl = dl
+        self.nh = nh
+        self.dh = dh
+
+        self.W = torch.nn.Parameter(torch.rand([self.nl,self.nh,self.dl,self.dh]), requires_grad=True)
+        self.B = torch.nn.Parameter(torch.rand([1,self.nl,self.nh]), requires_grad=True)                         #Difference in Dimension definition, but shouldnot be a problem
+        self.squash = Squash()                                                                                   #eps in function predefind
+
+        
+            # init custom weights -> not implemented
+        
+        
+    def forward(self, U_l):
+        """
+        Data tensors:
+            Input:  U_l ... lower layer capsules
+            Ouput: U_h ... higher layer capsules
+        """
+        U_hat = torch.einsum("...ij,ikjl->...ikl",U_l,self.W)
+        A = torch.einsum("...hkl,...ikl->...hik",U_hat, U_hat)
+        A = A / torch.sqrt(torch.Tensor([self.dl]))
+        A_hat = torch.einsum("...hik->...ik",A)
+        C = torch.softmax(A_hat,dim=-1)
+        CB = C+self.B
+        U_h = torch.einsum("...ikl,...ik->...kl",U_hat,CB)
+        U_h = self.squash(U_h)
+        return U_h

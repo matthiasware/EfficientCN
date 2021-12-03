@@ -140,3 +140,218 @@ class MnistEffCapsNet(nn.Module):
         u_h_masked = torch.flatten(u_h_masked, start_dim=1)
         x_rec = self.decoder(u_h_masked)
         return u_h, x_rec
+
+
+class MultiMnistBaselineCNN(nn.Module):
+    pass
+
+
+class MultiMnistEcnBackbone(nn.Module):
+    """
+        Backbone model from Efficient-CapsNet for MultiMNIST
+    """
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Sequential(
+            nn.Conv2d(1, 32, kernel_size=(5, 5), padding="valid"),
+            nn.ReLU(inplace=True),
+            nn.BatchNorm2d(32),
+            nn.Conv2d(32, 64, kernel_size=(3, 3), padding="valid"),
+            nn.ReLU(inplace=True),
+            nn.BatchNorm2d(64),
+            nn.Conv2d(64, 64, kernel_size=(3, 3), stride=2, padding="valid"),
+            nn.ReLU(inplace=True),
+            nn.BatchNorm2d(64),
+            nn.Conv2d(64, 128, kernel_size=(3, 3), stride=2, padding="valid"),
+            nn.ReLU(inplace=True),
+            nn.BatchNorm2d(128),
+        )
+    def forward(self, x):
+        """
+            IN:
+                x (b, 1, 36, 36)
+            OUT:
+                x (b, 128, 6, 6)
+        """
+        return self.layers(x)
+    
+    
+class MultiMnistEcnDecoder(nn.Module):
+    """
+        Decoder model from Efficient-CapsNet for MultiMNIST
+    """
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Sequential(
+            nn.Linear(16*10, 512),
+            nn.ReLU(inplace=True),
+            nn.Linear(512, 1024),
+            nn.ReLU(inplace=True),
+            nn.Linear(1024, 36*36),
+            nn.Sigmoid()
+        )
+    
+    def forward(self, x):
+        """
+            IN:
+                x (b, n, d) with n=10 and d=16
+            OUT:
+                x_rec (b, 1, 36, 36)
+            Notes:
+                input must be masked!
+        """
+        x = self.layers(x)
+        x = x.view(-1, 1, 36, 36)
+        return x
+
+    
+class MultiMnistEffCapsNet(nn.Module):
+    """
+        EffCaps Implementation for MultiMNIST
+        all parameters taken from the paper
+    """
+    def __init__(self):
+        super().__init__()
+        # values from paper, are fixed!
+        self.n_l = 16  # num of primary capsules
+        self.d_l = 8   # dim of primary capsules
+        self.n_h = 10  # num of output capsules
+        self.d_h = 16  # dim of output capsules
+        
+        self.backbone = MultiMnistEcnBackbone()
+        self.primcaps = PrimaryCaps(F=128, K=5, N=self.n_l, D=self.d_l, s=2) # F = n_l * d_l !!! # S=stride=2 reduces [1,128,6,6] -> [1,128,5,5]
+        self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h) 
+        self.decoder = MultiMnistEcnDecoder()
+
+    def forward(self, x):
+        """
+            IN:
+                x (b, 1, 36, 36)
+            OUT:
+                u_h    
+                    (b, n_h, d_h)
+                    output caps
+                x_rec  
+                    (b, 1, 36, 36)
+                    reconstruction of x
+        """
+        u_l = self.primcaps(self.backbone(x))
+        u_h = self.fcncaps(u_l)
+        #
+        u_h_masked = max_norm_masking(u_h)
+        u_h_masked = torch.flatten(u_h_masked, start_dim=1)
+        x_rec = self.decoder(u_h_masked)
+        return u_h, x_rec
+
+
+class MultiMnistBaselineCNN(nn.Module):
+    pass
+
+    
+class SmalNorbEcnBackbone(nn.Module):
+    """
+        Backbone model from Efficient-CapsNet for SmalNorb
+    """
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Sequential(
+            nn.Conv2d(2, 32, kernel_size=(7, 7),stride=2, padding="valid"),
+            nn.LeakyReLU(0.3,inplace=True),
+            nn.InstanceNorm2d(32),
+            nn.Conv2d(32, 64, kernel_size=(3, 3), padding="valid"),
+            nn.LeakyReLU(0.3,inplace=True),
+            nn.InstanceNorm2d(64),
+            nn.Conv2d(64, 64, kernel_size=(3, 3), padding="valid"),
+            nn.LeakyReLU(0.3,inplace=True),
+            nn.InstanceNorm2d(64),
+            nn.Conv2d(64, 128, kernel_size=(3, 3), stride=2, padding="valid"),
+            nn.LeakyReLU(0.3,inplace=True),
+            nn.InstanceNorm2d(128),
+        )
+    def forward(self, x):
+        """
+            IN:
+                x (b, 2, 48, 48)
+            OUT:
+                x (b, 128, 8, 8)
+        """
+        return self.layers(x)
+  
+
+class SmalNorbEcnDecoder(nn.Module):
+    """
+        Decoder model from Efficient-CapsNet for MNIST
+    """
+    def __init__(self):
+        super().__init__()
+        self.layer1 = nn.Sequential(
+            nn.Linear(16*5, 64)
+        )
+        
+        self.layer2 = nn.Sequential(
+            nn.UpsamplingBilinear2d(scale_factor=2),
+            nn.Conv2d(1, 64, kernel_size=(3, 3), padding="valid"),
+            nn.LeakyReLU(0.3,inplace=True),
+            nn.UpsamplingBilinear2d(scale_factor=2),
+            nn.Conv2d(64, 128, kernel_size=(3, 3), padding="valid"),
+            nn.LeakyReLU(0.3,inplace=True),
+            nn.UpsamplingBilinear2d(scale_factor=2),
+            nn.Conv2d(128, 128, kernel_size=(3, 3), padding="valid"),
+            nn.LeakyReLU(0.3,inplace=True),
+            nn.Conv2d(128, 2, kernel_size=(3, 3), padding="valid"),
+            nn.Sigmoid()
+        )
+    
+    def forward(self, x):
+        """
+            IN:
+                x (b, n, d) with n=10 and d=16
+            OUT:
+                x_rec (b, 1, 36, 36)
+            Notes:
+                input must be masked!
+        """
+        x = self.layer1(x)
+        x = x.view(-1, 1, 8, 8)
+        x = self.layer2(x)
+        return x
+
+    
+class SmalNorbEffCapsNet(nn.Module):
+    """
+        EffCaps Implementation for SmalNorb
+        all parameters taken from the paper
+    """
+    def __init__(self):
+        super().__init__()
+        # values from paper, are fixed!
+        self.n_l = 16  # num of primary capsules
+        self.d_l = 8   # dim of primary capsules
+        self.n_h = 5   # num of output capsules
+        self.d_h = 16  # dim of output capsules
+        
+        self.backbone = SmalNorbEcnBackbone()
+        self.primcaps = PrimaryCaps(F=128, K=8, N=self.n_l, D=self.d_l, s=2) # F = n_l * d_l !!!
+        self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h) 
+        self.decoder = SmalNorbEcnDecoder()
+
+    def forward(self, x):
+        """
+            IN:
+                x (b, 2, 48, 48)
+            OUT:
+                u_h    
+                    (b, n_h, d_h)
+                    output caps
+                x_rec  
+                    (b, 2, 48, 48)
+                    reconstruction of x
+        """
+        u_l = self.backbone(x)
+        u_l = self.primcaps(u_l)
+        u_h = self.fcncaps(u_l)
+        #
+        u_h_masked = max_norm_masking(u_h)
+        u_h_masked = torch.flatten(u_h_masked, start_dim=1)
+        x_rec = self.decoder(u_h_masked)
+        return u_h, x_rec
