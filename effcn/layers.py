@@ -85,7 +85,8 @@ class FCCaps(nn.Module):
         self.d_l = d_l
         self.n_h = n_h
         self.d_h = d_h
-
+        
+        
         self.W = torch.nn.Parameter(torch.rand(
             n_l, n_h, d_l, d_h), requires_grad=True)
         self.B = torch.nn.Parameter(torch.rand(n_l, n_h), requires_grad=True)
@@ -159,13 +160,20 @@ class FCCaps2(nn.Module):
         self.dl = dl
         self.nh = nh
         self.dh = dh
-
-        self.W = torch.nn.Parameter(torch.rand([self.nl,self.nh,self.dl,self.dh]), requires_grad=True)
-        self.B = torch.nn.Parameter(torch.rand([1,self.nl,self.nh]), requires_grad=True)                         #Difference in Dimension definition, but shouldnot be a problem
-        self.squash = Squash()                                                                                   #eps in function predefind
-
         
-            # init custom weights -> not implemented
+        #
+        self.W = torch.nn.Parameter(torch.rand([self.nl,self.nh,self.dl,self.dh]), requires_grad=True)
+        self.B = torch.nn.Parameter(torch.rand([self.nl,self.nh]), requires_grad=True)
+        #self.B = torch.nn.Parameter(torch.rand([1,self.nl,self.nh]), requires_grad=True)   #dim for B from tensorflow code    -> #Difference in Dimension definition => difference if batch >1 ...
+        self.squash = Squash()         #eps in function predefind
+        #
+        
+        # init custom weights -> not implemented
+        torch.nn.init.kaiming_normal_(
+            self.W, a=0, mode='fan_in', nonlinearity='leaky_relu')        #MM
+        torch.nn.init.kaiming_normal_(
+            self.B, a=0, mode="fan_in", nonlinearity="leaky_relu")        #MM    
+        
         
         
     def forward(self, U_l):
@@ -174,6 +182,7 @@ class FCCaps2(nn.Module):
             Input:  U_l ... lower layer capsules
             Ouput: U_h ... higher layer capsules
         """
+        
         U_hat = torch.einsum("...ij,ikjl->...ikl",U_l,self.W)
         A = torch.einsum("...hkl,...ikl->...hik",U_hat, U_hat)
         A = A / torch.sqrt(torch.Tensor([self.dl]))
