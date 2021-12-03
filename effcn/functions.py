@@ -4,9 +4,9 @@ import torch.nn.functional as F
 
 def squash_func(x, eps=10e-21):
     """
-        IN: 
+        IN:
             x (b, n, d)
-        OUT: 
+        OUT:
             squash(x) (b, n, d)
     """
     x_norm = torch.norm(x, dim=2, keepdim=True)
@@ -19,7 +19,7 @@ def margin_loss(u, y_true, lbd=0.5, m_plus=0.9, m_minus=0.1):
         u      (b,n,d)  ... capsules with n equals the numbe of classes
         y_true (b,n)    .... labels vector, categorical representation
     OUT:
-        loss, scalar  
+        loss, scalar
     """
 
     u_norm = torch.norm(u, dim=2)
@@ -29,6 +29,25 @@ def margin_loss(u, y_true, lbd=0.5, m_plus=0.9, m_minus=0.1):
     loss = y_true * term_left + lbd * (1.0 - y_true) * term_right
     loss = loss.sum(dim=1).mean()
     return loss
+
+
+def create_margin_loss(lbd=0.5, m_plus=0.9, m_minus=0.1):
+    def func_margin_loss(u, y_true):
+        """
+            IN:
+                u      (b,n,d)  ... capsules with n equals the numbe of classes
+                y_true (b,n)    .... labels vector, categorical representation
+            OUT:
+                loss, scalar
+        """
+        u_norm = torch.norm(u, dim=2)
+        term_left = torch.square(F.relu(m_plus - u_norm))
+        term_right = torch.square(F.relu(u_norm - m_minus))
+        #
+        loss = y_true * term_left + lbd * (1.0 - y_true) * term_right
+        loss = loss.sum(dim=1).mean()
+        return loss
+    return func_margin_loss
 
 
 def max_norm_masking(u):
