@@ -32,17 +32,6 @@ cd train
 python mnist_effcn_advanced_train.py
 ```
 
-### Todo queue (Marcel)
-- add code for SmallNORBS with original parameters
-- add code for MultiMNIST with orignal parameters
-- label masking function
-- try train with max_norm_masking + label_norm_masking
-- research: unit testing
-- (unit) test attention layer
-- (unit) test masking
-
-
-
 
 ## Notes
 
