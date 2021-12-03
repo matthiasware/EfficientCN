@@ -15,7 +15,7 @@ if torch.cuda.is_available():
     dev = "cuda:0" 
 else:  
     dev = "cpu"  
-# dev = 'cpu'
+dev = 'cpu'
 device = torch.device(dev)
 
 print("Using device: {}".format(device))
@@ -61,6 +61,7 @@ if __name__ == '__main__':
     model.train()
     for epoch in range(num_epochs):
         def closure():
+            print('.')
             optimizer.zero_grad()
             y_pred = model(x_train)
             loss = loss_func(y_pred, y_train)         
@@ -69,18 +70,19 @@ if __name__ == '__main__':
 
         optimizer.step(closure)
 
-        y_pred_train = model(x_train)
-        loss = loss_func(y_pred_train, y_train)         
-        y_pred_train = torch.max(y_pred_train, 1)[1]
-        correct_train = (y_pred_train == y_train).sum().item()
-        acc_train = correct_train / y_train.shape[0]
-        
-        y_pred_valid = model(x_valid)
-        y_pred_valid = torch.max(y_pred_valid, 1)[1]
-        correct_valid = (y_pred_valid == y_valid).sum().item()
-        acc_valid = correct_valid / y_valid.shape[0]
+        with torch.no_grad():
+            y_pred_train = model(x_train)
+            loss = loss_func(y_pred_train, y_train)         
+            y_pred_train = torch.max(y_pred_train, 1)[1]
+            correct_train = (y_pred_train == y_train).sum().item()
+            acc_train = correct_train / y_train.shape[0]
             
-        print("Epoch[{}/{}]  loss: {:.6f}  train_acc: {:.4f}  test_acc: {:.4f}".format(epoch, num_epochs, loss.item(), acc_train, acc_valid))
+            y_pred_valid = model(x_valid)
+            y_pred_valid = torch.max(y_pred_valid, 1)[1]
+            correct_valid = (y_pred_valid == y_valid).sum().item()
+            acc_valid = correct_valid / y_valid.shape[0]
+            
+            print("Epoch[{}/{}]  loss: {:.6f}  train_acc: {:.4f}  test_acc: {:.4f}".format(epoch, num_epochs, loss.item(), acc_train, acc_valid))
 
     """
     print("Eval ...", flush="True")
