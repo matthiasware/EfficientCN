@@ -3,35 +3,38 @@ import torch.nn as nn
 from .layers import View, Squash, PrimaryCaps, FCCaps
 from .functions import max_norm_masking
 
+
 class MnistBaselineCNN(nn.Module):
     """
         Baseline CNN Model for MNIST
     """
+
     def __init__(self):
         super(MnistBaselineCNN, self).__init__()
-        self.conv1 = nn.Sequential(         
+        self.conv1 = nn.Sequential(
             nn.Conv2d(
-                in_channels=1,              
-                out_channels=16,            
-                kernel_size=5,              
-                stride=1,                   
-                padding=2,                  
-            ),                              
-            nn.ReLU(),                      
-            nn.MaxPool2d(kernel_size=2),    
+                in_channels=1,
+                out_channels=16,
+                kernel_size=5,
+                stride=1,
+                padding=2,
+            ),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
         )
-        self.conv2 = nn.Sequential(         
-            nn.Conv2d(16, 32, 5, 1, 2),     
-            nn.ReLU(),                      
-            nn.MaxPool2d(2),                
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(16, 32, 5, 1, 2),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
         )
         # fully connected layer, output 10 classes
         self.out = nn.Linear(32 * 7 * 7, 10)
+
     def forward(self, x):
         x = self.conv1(x)
         x = self.conv2(x)
         # flatten the output of conv2 to (batch_size, 32 * 7 * 7)
-        x = x.view(x.size(0), -1)       
+        x = x.view(x.size(0), -1)
         output = self.out(x)
         return output
 
@@ -40,6 +43,7 @@ class MnistEcnBackbone(nn.Module):
     """
         Backbone model from Efficient-CapsNet for MNIST
     """
+
     def __init__(self):
         super().__init__()
         self.layers = nn.Sequential(
@@ -56,6 +60,7 @@ class MnistEcnBackbone(nn.Module):
             nn.ReLU(inplace=True),
             nn.BatchNorm2d(128),
         )
+
     def forward(self, x):
         """
             IN:
@@ -70,17 +75,18 @@ class MnistEcnDecoder(nn.Module):
     """
         Decoder model from Efficient-CapsNet for MNIST
     """
+
     def __init__(self):
         super().__init__()
         self.layers = nn.Sequential(
-            nn.Linear(16*10, 512),
+            nn.Linear(16 * 10, 512),
             nn.ReLU(inplace=True),
             nn.Linear(512, 1024),
             nn.ReLU(inplace=True),
-            nn.Linear(1024, 28*28),
+            nn.Linear(1024, 28 * 28),
             nn.Sigmoid()
         )
-    
+
     def forward(self, x):
         """
             IN:
@@ -100,6 +106,7 @@ class MnistEffCapsNet(nn.Module):
         EffCaps Implementation for MNIST
         all parameters taken from the paper
     """
+
     def __init__(self):
         super().__init__()
         # values from paper, are fixed!
@@ -107,9 +114,10 @@ class MnistEffCapsNet(nn.Module):
         self.d_l = 8   # dim of primary capsules
         self.n_h = 10  # num of output capsules
         self.d_h = 16  # dim of output capsules
-        
+
         self.backbone = MnistEcnBackbone()
-        self.primcaps = PrimaryCaps(F=128, K=9, N=self.n_l, D=self.d_l) # F = n_l * d_l !!!
+        self.primcaps = PrimaryCaps(
+            F=128, K=9, N=self.n_l, D=self.d_l)  # F = n_l * d_l !!!
         self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h)
         self.decoder = MnistEcnDecoder()
 

@@ -1,6 +1,8 @@
 # EfficientCN
 Pytorch Implementation for [Efficient-CapsNet](https://arxiv.org/abs/2101.12491).
 
+Experimental results can be found in RESULTS.md
+
 ## Install:
 
 on linux:
@@ -30,50 +32,52 @@ python mnist_effcn_advanced_train.py
 
 ## TODO
 
+#### Todo queue (Matthias)
+- refactor ImbaCaps notes and understand the different approaches and methods
+- implement advanced training script which is more customizable
+- train on MNIST with original preprocessing and test on affNIST
+- train on MNIST without preprocessing and test on affNIST
+- train on CIFAR10
+- check attention scores
+- visualize capsules
+
+### Todo queue (Marcel)
+- add code for SmallNORBS with original parameters
+- add code for MultiMNIST with orignal parameters
+- label masking function
+- try train with max_norm_masking + label_norm_masking
+- research: unit testing
+- (unit) test attention layer
+- (unit) test masking
+
 #### Small Stuff
+- neural turing machine paper > memory extension
 - controll used hypterparamters 
-- use original preprocessing and augmentation
 - unittest routing and masking opterations
 - check attention scores
+- my implementation of the masking operation might be wrong. i masked out everything but the most significant capsule, but i guess in the original apprach they mask out depending on the ground truth labels and not on the CN output.
 
 #### Feature Request
+- different schedulers
 - batch vs epoch statistics
+- add support for accs on mnist and affnist
+- create 32 images from test set and create rec set
 - tensorboard support
 - animated recs
-- save training statistics data
-- add SmallNORBS example
-- add MultiMNIST example
+- visualize filters and capsnets
+- save training statistics data alongside model
 
 ## Experimental and Conceptual Questions
-
-well we should answer those:
+well we should answer these questions:
 - what is my best baseline?
 - how do attention scores look like?
 - how do attention scores vary over training process?
 - training without augementation?
 - how to speedup training?
 - can i get the same results as in the paper?
-
-
-## MNIST Results
-
-### EfficientCapsNet Paper
-The paper reports a mean performance of 0.9974 acc for single model predictions.
-
-### Our Pytorch Implementation
-
-Runs:
-- ACC=0.997, LR=5e-4,     BS=16  epchs=150     (data/ckpts/run_2021-11-27_23-49-25)
-- ACC=0.996, LR=53-4 * 8, BS=256 epochs=10000  (data/ckpts/run_2021-11-27_23-56-50)
-
-#### Baseline CNN
-
-The baseline CNN uses 28938 trainable parameters and after training yields an acc of 0.993 on the test with 82 misclassified samples using the following setting:
-- bs: 256
-- optimizer: Adam
-- learning rate: 0.01
-- exponential decay scheduler with 0.96
-
+- can i get rid of the rec loss and to which degree?
+- self supervised loss?
+- how to scale the model to more clases withot parameter explosion?
 
 ## Notes
 

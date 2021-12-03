@@ -27,11 +27,11 @@ from effcn.utils import count_parameters
 
 #  using params from paper
 BATCH_SIZE = 16
-NUM_EPOCHS = 1
+NUM_EPOCHS = 150
 LEARNING_RATE = 5e-4
 SCHEDULER_GAMMA = 0.96
 REC_LOSS_WEIGHT = 0.392
-NUM_WORKERS = 4
+NUM_WORKERS = 6
 
 if torch.cuda.is_available():
     dev = "cuda:0" 
