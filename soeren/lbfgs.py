@@ -144,7 +144,7 @@ def _strong_wolfe(obj_func,
             insuf_progress = False
 
         # Evaluate new point
-        f_new, g_new = obj_func(x, t, d)
+        f_new, g_new, y_predict = obj_func(x, t, d)
         ls_func_evals += 1
         gtd_new = g_new.dot(d)
         ls_iter += 1
