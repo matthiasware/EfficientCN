@@ -9,6 +9,8 @@ import torchvision.datasets as datasets
 import torchvision.transforms as T
 import torch.nn as nn
 from torch import optim
+from lbfgs import LBFGS
+#from torch.optim import LBFGS
 
 import numpy as np
 from effcn.models import MnistBaselineCNN
@@ -48,6 +50,7 @@ if __name__ == '__main__':
     x_valid = x_valid.to(device)
     y_valid = y_valid.to(device)
 
+    torch.manual_seed(0)
     model = MnistBaselineCNN()
     model = model.to(device)
 
@@ -56,8 +59,8 @@ if __name__ == '__main__':
     loss_func = nn.CrossEntropyLoss()
 #    optimizer = optim.Adam(model.parameters(), lr = 0.01)
 #    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.96)
-    optimizer = optim.LBFGS(model.parameters(), history_size=10, max_iter=1, 
-                            line_search_fn="strong_wolfe")
+    optimizer = LBFGS(model.parameters(), history_size=10, max_iter=1, 
+                      line_search_fn="strong_wolfe")
 
     print("Train ...", flush="True")
     num_epochs = 150
@@ -69,13 +72,15 @@ if __name__ == '__main__':
             y_pred = model(x_train)
             loss = loss_func(y_pred, y_train)         
             loss.backward()
-            return loss
+            return loss, y_pred
 
-        optimizer.step(closure)
-
+        loss2, y_predict2 = optimizer.step(closure)
+        
         with torch.no_grad():
-            y_pred_train = model(x_train)
-            loss = loss_func(y_pred_train, y_train)         
+#            y_pred_train = model(x_train)
+            y_pred_train = y_predict2
+#            loss = loss_func(y_pred_train, y_train)         
+            loss = loss2
             y_pred_train = torch.max(y_pred_train, 1)[1]
             correct_train = (y_pred_train == y_train).sum().item()
             acc_train = correct_train / y_train.shape[0]
@@ -84,24 +89,4 @@ if __name__ == '__main__':
             y_pred_valid = torch.max(y_pred_valid, 1)[1]
             correct_valid = (y_pred_valid == y_valid).sum().item()
             acc_valid = correct_valid / y_valid.shape[0]
-            
-            print("Epoch[{}/{}]  loss: {:.6f}  train_acc: {:.4f}  test_acc: {:.4f}".format(epoch, num_epochs, loss.item(), acc_train, acc_valid))
-
-    """
-    print("Eval ...", flush="True")
-    model.eval()
-    with torch.no_grad():
-        correct = 0
-        total = 0
-        for x, y_true in dl_valid:
-            x = x.to(device)
-            y_true = y_true.to(device)
-            y_pred = model(x)
-            y_pred = torch.max(y_pred, 1)[1]
-            correct += (y_pred == y_true).sum().item()
-            total += y_true.shape[0]
-        acc = correct / total
-
-    print("Accuracy @Test:      {:.3f}".format(acc))
-    print("num total err @Test: {}".format(total - correct))
-    """
+            print("Epoch[{}/{}]  loss: {:.6f}  train_acc: {:.4f}  test_acc: {:.4f}".format(epoch, num_epochs, loss, acc_train, acc_valid))
