@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import sys
+sys.path.append("./..")
+
 import torch
 import torchvision.datasets as datasets
 import torchvision.transforms as T
@@ -22,8 +25,8 @@ print("Using device: {}".format(device))
 
 
 if __name__ == '__main__':
-    ds_train = datasets.MNIST(root='./data', train=True, download=True, transform=T.ToTensor())
-    ds_valid = datasets.MNIST(root="./data", train=False, download=True, transform=T.ToTensor())
+    ds_train = datasets.MNIST(root='./../data', train=True, download=True, transform=T.ToTensor())
+    ds_valid = datasets.MNIST(root="./../data", train=False, download=True, transform=T.ToTensor())
 
     batch_size_train = ds_train.__len__() // 1
     batch_size_valid = ds_valid.__len__() // 1
