@@ -5,4 +5,11 @@
 !*.yml
 !*.ipynb
 !*.md
+
+# latex stuff
+!*.tex
+!*.sty
+!*.bib
+
 .ipynb_checkpoints
+
