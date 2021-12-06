@@ -395,7 +395,7 @@ def train(config):
     print("Training time: {:.1f}".format(end - start))
 
     with open(p_stats, "wb") as file:
-        pickle.dump(p_stats, file)
+        pickle.dump(stats, file)
 
     sw.close()
 
@@ -409,21 +409,22 @@ if __name__ == "__main__":
         'device': 'cuda:0',
         'debug': True,
         'train': {
-            'batch_size': 512,
-            'num_epochs': 150,
+            'batch_size': 1024,
+            'num_epochs': 50,
             'num_workers': 2,
             'num_vis': 8,
             'pin_memory': True,
         },
         'valid': {
             'num_workers': 2,       # Either set num_worker high or pin_memory=True
-            'batch_size': 512,
+            'batch_size': 1024,
             'num_vis': 8,
             'pin_memory': True,
         },
         'optimizer': 'adam',
         'optimizer_args': {
-            'lr': 0.001
+            'lr': 0.001,
+            'weight_decay': 1e-4,
         },
         'scheduler': 'exponential_decay',
         'scheduler_burnin': 10,  # [epochs]
@@ -432,7 +433,7 @@ if __name__ == "__main__":
         },
         'freqs': {
             'valid': 1,   # [epochs]
-            'rec': 1,    # [epochs] show reconstructions
+            'rec': 1,     # [epochs] show reconstructions
             'ckpt': 10,   # [epochs]
         },
         'paths': {
