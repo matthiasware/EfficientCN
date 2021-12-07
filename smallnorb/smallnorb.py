@@ -10,9 +10,10 @@ import torch.utils.data as data
 import numpy as np
 from PIL import Image
 from torchvision.datasets.utils import download_url, check_integrity
+import torchvision.transforms as T
 
 
-class smallNORB(data.Dataset):
+class SmallNORB(data.Dataset):
     """`MNIST <https://cs.nyu.edu/~ylclab/data/norb-v1.0-small//>`_ Dataset.
     Args:
         root (string): Root directory of dataset where processed folder and
@@ -158,7 +159,12 @@ class smallNORB(data.Dataset):
             return img_left, img_right, target, info
 
         if self.mode == "nopil":
-            return self.data[index], target, info        
+            img_left = self._transform(self.data[index, 0])
+            img_right = self._transform(self.data[index, 1])
+            
+            data = torch.stack((img_left, img_right), dim=1)
+            data = torch.squeeze(data)
+            return data, target, info        
         
         img = self._transform(self.data[index])
         return img, target
