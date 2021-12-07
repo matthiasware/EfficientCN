@@ -20,7 +20,7 @@ if torch.cuda.is_available():
     dev = "cuda:0" 
 else:  
     dev = "cpu"  
-dev = 'cpu'
+# dev = 'cpu'
 device = torch.device(dev)
 
 print("Using device: {}".format(device))
@@ -51,6 +51,7 @@ if __name__ == '__main__':
     y_valid = y_valid.to(device)
 
     torch.manual_seed(0)
+    torch.backends.cudnn.benchmark = True
     model = MnistBaselineCNN()
     model = model.to(device)
 
