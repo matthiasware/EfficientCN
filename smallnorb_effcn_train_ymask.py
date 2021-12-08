@@ -19,9 +19,9 @@ from tqdm import tqdm
 from pathlib import Path
 
 # local imports
-from effcn.models import SmallNorbEcnBackbone, SmallNorbEcnDecoder, SmallNorbEffCapsNet
+from effcn.models import SmallNorbEcnBackbone, SmallNorbEcnDecoder, SmallNorbEffCapsNetYMask
 from effcn.layers import PrimaryCaps, FCCaps
-from effcn.functions import margin_loss, max_norm_masking
+from effcn.functions import margin_loss
 from effcn.utils import count_parameters
 from smallnorb.smallnorb import SmallNORB
 
@@ -36,7 +36,7 @@ torch.backends.cudnn.benchmark = True
 BATCH_SIZE = 16
 NUM_EPOCHS = 1
 LEARNING_RATE = 5e-4
-SCHEDULER_GAMMA = 0.99
+SCHEDULER_GAMMA = 0.97
 REC_LOSS_WEIGHT = 0.392
 NUM_WORKERS = 6
 
@@ -53,30 +53,6 @@ DEVICE = torch.device(dev)
 # paths
 P_DATA = "./data"
 P_CKTPS = "./data/ckpts"
-
-def plot_img(dl_train,dl_valid):
-    # plot train imgs
-    x, y, z = next(iter(dl_train))
-    # stereo channel 1
-    img = torchvision.utils.make_grid(x[:64,:1,:,:], nrow=8)
-    img = img.permute((1,2,0))
-    plt.imshow(img)
-    # stereo channel 2
-    img = torchvision.utils.make_grid(x[:64,1:2,:,:], nrow=8)
-    img = img.permute((1,2,0))
-    plt.imshow(img)
-
-    # plot valid imgs
-    x, y, z = next(iter(dl_valid))
-    # stereo channel 1
-    img = torchvision.utils.make_grid(x[:64,:1,:,:], nrow=8)
-    img = img.permute((1,2,0))
-    plt.imshow(img)
-    # stereo channel 2
-    img = torchvision.utils.make_grid(x[:64,1:2,:,:], nrow=8)
-    img = img.permute((1,2,0))
-    plt.imshow(img)
-    plt.show()
 
 
 def main():
@@ -111,9 +87,6 @@ def main():
                                         pin_memory=True,
                                         num_workers=NUM_WORKERS)   
     
-    
-    # visulazaation of loaded data (optional)
-    #plot_img(dl_train,dl_valid)
 
     # Data for visualization of the img reconstructions
     x_vis, y_vis, _ = next(iter(dl_valid))    
@@ -123,7 +96,7 @@ def main():
     #Train Model
 
     #Model
-    model = SmallNorbEffCapsNet()
+    model = SmallNorbEffCapsNetYMask()
     model = model.to(DEVICE)
 
     # optimizer
@@ -171,12 +144,12 @@ def main():
             for param in model.parameters():
                 param.grad = None
             
-            u_h, x_rec = model.forward(x)
+            u_h, x_rec, x_rec_y = model.forward(x, y_true)
             
             # Margin Loss & Reconstruction Loss
             y_one_hot = F.one_hot(y_true, num_classes=NUM_CLASSES)
             loss_margin = margin_loss(u_h, y_one_hot)
-            loss_rec = torch.nn.functional.mse_loss(x, x_rec)
+            loss_rec = torch.nn.functional.mse_loss(x, x_rec_y)
             loss_rec = REC_LOSS_WEIGHT * loss_rec
             
             # Total Loss
@@ -219,21 +192,31 @@ def main():
             y_true = y_true.to(DEVICE)
             
             with torch.no_grad():
-                #u_l = model.primcaps(model.backbone(x))
-                #u_h = model.fcncaps(u_l)
-                u_h, x_rec = model.forward(x)            
+                u_h, x_rec, x_rec_y = model.forward(x, y_true)  
+
+                # Margin Loss & Reconstruction Loss
+                y_one_hot = F.one_hot(y_true, num_classes=NUM_CLASSES)
+                loss_margin = margin_loss(u_h, y_one_hot)
+                loss_rec = torch.nn.functional.mse_loss(x, x_rec)
+                loss_rec = REC_LOSS_WEIGHT * loss_rec
+                # Total Loss
+                loss = loss_margin + loss_rec
+
+
+
                 y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
                 epoch_correct += (y_true == y_pred).sum()
                 epoch_total += y_true.shape[0]
 
+        print("loss_valid: {:.5f}".format(loss))
         print("acc_valid: {:.5f}".format(epoch_correct / epoch_total))
         stats["acc_valid"].append((epoch_correct/epoch_total).item())
 
         #  save reconstructions
-        # channel 1
         with torch.no_grad():
-            _, x_rec = model.forward(x_vis.to(DEVICE))
+            _, x_rec, x_rec_y = model.forward(x_vis.to(DEVICE), y_true)
         x_rec = x_rec.cpu()
+        # channel 1
         img = torchvision.utils.make_grid(torch.cat([x_vis[:16,:1,:,:], x_rec[:16,:1,:,:]], dim=0), nrow=16)
         img = img.permute(1,2,0)
         plt.figure(figsize=(16, 2))
@@ -241,12 +224,8 @@ def main():
         plt.axis('off')
         plt.imshow(img)
         plt.savefig(p_run / "smallnorb_c1_rec_{}.png".format(epoch_idx))
-        plt.close()
-        
+        plt.close()        
         # channel 2
-        with torch.no_grad():
-            _, x_rec = model.forward(x_vis.to(DEVICE))
-        x_rec = x_rec.cpu()
         img = torchvision.utils.make_grid(torch.cat([x_vis[:16,1:2,:,:], x_rec[:16,1:2,:,:]], dim=0), nrow=16)
         img = img.permute(1,2,0)
         plt.figure(figsize=(16, 2))

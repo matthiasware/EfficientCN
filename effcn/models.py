@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from .layers import View, Squash, PrimaryCaps, FCCaps
-from .functions import max_norm_masking
+from .functions import max_norm_masking, masking_max_norm, masking_y_true
 
 
 class MnistBaselineCNN(nn.Module):
@@ -248,7 +248,7 @@ class MultiMnistBaselineCNN(nn.Module):
     pass
 
     
-class SmalNorbEcnBackbone(nn.Module):
+class SmallNorbEcnBackbone(nn.Module):
     """
         Backbone model from Efficient-CapsNet for SmalNorb
     """
@@ -276,9 +276,9 @@ class SmalNorbEcnBackbone(nn.Module):
                 x (b, 128, 8, 8)
         """
         return self.layers(x)
-  
+    
 
-class SmalNorbEcnDecoder(nn.Module):
+class SmallNorbEcnDecoder(nn.Module):
     """
         Decoder model from Efficient-CapsNet for MNIST
     """
@@ -317,7 +317,7 @@ class SmalNorbEcnDecoder(nn.Module):
         return x
 
     
-class SmalNorbEffCapsNet(nn.Module):
+class SmallNorbEffCapsNet(nn.Module):
     """
         EffCaps Implementation for SmalNorb
         all parameters taken from the paper
@@ -330,10 +330,10 @@ class SmalNorbEffCapsNet(nn.Module):
         self.n_h = 5   # num of output capsules
         self.d_h = 16  # dim of output capsules
         
-        self.backbone = SmalNorbEcnBackbone()
+        self.backbone = SmallNorbEcnBackbone()
         self.primcaps = PrimaryCaps(F=128, K=8, N=self.n_l, D=self.d_l, s=2) # F = n_l * d_l !!!
         self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h) 
-        self.decoder = SmalNorbEcnDecoder()
+        self.decoder = SmallNorbEcnDecoder()
 
     def forward(self, x):
         """
@@ -355,3 +355,51 @@ class SmalNorbEffCapsNet(nn.Module):
         u_h_masked = torch.flatten(u_h_masked, start_dim=1)
         x_rec = self.decoder(u_h_masked)
         return u_h, x_rec
+    
+    
+class SmallNorbEffCapsNetYMask(nn.Module):
+    """
+        EffCaps Implementation for SmalNorb
+        all parameters taken from the paper
+    """
+    def __init__(self):
+        super().__init__()
+        # values from paper, are fixed!
+        self.n_l = 16  # num of primary capsules
+        self.d_l = 8   # dim of primary capsules
+        self.n_h = 5   # num of output capsules
+        self.d_h = 16  # dim of output capsules
+        
+        self.backbone = SmallNorbEcnBackbone()
+        self.primcaps = PrimaryCaps(F=128, K=8, N=self.n_l, D=self.d_l, s=2) # F = n_l * d_l !!!
+        self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h) 
+        self.decoder = SmallNorbEcnDecoder()
+
+    def forward(self, x, y_true):
+        """
+            IN:
+                x (b, 2, 48, 48)
+            OUT:
+                u_h    
+                    (b, n_h, d_h)
+                    output caps
+                x_rec  
+                    (b, 2, 48, 48)
+                    reconstruction of x
+        """
+        #Encoder
+        u_l = self.backbone(x)
+        u_l = self.primcaps(u_l)
+        u_h = self.fcncaps(u_l)
+        
+        #Decoder max norm
+        u_h_masked_max = masking_max_norm(u_h)
+        u_h_masked_max = torch.flatten(u_h_masked_max, start_dim=1)
+        x_rec_max = self.decoder(u_h_masked_max)
+        
+        #Decoder y true
+        u_h_masked_y = masking_y_true(u_h, y_true)
+        u_h_masked_y = torch.flatten(u_h_masked_y, start_dim=1)
+        x_rec_y = self.decoder(u_h_masked_y)
+        
+        return u_h, x_rec_max, x_rec_y

@@ -63,3 +63,36 @@ def max_norm_masking(u):
     u_norm = torch.norm(u, dim=2)
     mask = F.one_hot(torch.argmax(u_norm, 1), num_classes=n_classes)
     return torch.einsum('bnd,bn->bnd', u, mask)
+
+
+def masking_max_norm(u):
+    """
+    IN:
+        u (b, n d) ... capsules
+    OUT:
+        masked(u)  (b, n, d) where:
+        - normalise over dimension d of u
+        - keep largest vector in dimension n
+        - mask out everything else
+    """
+    _, n_classes, _ = u.shape
+    u_norm = torch.norm(u, dim=2)
+    mask = F.one_hot(torch.argmax(u_norm, 1), num_classes=n_classes)
+    return torch.einsum('bnd,bn->bnd', u, mask)
+
+
+def masking_y_true(u, y_true):
+    """
+    IN:
+        u (b, n d) ... capsules
+        y_true (b,)  ... classification value (skalar)
+    OUT:
+        masked(u)  (b, n, d) where:
+        - normalise over dimension d of u
+        - keep vector in dimension n with y_true
+        - mask out everything else
+    """
+    _, n_classes, _ = u.shape
+    u_norm = torch.norm(u, dim=2)
+    mask = F.one_hot(y_true, num_classes=n_classes)
+    return torch.einsum('bnd,bn->bnd', u, mask)
