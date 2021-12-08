@@ -34,7 +34,7 @@ torch.backends.cudnn.benchmark = True
 
 #  using params from paper
 BATCH_SIZE = 16
-NUM_EPOCHS = 1
+NUM_EPOCHS = 200
 LEARNING_RATE = 5e-4
 SCHEDULER_GAMMA = 0.97
 REC_LOSS_WEIGHT = 0.392
@@ -202,8 +202,6 @@ def main():
                 # Total Loss
                 loss = loss_margin + loss_rec
 
-
-
                 y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
                 epoch_correct += (y_true == y_pred).sum()
                 epoch_total += y_true.shape[0]
@@ -214,21 +212,22 @@ def main():
 
         #  save reconstructions
         with torch.no_grad():
-            _, x_rec, x_rec_y = model.forward(x_vis.to(DEVICE), y_true)
+            _, x_rec, x_rec_y = model.forward(x_vis.to(DEVICE), y_vis.to(DEVICE))
         x_rec = x_rec.cpu()
+        x_rec_y = x_rec_y.cpu()
         # channel 1
-        img = torchvision.utils.make_grid(torch.cat([x_vis[:16,:1,:,:], x_rec[:16,:1,:,:]], dim=0), nrow=16)
+        img = torchvision.utils.make_grid(torch.cat([x_vis[:16,:1,:,:], x_rec[:16,:1,:,:], x_rec_y[:16,:1,:,:]], dim=0), nrow=16)
         img = img.permute(1,2,0)
-        plt.figure(figsize=(16, 2))
+        plt.figure(figsize=(16, 3))
         plt.tight_layout()
         plt.axis('off')
         plt.imshow(img)
         plt.savefig(p_run / "smallnorb_c1_rec_{}.png".format(epoch_idx))
         plt.close()        
         # channel 2
-        img = torchvision.utils.make_grid(torch.cat([x_vis[:16,1:2,:,:], x_rec[:16,1:2,:,:]], dim=0), nrow=16)
+        img = torchvision.utils.make_grid(torch.cat([x_vis[:16,1:2,:,:], x_rec[:16,1:2,:,:], x_rec_y[:16,1:2,:,:]], dim=0), nrow=16)
         img = img.permute(1,2,0)
-        plt.figure(figsize=(16, 2))
+        plt.figure(figsize=(16, 3))
         plt.tight_layout()
         plt.axis('off')
         plt.imshow(img)
