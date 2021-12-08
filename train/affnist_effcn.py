@@ -10,9 +10,15 @@ DEVICE = "cuda:0"
 P_EXPERIMENT = '/mnt/experiments/effcn/affnist/grid_search'
 
 if DEVICE == "cuda:0":
-    bss = [1024]
+    bss = [64, 32]
+    lrs = [0.0001, 0.001, 0.01]
+    rec_weights = [10, 1, 0.1, 0.01, 0.001, 0]
+    weight_decays = [1e-5, 1e-4, 1e-3, 0]
 elif DEVICE == "cuda:1":
-    bss = [128]
+    bss = [1024, 512, 256, 128]
+    lrs = [0.0001, 0.001, 0.01]
+    rec_weights = [0.01, 0]
+    weight_decays = [1e-5, 1e-4, 1e-3, 0]
 else:
     raise Exception("Bla")
 
