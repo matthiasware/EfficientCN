@@ -2,6 +2,7 @@ import sys
 sys.path.append("./..")
 
 # standard lib
+import argparse
 import shutil
 from pathlib import Path
 import pickle
@@ -405,26 +406,37 @@ def train(config):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Run Efficient CapsNet on AffNIST')
+
+    parser.add_argument('--lr', type=float, default=0.0001)
+    parser.add_argument('--bs', type=int, default=16)
+    parser.add_argument('--num_epochs', type=int, default=150)
+    parser.add_argument('--weight_decay', type=float, default=0)
+    parser.add_argument('--loss_weight_rec', type=float, default=0)
+    parser.add_argument('--device', type=str, default="cuda:0")
+    parser.add_argument('--p_experiment', type=str, default="/mnt/experiments/effcn/affnist")
+    args = parser.parse_args()
+
     config = {
-        'device': 'cuda:0',
+        'device': args.device,
         'debug': True,
         'train': {
-            'batch_size': 1024,
-            'num_epochs': 50,
+            'batch_size': args.bs,
+            'num_epochs': args.num_epochs,
             'num_workers': 2,
             'num_vis': 8,
             'pin_memory': True,
         },
         'valid': {
             'num_workers': 2,       # Either set num_worker high or pin_memory=True
-            'batch_size': 1024,
+            'batch_size': args.bs,
             'num_vis': 8,
             'pin_memory': True,
         },
         'optimizer': 'adam',
         'optimizer_args': {
-            'lr': 0.001,
-            'weight_decay': 1e-4,
+            'lr': args.lr,
+            'weight_decay': args.weight_decay,
         },
         'scheduler': 'exponential_decay',
         'scheduler_burnin': 10,  # [epochs]
@@ -438,7 +450,7 @@ if __name__ == "__main__":
         },
         'paths': {
             'data': '/home/matthias/projects/EfficientCN/data',
-            'experiments': '/mnt/experiments/effcn/affnist/tmp',
+            'experiments': args.p_experiment,
         },
         'names': {
             'model_dir': 'effcn_affnist_{}'.format(get_sting_timestamp()),
@@ -459,10 +471,11 @@ if __name__ == "__main__":
                 'weight': 1.0
             },
             'rec': {
-                'weight': 0.3
+                'weight': args.loss_weight_rec
             }
         },
-        'stop_acc': 0.9922
+        'stop_acc': 0.9973
     }
     config = DottedDict(config)
     train(config)
+    # print(config)
