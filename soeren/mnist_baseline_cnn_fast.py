@@ -8,11 +8,9 @@ import torch
 import torchvision.datasets as datasets
 import torchvision.transforms as T
 import torch.nn as nn
-from torch import optim
 from lbfgs import LBFGS
 #from torch.optim import LBFGS
 
-import numpy as np
 from effcn.models import MnistBaselineCNN
 from effcn.utils import count_parameters
 
@@ -30,8 +28,8 @@ if __name__ == '__main__':
     ds_train = datasets.MNIST(root='./../data', train=True, download=True, transform=T.ToTensor())
     ds_valid = datasets.MNIST(root="./../data", train=False, download=True, transform=T.ToTensor())
 
-    batch_size_train = ds_train.__len__() // 1
-    batch_size_valid = ds_valid.__len__() // 1
+    batch_size_train = ds_train.__len__() // 10
+    batch_size_valid = ds_valid.__len__() // 10
     dl_train = torch.utils.data.DataLoader(ds_train, 
                                            batch_size=batch_size_train, 
                                            shuffle=False, 
@@ -75,13 +73,12 @@ if __name__ == '__main__':
             loss.backward()
             return loss, y_pred
 
-        loss2, y_predict2 = optimizer.step(closure)
+        loss, y_predict = optimizer.step(closure)
         
         with torch.no_grad():
 #            y_pred_train = model(x_train)
-            y_pred_train = y_predict2
+            y_pred_train = y_predict
 #            loss = loss_func(y_pred_train, y_train)         
-            loss = loss2
             y_pred_train = torch.max(y_pred_train, 1)[1]
             correct_train = (y_pred_train == y_train).sum().item()
             acc_train = correct_train / y_train.shape[0]

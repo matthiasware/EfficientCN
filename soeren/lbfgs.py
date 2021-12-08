@@ -328,7 +328,7 @@ class LBFGS(Optimizer):
 
         # optimal condition
         if opt_cond:
-            return orig_loss
+            return orig_loss, state.get('y_predict')
 
         # tensors cached in state (for tracing)
         d = state.get('d')
@@ -434,7 +434,6 @@ class LBFGS(Optimizer):
 
                     loss, flat_grad, t, ls_func_evals, y_predict = _strong_wolfe(
                         obj_func, x_init, t, d, loss, flat_grad, gtd)
-                    print(ls_func_evals)
                 self._add_grad(t, d)
                 opt_cond = flat_grad.abs().max() <= tolerance_grad
             else:
@@ -484,5 +483,6 @@ class LBFGS(Optimizer):
         state['prev_loss'] = prev_loss
         state['loss'] = loss
         state['flat_grad'] = flat_grad
+        state['y_predict'] = y_predict
 
         return loss, y_predict
