@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from .layers import View, Squash, PrimaryCaps, FCCaps
-from .functions import max_norm_masking, masking_max_norm, masking_y_true
+from .functions import max_norm_masking, masking
 
 
 class MnistBaselineCNN(nn.Module):
@@ -375,7 +375,7 @@ class SmallNorbEffCapsNetYMask(nn.Module):
         self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h) 
         self.decoder = SmallNorbEcnDecoder()
 
-    def forward(self, x, y_true):
+    def forward(self, x, y_true=None):
         """
             IN:
                 x (b, 2, 48, 48)
@@ -392,14 +392,8 @@ class SmallNorbEffCapsNetYMask(nn.Module):
         u_l = self.primcaps(u_l)
         u_h = self.fcncaps(u_l)
         
-        #Decoder max norm
-        u_h_masked_max = masking_max_norm(u_h)
-        u_h_masked_max = torch.flatten(u_h_masked_max, start_dim=1)
-        x_rec_max = self.decoder(u_h_masked_max)
+        #Decoder
+        u_h_masked = masking(u_h, y_true)
+        x_rec = self.decoder(u_h_masked)
         
-        #Decoder y true
-        u_h_masked_y = masking_y_true(u_h, y_true)
-        u_h_masked_y = torch.flatten(u_h_masked_y, start_dim=1)
-        x_rec_y = self.decoder(u_h_masked_y)
-        
-        return u_h, x_rec_max, x_rec_y
+        return u_h,  x_rec

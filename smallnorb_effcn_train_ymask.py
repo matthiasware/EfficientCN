@@ -60,6 +60,7 @@ def main():
     #Get & Preprocess data
 
     #Tranformations
+    """
     transform_train = T.Compose([
         T.Resize(64),
         T.RandomResizedCrop(48, scale=(0.8, 1.0), ratio=(1, 1)),
@@ -70,7 +71,18 @@ def main():
         T.RandomResizedCrop(48, scale=(0.8, 1.0), ratio=(1, 1)),
         T.ToTensor()
     ])   
-    
+    """
+    transform_train = T.Compose([
+        T.Resize(64),
+        T.RandomCrop(48),
+        T.ToTensor()
+    ])
+    transform_valid = T.Compose([
+        T.Resize(64),
+        T.RandomCrop(48),
+        T.ToTensor()
+    ])  
+
     #load Dataset
     ds_train = SmallNORB(root='data/SmallNORB',train=True, download=True, transform=transform_train, mode="nopil")
     ds_valid = SmallNORB(root='data/SmallNORB',train=False, download=True, transform=transform_valid, mode="nopil")
@@ -144,12 +156,12 @@ def main():
             for param in model.parameters():
                 param.grad = None
             
-            u_h, x_rec, x_rec_y = model.forward(x, y_true)
+            u_h, x_rec = model.forward(x, y_true)
             
             # Margin Loss & Reconstruction Loss
             y_one_hot = F.one_hot(y_true, num_classes=NUM_CLASSES)
             loss_margin = margin_loss(u_h, y_one_hot)
-            loss_rec = torch.nn.functional.mse_loss(x, x_rec_y)
+            loss_rec = torch.nn.functional.mse_loss(x, x_rec)
             loss_rec = REC_LOSS_WEIGHT * loss_rec
             
             # Total Loss
@@ -192,7 +204,7 @@ def main():
             y_true = y_true.to(DEVICE)
             
             with torch.no_grad():
-                u_h, x_rec, x_rec_y = model.forward(x, y_true)  
+                u_h, x_rec = model.forward(x)  
 
                 # Margin Loss & Reconstruction Loss
                 y_one_hot = F.one_hot(y_true, num_classes=NUM_CLASSES)
@@ -212,22 +224,21 @@ def main():
 
         #  save reconstructions
         with torch.no_grad():
-            _, x_rec, x_rec_y = model.forward(x_vis.to(DEVICE), y_vis.to(DEVICE))
+            _, x_rec = model.forward(x_vis.to(DEVICE), y_vis.to(DEVICE))
         x_rec = x_rec.cpu()
-        x_rec_y = x_rec_y.cpu()
         # channel 1
-        img = torchvision.utils.make_grid(torch.cat([x_vis[:16,:1,:,:], x_rec[:16,:1,:,:], x_rec_y[:16,:1,:,:]], dim=0), nrow=16)
+        img = torchvision.utils.make_grid(torch.cat([x_vis[:16,:1,:,:], x_rec[:16,:1,:,:]], dim=0), nrow=16)
         img = img.permute(1,2,0)
-        plt.figure(figsize=(16, 3))
+        plt.figure(figsize=(16, 2))
         plt.tight_layout()
         plt.axis('off')
         plt.imshow(img)
         plt.savefig(p_run / "smallnorb_c1_rec_{}.png".format(epoch_idx))
         plt.close()        
         # channel 2
-        img = torchvision.utils.make_grid(torch.cat([x_vis[:16,1:2,:,:], x_rec[:16,1:2,:,:], x_rec_y[:16,1:2,:,:]], dim=0), nrow=16)
+        img = torchvision.utils.make_grid(torch.cat([x_vis[:16,1:2,:,:], x_rec[:16,1:2,:,:]], dim=0), nrow=16)
         img = img.permute(1,2,0)
-        plt.figure(figsize=(16, 3))
+        plt.figure(figsize=(16, 2))
         plt.tight_layout()
         plt.axis('off')
         plt.imshow(img)
