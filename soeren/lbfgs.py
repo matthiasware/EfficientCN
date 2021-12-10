@@ -275,9 +275,10 @@ class LBFGS(Optimizer):
 
     def _directional_evaluate(self, closure, x, t, d):
         self._add_grad(t, d)
-        loss, y_predict = closure()
-        loss = float(loss)
-        flat_grad = self._gather_flat_grad()
+        loss, y_predict, batches = closure()
+        loss = float(loss) / batches
+        flat_grad = self._gather_flat_grad() / batches
+        print(loss, float(torch.norm(flat_grad, 2)))
         self._set_param(x)
         return loss, flat_grad, y_predict
 
@@ -313,8 +314,8 @@ class LBFGS(Optimizer):
         # evaluate initial f(x) and df/dx
         orig_loss = state.get('loss')
         if orig_loss is None:
-            orig_loss, y_predict = closure()
-            loss = float(orig_loss)
+            orig_loss, y_predict, batches = closure()
+            loss = float(orig_loss) / batches
             current_evals = 1
             state['func_evals'] += 1
         else:
@@ -323,9 +324,10 @@ class LBFGS(Optimizer):
 
         flat_grad = state.get('flat_grad')
         if flat_grad is None:
-            flat_grad = self._gather_flat_grad()
+            flat_grad = self._gather_flat_grad() / batches
         opt_cond = flat_grad.abs().max() <= tolerance_grad
 
+        print(loss, float(torch.norm(flat_grad, 2)))
         # optimal condition
         if opt_cond:
             return orig_loss, state.get('y_predict')
@@ -444,8 +446,10 @@ class LBFGS(Optimizer):
                     # the reason we do this: in a stochastic setting,
                     # no use to re-evaluate that function here
                     with torch.enable_grad():
-                        loss = float(closure())
-                    flat_grad = self._gather_flat_grad()
+                        loss, y_pred, batches = closure()
+                    loss = float(loss) / batches
+                    flat_grad = self._gather_flat_grad() / batches
+                    print(loss, float(torch.norm(flat_grad, 2)))
                     opt_cond = flat_grad.abs().max() <= tolerance_grad
                     ls_func_evals = 1
 
