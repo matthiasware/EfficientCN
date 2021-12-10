@@ -24,6 +24,7 @@ from effcn.layers import PrimaryCaps, FCCaps
 from effcn.functions import margin_loss
 from effcn.utils import count_parameters
 from smallnorb.smallnorb import SmallNORB
+from smallnorb.jitter import ColorJitter
 
 # will most likely result in a 30% speed up
 torch.backends.cudnn.benchmark = True
@@ -34,7 +35,7 @@ torch.backends.cudnn.benchmark = True
 
 #  using params from paper
 #BATCH_SIZE = 16
-NUM_EPOCHS = 200
+NUM_EPOCHS = 2
 LEARNING_RATE = 5e-4
 SCHEDULER_GAMMA = 0.97
 REC_LOSS_WEIGHT = 0.392
@@ -61,16 +62,14 @@ def main(BATCH_SIZE):
 
     #Tranformations
     transform_train = T.Compose([
+        T.Normalize(mean=[191.7811,193.0594],std=[45.2232, 44.2558]),
         T.Resize(64),
         T.RandomCrop(48),
-        T.transforms.ColorJitter(brightness=[0., 2.], contrast=[0.5,1.5], saturation=0, hue=0),
-        T.ToTensor()
+        ColorJitter(brightness= [0.,2.], contrast=[0.5,1.5], saturation=0, hue=0),
     ])
     transform_valid = T.Compose([
         T.Resize(64),
-        T.RandomCrop(48),
-        T.transforms.ColorJitter(brightness=0, contrast=0, saturation=0, hue=0),
-        T.ToTensor()
+        T.CenterCrop(48),
     ])  
 
     #load Dataset
@@ -214,27 +213,28 @@ def main(BATCH_SIZE):
 
         #  save reconstructions
         with torch.no_grad():
-            _, x_rec = model.forward(x_vis.to(DEVICE), y_vis.to(DEVICE))
+            #reconstruction from class
+            _, x_rec_y = model.forward(x_vis.to(DEVICE), y_vis.to(DEVICE))
+            #reconstruction from max arg
+            _, x_rec = model.forward(x_vis.to(DEVICE))
+        x_rec_y = x_rec_y.cpu()
         x_rec = x_rec.cpu()
         # channel 1
-        img = torchvision.utils.make_grid(torch.cat([x_vis[:16,:1,:,:], x_rec[:16,:1,:,:]], dim=0), nrow=16)
+        img = torchvision.utils.make_grid(torch.cat([x_vis[:16,:1,:,:], 
+                                                    x_rec[:16,:1,:,:],
+                                                    x_rec_y[:16,:1,:,:],
+                                                    (x_rec[:16,:1,:,:] - x_rec_y[:16,:1,:,:]),
+                                                    x_vis[:16,1:2,:,:], 
+                                                    x_rec[:16,1:2,:,:],
+                                                    x_rec_y[:16,1:2,:,:], 
+                                                    (x_rec[:16,1:2,:,:]-x_rec_y[:16,1:2,:,:])], dim=0), nrow=16)
         img = img.permute(1,2,0)
-        plt.figure(figsize=(16, 2))
+        plt.figure(figsize=(16, 8))
         plt.tight_layout()
         plt.axis('off')
         plt.imshow(img)
-        plt.savefig(p_run / "smallnorb_c1_rec_{}.png".format(epoch_idx))
+        plt.savefig(p_run / "smallnorb_rec_{}.png".format(epoch_idx))
         plt.close()        
-        # channel 2
-        img = torchvision.utils.make_grid(torch.cat([x_vis[:16,1:2,:,:], x_rec[:16,1:2,:,:]], dim=0), nrow=16)
-        img = img.permute(1,2,0)
-        plt.figure(figsize=(16, 2))
-        plt.tight_layout()
-        plt.axis('off')
-        plt.imshow(img)
-        plt.savefig(p_run / "smallnorb_c2_rec_{}.png".format(epoch_idx))
-        plt.close()
-
 
         #append learning rate
         lr_scheduler.step()
@@ -256,11 +256,12 @@ def main(BATCH_SIZE):
 
 
 if __name__ == '__main__':
-    main(16)
-    main(32)
-    main(128)
-    main(512)
-    main(1024)
+    #main(16)
+    #main(32)
+    #main(64)
+    #main(128)
+    main(256)
+    #main(512)
 
 
 
