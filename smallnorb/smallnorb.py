@@ -159,13 +159,39 @@ class SmallNORB(data.Dataset):
             return img_left, img_right, target, info
 
         if self.mode == "nopil":
+            data = self.data[index]
+            data = data.type(torch.float)
+            if self.transform is not None:
+                data = self.transform(data)
+
+            return data, target, info         
+        
+        
+        """
+        if self.mode == "nopil":
+            img_left = Image.fromarray(self.data[index, 0].numpy(), mode='L')
+            img_right = Image.fromarray(self.data[index, 1].numpy(), mode='L')
+            trans = T.Compose([T.ToTensor()])
+            img_left = trans(img_left)
+            img_right = trans(img_right)
+            data = torch.stack((img_left, img_right), dim=1)
+            #data = torch.squeeze(data)
+            #data = self.data[index].numpy()#.to(torch.float)
+            #data = data.type(torch.float)
+            if self.transform is not None:
+                data = self.transform(data)
+
+            return data, target, info          
+        """
+        """
+        if self.mode == "nopil":
             img_left = self._transform(self.data[index, 0])
             img_right = self._transform(self.data[index, 1])
             
             data = torch.stack((img_left, img_right), dim=1)
             data = torch.squeeze(data)
             return data, target, info        
-        
+        """
         img = self._transform(self.data[index])
         return img, target
 
