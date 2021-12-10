@@ -33,7 +33,7 @@ torch.backends.cudnn.benchmark = True
 #########################
 
 #  using params from paper
-BATCH_SIZE = 16
+#BATCH_SIZE = 16
 NUM_EPOCHS = 200
 LEARNING_RATE = 5e-4
 SCHEDULER_GAMMA = 0.97
@@ -55,31 +55,21 @@ P_DATA = "./data"
 P_CKTPS = "./data/ckpts"
 
 
-def main():
+def main(BATCH_SIZE):
     ##################################
     #Get & Preprocess data
 
     #Tranformations
-    """
-    transform_train = T.Compose([
-        T.Resize(64),
-        T.RandomResizedCrop(48, scale=(0.8, 1.0), ratio=(1, 1)),
-        T.ToTensor()
-    ])
-    transform_valid = T.Compose([
-        T.Resize(64),
-        T.RandomResizedCrop(48, scale=(0.8, 1.0), ratio=(1, 1)),
-        T.ToTensor()
-    ])   
-    """
     transform_train = T.Compose([
         T.Resize(64),
         T.RandomCrop(48),
+        T.transforms.ColorJitter(brightness=[0., 2.], contrast=[0.5,1.5], saturation=0, hue=0),
         T.ToTensor()
     ])
     transform_valid = T.Compose([
         T.Resize(64),
         T.RandomCrop(48),
+        T.transforms.ColorJitter(brightness=0, contrast=0, saturation=0, hue=0),
         T.ToTensor()
     ])  
 
@@ -266,7 +256,11 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(16)
+    main(32)
+    main(128)
+    main(512)
+    main(1024)
 
 
 
