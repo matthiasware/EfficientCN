@@ -35,11 +35,11 @@ torch.backends.cudnn.benchmark = True
 
 #  using params from paper
 #BATCH_SIZE = 16
-NUM_EPOCHS = 2
-LEARNING_RATE = 5e-4
+NUM_EPOCHS = 200
+#LEARNING_RATE = 5e-4
 SCHEDULER_GAMMA = 0.97
 REC_LOSS_WEIGHT = 0.392
-NUM_WORKERS = 6
+NUM_WORKERS = 2
 
 # Dataset SmallNORB
 NUM_CLASSES = 5
@@ -56,18 +56,21 @@ P_DATA = "./data"
 P_CKTPS = "./data/ckpts"
 
 
-def main(BATCH_SIZE):
+def main(BATCH_SIZE=16,LEARNING_RATE=5e-4 ):
     ##################################
     #Get & Preprocess data
 
     #Tranformations
     transform_train = T.Compose([
-        T.Normalize(mean=[191.7811,193.0594],std=[45.2232, 44.2558]),
+        #.Normalize(mean=[191.7811,193.0594],std=[45.2232, 44.2558]),
+        T.Normalize(mean=[127.5, 127.5],std=[127.5, 127.5]),
         T.Resize(64),
         T.RandomCrop(48),
         ColorJitter(brightness= [0.,2.], contrast=[0.5,1.5], saturation=0, hue=0),
     ])
     transform_valid = T.Compose([
+        #T.Normalize(mean=[191.0684,192.0952],std=[45.4354, 44.3388]),
+        T.Normalize(mean=[127.5, 127.5],std=[127.5, 127.5]),
         T.Resize(64),
         T.CenterCrop(48),
     ])  
@@ -90,9 +93,9 @@ def main(BATCH_SIZE):
     
 
     # Data for visualization of the img reconstructions
-    x_vis, y_vis, _ = next(iter(dl_valid))    
-    
-    
+    x_vis, y_vis, _ = next(iter(dl_valid))
+  
+
     ##################################
     #Train Model
 
@@ -113,6 +116,7 @@ def main(BATCH_SIZE):
     stats = {
         'acc_train': [],
         'acc_valid': [],
+        'rec_delta': [],
     }
 
     # print stuff
@@ -219,12 +223,12 @@ def main(BATCH_SIZE):
             _, x_rec = model.forward(x_vis.to(DEVICE))
         x_rec_y = x_rec_y.cpu()
         x_rec = x_rec.cpu()
-        # channel 1
-        img = torchvision.utils.make_grid(torch.cat([x_vis[:16,:1,:,:], 
+        # channel 1 & 2
+        img = torchvision.utils.make_grid(torch.cat([((x_vis[:16,:1,:,:]+1)/2), 
                                                     x_rec[:16,:1,:,:],
                                                     x_rec_y[:16,:1,:,:],
                                                     (x_rec[:16,:1,:,:] - x_rec_y[:16,:1,:,:]),
-                                                    x_vis[:16,1:2,:,:], 
+                                                    ((x_vis[:16,1:2,:,:]+1)/2), 
                                                     x_rec[:16,1:2,:,:],
                                                     x_rec_y[:16,1:2,:,:], 
                                                     (x_rec[:16,1:2,:,:]-x_rec_y[:16,1:2,:,:])], dim=0), nrow=16)
@@ -234,7 +238,11 @@ def main(BATCH_SIZE):
         plt.axis('off')
         plt.imshow(img)
         plt.savefig(p_run / "smallnorb_rec_{}.png".format(epoch_idx))
-        plt.close()        
+        plt.close() 
+
+        # proff delta between rec by class & rec by argmax
+        print("rec_delta: {:.5f}".format(torch.nn.functional.mse_loss(x_rec_y, x_rec)))
+        stats["rec_delta"].append((torch.nn.functional.mse_loss(x_rec_y, x_rec)).item())       
 
         #append learning rate
         lr_scheduler.step()
@@ -254,13 +262,21 @@ def main(BATCH_SIZE):
     plt.savefig(p_run / "acc.png")
     plt.close()
 
+    rr = list(range(1, epoch_idx + 1))
+    plt.plot(rr, stats["rec_delta"], label="reconstruction delta")
+    #plt.ylim(0, 1)
+    plt.legend()
+    plt.savefig(p_run / "a_rec_delta.png")
+    plt.close()
 
 if __name__ == '__main__':
-    #main(16)
+    main()
+    #main(16,5e-5)
+    #main(16,5e-3)
     #main(32)
     #main(64)
     #main(128)
-    main(256)
+    #main(256)
     #main(512)
 
 
