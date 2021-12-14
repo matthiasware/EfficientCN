@@ -38,6 +38,7 @@ NUM_EPOCHS = 1
 LEARNING_RATE = 5e-4
 SCHEDULER_GAMMA = 0.99
 REC_LOSS_WEIGHT = 0.392
+MAR_LOSS_WEIGHT = 1.0
 NUM_WORKERS = 6
 
 # Dataset SmallNORB
@@ -176,6 +177,7 @@ def main():
             # Margin Loss & Reconstruction Loss
             y_one_hot = F.one_hot(y_true, num_classes=NUM_CLASSES)
             loss_margin = margin_loss(u_h, y_one_hot)
+            loss_margin = MAR_LOSS_WEIGHT * loss_margin
             loss_rec = torch.nn.functional.mse_loss(x, x_rec)
             loss_rec = REC_LOSS_WEIGHT * loss_rec
             
