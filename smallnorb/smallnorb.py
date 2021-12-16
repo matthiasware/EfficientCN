@@ -121,12 +121,12 @@ class SmallNORB(data.Dataset):
         elif self.mode == "right":
             self.data = self._load("{}_right".format(image_file))
 
-        elif self.mode == "all" or self.mode == "stereo" or self.mode == "nopil":
+        elif self.mode == "all" or self.mode == "stereo" or self.mode == "nopil" or self.mode == "pseudo":
             left_data = self._load("{}_left".format(image_file))
             right_data = self._load("{}_right".format(image_file))
 
             # load stereo or nopil
-            if self.mode == "stereo" or self.mode == "nopil":
+            if self.mode == "stereo" or self.mode == "nopil" or self.mode == "pseudo":
                 self.data = torch.stack((left_data, right_data), dim=1)
 
             # load all
@@ -144,6 +144,9 @@ class SmallNORB(data.Dataset):
                 tuple: (image left, image right, target, info)
             mode ``nopil'':
                 tuple: (image left & right [2,96,96], target, info)
+            mode ``pseudo'':
+                processed as pseudo 3 channel img
+                tuple: (tensor(image left & right [2,96,96]), target, info)
         """
         target = self.labels[index % 24300] if self.mode is "all" else self.labels[index]
         if self.target_transform is not None:
@@ -165,33 +168,20 @@ class SmallNORB(data.Dataset):
                 data = self.transform(data)
 
             return data, target, info         
-        
-        
-        """
-        if self.mode == "nopil":
-            img_left = Image.fromarray(self.data[index, 0].numpy(), mode='L')
-            img_right = Image.fromarray(self.data[index, 1].numpy(), mode='L')
-            trans = T.Compose([T.ToTensor()])
-            img_left = trans(img_left)
-            img_right = trans(img_right)
-            data = torch.stack((img_left, img_right), dim=1)
-            #data = torch.squeeze(data)
-            #data = self.data[index].numpy()#.to(torch.float)
-            #data = data.type(torch.float)
-            if self.transform is not None:
-                data = self.transform(data)
 
-            return data, target, info          
-        """
-        """
-        if self.mode == "nopil":
-            img_left = self._transform(self.data[index, 0])
-            img_right = self._transform(self.data[index, 1])
+        if self.mode == "pseudo":
+            c1 = self.data[index, 0]
+            c2 = self.data[index, 1]
+            c3 = self.data[index, 0]*0 #pseudo chammel to use standard func for transform
             
-            data = torch.stack((img_left, img_right), dim=1)
-            data = torch.squeeze(data)
-            return data, target, info        
-        """
+            data = np.stack((c1, c2,c3), axis=2)
+            #out = Image.fromarray(data, mode='RGB')
+            out = T.ToTensor()(data)
+            if self.transform is not None:
+                out = self.transform(out)
+            ten = torch.stack((out[0], out[1]), dim=0)            
+            return ten, target, info
+        
         img = self._transform(self.data[index])
         return img, target
 
@@ -745,5 +735,25 @@ if __name__ == '__main__':
     #A[0][0].show()
     #print(A[43][0].size())
 
-    B = smallNORB(root="", mode="nopil")
-    print(B[0][0].size())
+    transform = T.Compose([       
+        T.ColorJitter(brightness= [0.,1.], contrast=[0.5,1.5], saturation=0, hue=0),
+        T.Resize(64),
+        T.RandomCrop(48),
+        T.Normalize(mean=[191.7811/255,193.0594/255,0],std=[45.2232/255, 44.2558/255,1]),
+        #T.Normalize(mean=[127.5/255, 127.5/255, 127.5/255],std=[127.5/255, 127.5/255, 127.5/255]),
+        
+    ])
+
+    B = SmallNORB(root="smallnorb",transform=transform, mode="pseudo")
+    #print(B[0][0].size())
+    #print(B[0][0].shape)
+    #print(B[0][0])
+    #print(B[0][0][0])
+    a = B[0][0]
+    print(a[0])
+    print(a.shape)
+    print(a.max())
+    print(a.min())
+    print(a.mean())
+
+
