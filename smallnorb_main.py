@@ -24,18 +24,19 @@ from smallnorb.jitter import ColorJitter
 def conf1():
     #Tranformations
     transform_train = T.Compose([
-        #.Normalize(mean=[191.7811,193.0594],std=[45.2232, 44.2558]),
-        T.Normalize(mean=[127.5, 127.5],std=[127.5, 127.5]),
+        T.ColorJitter(brightness= [0.5,1.], contrast=[0.5,1.], saturation=0, hue=0),
         T.Resize(64),
         T.RandomCrop(48),
-        ColorJitter(brightness= [0.,2.], contrast=[0.5,1.5], saturation=0, hue=0),
+        T.Normalize(mean=[191.7811/255,193.0594/255,0],std=[45.2232/255, 44.2558/255,1]),
     ])
     transform_valid = T.Compose([
-        #T.Normalize(mean=[191.0684,192.0952],std=[45.4354, 44.3388]),
-        T.Normalize(mean=[127.5, 127.5],std=[127.5, 127.5]),
+        #T.ColorJitter(brightness= [0.5,1.], contrast=[0.5,1.], saturation=0, hue=0),
         T.Resize(64),
-        T.CenterCrop(48),
+        T.CenterCrop(48),        
+        T.Normalize(mean=[191.0684/255,192.0952/255,0],std=[45.4354/255, 44.3388/255,1]),        
     ])  
+
+
 
     batch_size = 16
     num_epochs = 200
@@ -48,16 +49,18 @@ def conf1():
             'batch_size': batch_size,
             'num_epochs': num_epochs,
             'num_workers': num_workers,
-            'num_vis': 8,
+            'num_vis': 16,
             'pin_memory': True,
-            'transform' : transform_train
+            'transform' : transform_train,
+            'mode' : "pseudo"
         },
         'valid': {
             'num_workers': num_workers,       # Either set num_worker high or pin_memory=True
             'batch_size': batch_size,
-            'num_vis': 8,
+            'num_vis': 16,
             'pin_memory': True,
-            'transform' : transform_valid
+            'transform' : transform_valid,
+            'mode' : "pseudo"
         },
         'optimizer': 'adam',
         'optimizer_args': {
@@ -101,7 +104,7 @@ def conf1():
                 'by_class': True
             }
         },
-        'stop_acc': 1.0 #0.9973
+        'stop_acc': 0.9973
     }
 
     return DottedDict(config)
@@ -359,7 +362,12 @@ def conf4():
 
 if __name__ == '__main__':
 
-    train(conf1())
-    train(conf2())
-    train(conf3())
-    train(conf4())
+    #train(conf1())
+    #train(conf2())
+    #train(conf3())
+    #train(conf4())
+
+    i = 0
+    while i < 10:
+        train(conf1())
+        i += 1

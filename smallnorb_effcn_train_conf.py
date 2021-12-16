@@ -37,19 +37,18 @@ torch.backends.cudnn.benchmark = True
 
 def default():
     #Tranformations
+    #Tranformations
     transform_train = T.Compose([
-        #.Normalize(mean=[191.7811,193.0594],std=[45.2232, 44.2558]),
-        T.Normalize(mean=[127.5, 127.5],std=[127.5, 127.5]),
+        T.ColorJitter(brightness= [0.5,1.], contrast=[0.5,1.], saturation=0, hue=0),
         T.Resize(64),
         T.RandomCrop(48),
-        ColorJitter(brightness= [0.,2.], contrast=[0.5,1.5], saturation=0, hue=0),
+        T.Normalize(mean=[191.7811/255,193.0594/255,0],std=[45.2232/255, 44.2558/255,1]),
     ])
     transform_valid = T.Compose([
-        #T.Normalize(mean=[191.0684,192.0952],std=[45.4354, 44.3388]),
-        T.Normalize(mean=[127.5, 127.5],std=[127.5, 127.5]),
         T.Resize(64),
-        T.CenterCrop(48),
-    ])  
+        T.CenterCrop(48),        
+        T.Normalize(mean=[191.0684/255,192.0952/255,0],std=[45.4354/255, 44.3388/255,1]),        
+    ])
 
     batch_size = 16
     num_epochs = 200
@@ -64,14 +63,16 @@ def default():
             'num_workers': num_workers,
             'num_vis': 8,
             'pin_memory': True,
-            'transform' : transform_train
+            'transform' : transform_train,
+            'mode' : "pseudo"
         },
         'valid': {
             'num_workers': num_workers,       # Either set num_worker high or pin_memory=True
             'batch_size': batch_size,
             'num_vis': 8,
             'pin_memory': True,
-            'transform' : transform_valid
+            'transform' : transform_valid,
+            'mode' : "pseudo"
         },
         'optimizer': 'adam',
         'optimizer_args': {
@@ -160,17 +161,18 @@ def create_reconstruction_grid_img(model, device, x, y, permute=False):
     with torch.no_grad():
         _, x_rec = model.forward(x.to(device))
         _, x_rec_y = model.forward(x.to(device),y.to(device))
-        x_rec = x_rec.cpu()
-        x_rec_y = x_rec_y.cpu()
+    x_rec = x_rec.cpu()
+    x_rec_y = x_rec_y.cpu()
+    scal = lambda x: (x-x.min())/(x.max()-x.min())
     img = torchvision.utils.make_grid(
-        torch.cat([((x[:,:1,:,:]+1)/2), 
-                    x_rec[:,:1,:,:],
-                    x_rec_y[:,:1,:,:],
-                    (x_rec[:,:1,:,:] - x_rec_y[:,:1,:,:]),
-                    ((x[:,1:2,:,:]+1)/2), 
-                    x_rec[:,1:2,:,:],
-                    x_rec_y[:,1:2,:,:], 
-                    (x_rec[:,1:2,:,:]-x_rec_y[:,1:2,:,:])], dim=0), nrow=x.shape[0])
+        torch.cat([scal(x[:,:1,:,:]), 
+                    scal(x_rec[:,:1,:,:]),
+                    scal(x_rec_y[:,:1,:,:]),
+                    scal((x_rec[:,:1,:,:] - x_rec_y[:,:1,:,:])),
+                    scal(x[:,1:2,:,:]), 
+                    scal(x_rec[:,1:2,:,:]),
+                    scal(x_rec_y[:,1:2,:,:]), 
+                    scal((x_rec[:,1:2,:,:]-x_rec_y[:,1:2,:,:]))], dim=0), nrow=x.shape[0])
     if permute:
         img = img.permute(1, 2, 0)
     return img
@@ -245,10 +247,12 @@ def train(config=None):
     #Tranformations
     transform_train = config.train.transform
     transform_valid = config.valid.transform
+    mode_train = config.train.mode
+    mode_valid = config.valid.mode
 
     #load Dataset
-    ds_train = SmallNORB(root=p_data,train=True, download=True, transform=transform_train, mode="nopil")
-    ds_valid = SmallNORB(root=p_data,train=False, download=True, transform=transform_valid, mode="nopil")
+    ds_train = SmallNORB(root=p_data,train=True, download=True, transform=transform_train, mode=mode_train)
+    ds_valid = SmallNORB(root=p_data,train=False, download=True, transform=transform_valid, mode=mode_valid)
     
     #stack data to batches
     dl_train = torch.utils.data.DataLoader(ds_train, 
