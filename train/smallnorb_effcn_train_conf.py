@@ -25,18 +25,16 @@ from tqdm import tqdm
 from dotted_dict import DottedDict
 
 # local imports
-from effcn.models import SmallNorbEffCapsNetYMask
+from effcn.models_smallnorb import SmallNorbEffCapsNetYMask
 from effcn.functions import create_margin_loss
 from effcn.utils import count_parameters
 from smallnorb.smallnorb import SmallNORB
-from smallnorb.jitter import ColorJitter
 from smallnorb.optimizer import get_optimizer, get_scheduler
 
 # will most likely result in a 30% speed up
 torch.backends.cudnn.benchmark = True
 
 def default():
-    #Tranformations
     #Tranformations
     transform_train = T.Compose([
         T.ColorJitter(brightness= [0.5,1.], contrast=[0.5,1.], saturation=0, hue=0),
