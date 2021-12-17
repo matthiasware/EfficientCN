@@ -1,20 +1,19 @@
 import time
 import numpy as np
-from affnist_effcn_train import train
+from affnist_effcn_wob_train import train
 import pickle
 from dotted_dict import DottedDict
 from misc.utils import get_sting_timestamp
 import subprocess
 
-DEVICE = "cuda:1"
-P_EXPERIMENT = '/mnt/experiments/effcn/affnist/grid_search'
+DEVICE = "cuda:0"
+P_EXPERIMENT = '/mnt/experiments/effcn/affnist/grid_search_wob'
 
 if DEVICE == "cuda:0":
-    bss = [2048, 64]
-    lrs = [0.0001, 0.001, 0.01]
-    rec_weights = [50, 10, 1, 0.1, 0.01, 0.001, 0]
-    weight_decays = [1e-5, 1e-4, 1e-3, 0]
-    idx_next = 45
+    bss = [512]
+    lrs = [0.0001, 0.001, 0.01][::-1]
+    rec_weights = [50, 10, 1, 0.1, 0.01, 0.001, 0][::-1]
+    weight_decays = [1e-4, 1e-3]
 elif DEVICE == "cuda:1":
     bss = [1024, 512, 256, 128]
     lrs = [0.0001, 0.001, 0.01]
@@ -37,12 +36,9 @@ for weight_decay in weight_decays:
         for lr in lrs:
             for rec_weight in rec_weights:
                 print("Run [{}/{}]".format(run_idx, n_runs))
-                if run_idx < idx_next:
-                    run_idx += 1
-                    continue
                 try:
                     subprocess.call(
-                        "python affnist_effcn_train.py --lr {} --bs {} --num_epochs 150 --weight_decay {} --loss_weight_rec {} --device {} --p_experiment {}".format(
+                        "python affnist_effcn_wob_train.py --lr {} --bs {} --num_epochs 150 --weight_decay {} --loss_weight_rec {} --device {} --p_experiment {}".format(
                             lr, bs, weight_decay, rec_weight, DEVICE, P_EXPERIMENT
                         ),
                         shell=True)

@@ -129,3 +129,89 @@ class FCCaps(nn.Module):
         CB = C + self.B
         U_h = torch.einsum('...ikl,...ik->...kl', U_hat, CB)
         return self.squash(U_h)
+
+    def forward_debug(self, U_l):
+        U_hat = torch.einsum('...ij,ikjl->...ikl', U_l, self.W)
+        A = torch.einsum("...ikl, ...hkl -> ...hik", U_hat, U_hat)
+        A_scaled = A / self.attention_scaling
+        A_sum = torch.einsum("...hij->...hj", A_scaled)
+        C = torch.softmax(A_sum, dim=-1)
+        CB = C + self.B
+        U_h_fin = torch.einsum('...ikl,...ik->...kl', U_hat, CB)
+        U_h_sq = self.squash(U_h_fin)
+        return U_hat, A, A_scaled, A_sum, C, CB, U_h_fin, U_h_sq
+
+
+class FCCapsWOBias(nn.Module):
+    """
+        Attributes
+        ----------
+        n_l ... number of lower layer capsules
+        d_l ... dimension of lower layer capsules
+        n_h ... number of higher layer capsules
+        d_h ... dimension of higher layer capsules
+
+        W   (n_l, n_h, d_l, d_h) ... weight tensor
+        B   (n_l, n_h)           ... bias tensor
+    """
+
+    def __init__(self, n_l, n_h, d_l, d_h):
+        super().__init__()
+        self.n_l = n_l
+        self.d_l = d_l
+        self.n_h = n_h
+        self.d_h = d_h
+
+        self.W = torch.nn.Parameter(torch.rand(
+            n_l, n_h, d_l, d_h), requires_grad=True)
+        # self.B = torch.nn.Parameter(torch.rand(n_l, n_h), requires_grad=True)
+        self.squash = Squash(eps=1e-20)
+
+        # init custom weights
+        # i'm relly unsure about this initialization scheme
+        # i don't think it makes sense in our case, but the paper says so ...
+        torch.nn.init.kaiming_normal_(
+            self.W, a=0, mode='fan_in', nonlinearity='leaky_relu')
+        # torch.nn.init.kaiming_normal_(
+        #     self.B, a=0, mode="fan_in", nonlinearity="leaky_relu")
+
+        self.attention_scaling = np.sqrt(self.d_l)
+
+    def forward(self, U_l):
+        """
+        einsum convenventions:
+          n_l = i | h
+          d_l = j
+          n_h = k
+          d_h = l
+
+        Data tensors:
+            IN:  U_l ... lower layer capsules
+            OUT: U_h ... higher layer capsules
+            DIMS:
+                U_l (n_l, d_l)
+                U_h (n_h, d_h)
+                W   (n_l, n_h, d_l, d_h)
+                B   (n_l, n_h)
+                A   (n_l, n_l, n_h)
+                C   (n_l, n_h)
+        """
+        U_hat = torch.einsum('...ij,ikjl->...ikl', U_l, self.W)
+        A = torch.einsum("...ikl, ...hkl -> ...hik", U_hat, U_hat)
+        A = A / self.attention_scaling
+        A_sum = torch.einsum("...hij->...hj", A)
+        C = torch.softmax(A_sum, dim=-1)
+        # CB = C + self.B
+        U_h = torch.einsum('...ikl,...ik->...kl', U_hat, C)
+        return self.squash(U_h)
+
+    def forward_debug(self, U_l):
+        U_hat = torch.einsum('...ij,ikjl->...ikl', U_l, self.W)
+        A = torch.einsum("...ikl, ...hkl -> ...hik", U_hat, U_hat)
+        A_scaled = A / self.attention_scaling
+        A_sum = torch.einsum("...hij->...hj", A_scaled)
+        C = torch.softmax(A_sum, dim=-1)
+        # CB = C + self.B
+        U_h_fin = torch.einsum('...ikl,...ik->...kl', U_hat, C)
+        U_h_sq = self.squash(U_h_fin)
+        return U_hat, A, A_scaled, A_sum, C, U_h_fin, U_h_sq
