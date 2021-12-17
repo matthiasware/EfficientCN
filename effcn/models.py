@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 from .layers import View, Squash, PrimaryCaps, FCCaps, FCCapsWOBias
 from .functions import max_norm_masking
+from .layers import View, Squash, PrimaryCaps, FCCaps
+from .functions import max_norm_masking, masking
 
 
 ######################################
