@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from .functions import squash_func
+# from .functions import squash_func
 
 
 class Squash(nn.Module):
@@ -14,7 +14,8 @@ class Squash(nn.Module):
          IN:  (b, n, d)
          OUT: squash(x(b,n,d))
         """
-        return squash_func(x, self.eps)
+        x_norm = torch.norm(x, dim=2, keepdim=True)
+        return (1 - 1 / (torch.exp(x_norm) + self.eps)) * (x / (x_norm + self.eps))
 
 
 class View(nn.Module):
@@ -113,7 +114,7 @@ class FCCaps(nn.Module):
         Data tensors:
             IN:  U_l ... lower layer capsules
             OUT: U_h ... higher layer capsules
-            DIMS: 
+            DIMS:
                 U_l (n_l, d_l)
                 U_h (n_h, d_h)
                 W   (n_l, n_h, d_l, d_h)
@@ -123,7 +124,6 @@ class FCCaps(nn.Module):
         """
         U_hat = torch.einsum('...ij,ikjl->...ikl', U_l, self.W)
         A = torch.einsum("...ikl, ...hkl -> ...hik", U_hat, U_hat)
-        #A = A / torch.sqrt(torch.Tensor([self.d_l]))
         A = A / self.attention_scaling
         A_sum = torch.einsum("...hij->...hj", A)
         C = torch.softmax(A_sum, dim=-1)

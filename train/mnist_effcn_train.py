@@ -1,3 +1,6 @@
+import sys
+sys.path.append("./..")
+
 # default libraries
 import time
 import datetime
@@ -28,7 +31,7 @@ from effcn.utils import count_parameters
 #  using params from paper
 BATCH_SIZE = 16
 NUM_EPOCHS = 150
-LEARNING_RATE = 5e-4
+LEARNING_RATE = 5e-4 * 2**0
 SCHEDULER_GAMMA = 0.96
 REC_LOSS_WEIGHT = 0.392
 NUM_WORKERS = 6
@@ -40,8 +43,8 @@ else:
 DEVICE = torch.device(dev)
 
 # paths
-P_DATA = "./data"
-P_CKTPS = "./data/ckpts"
+P_DATA = "./../data"
+P_CKTPS = "./../data/ckpts"
 
 def main():
     #########################
@@ -52,10 +55,12 @@ def main():
     transform_train = T.Compose([
         T.RandomAffine(
             degrees=(-30, 30),
+            shear=(-30, 30),
+            # translate=(0.9, 0.9),
         ),
         T.RandomResizedCrop(
             28,
-            scale=(0.8, 1.0),
+            scale=(0.8, 1.2),
             ratio=(1, 1),
         ),
         T.ToTensor()
@@ -207,6 +212,9 @@ def main():
         model_name = "ecn_mnist_epoch_{}.ckpt".format(epoch_idx)
         p_model = p_run / model_name
         torch.save(model.state_dict(), p_model)
+
+    print("best acc train: {:.5f}".format(max(stats["acc_train"])))
+    print("best acc valid: {:.5f}".format(max(stats["acc_valid"])))
 
     #########################
     #  VIS STATS
