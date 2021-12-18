@@ -5,7 +5,7 @@ from .functions import max_norm_masking, masking
 
 class SmallNorbEcnBackbone(nn.Module):
     """
-        Backbone model from Efficient-CapsNet for SmalNorb
+        Backbone model from Efficient-CapsNet for SmallNorb
     """
     def __init__(self):
         super().__init__()
@@ -35,7 +35,7 @@ class SmallNorbEcnBackbone(nn.Module):
 
 class SmallNorbEcnDecoder(nn.Module):
     """
-        Decoder model from Efficient-CapsNet for MNIST
+        Decoder model from Efficient-CapsNet for SmallNorb
     """
     def __init__(self):
         super().__init__()
@@ -74,47 +74,7 @@ class SmallNorbEcnDecoder(nn.Module):
     
 class SmallNorbEffCapsNet(nn.Module):
     """
-        EffCaps Implementation for SmalNorb
-        all parameters taken from the paper
-    """
-    def __init__(self):
-        super().__init__()
-        # values from paper, are fixed!
-        self.n_l = 16  # num of primary capsules
-        self.d_l = 8   # dim of primary capsules
-        self.n_h = 5   # num of output capsules
-        self.d_h = 16  # dim of output capsules
-        
-        self.backbone = SmallNorbEcnBackbone()
-        self.primcaps = PrimaryCaps(F=128, K=8, N=self.n_l, D=self.d_l, s=2) # F = n_l * d_l !!!
-        self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h) 
-        self.decoder = SmallNorbEcnDecoder()
-
-    def forward(self, x):
-        """
-            IN:
-                x (b, 2, 48, 48)
-            OUT:
-                u_h    
-                    (b, n_h, d_h)
-                    output caps
-                x_rec  
-                    (b, 2, 48, 48)
-                    reconstruction of x
-        """
-        u_l = self.backbone(x)
-        u_l = self.primcaps(u_l)
-        u_h = self.fcncaps(u_l)
-        #
-        u_h_masked = max_norm_masking(u_h)
-        u_h_masked = torch.flatten(u_h_masked, start_dim=1)
-        x_rec = self.decoder(u_h_masked)
-        return u_h, x_rec
-    
-    
-class SmallNorbEffCapsNetYMask(nn.Module):
-    """
-        EffCaps Implementation for SmalNorb
+        EffCaps Implementation for SmallNorb
         all parameters taken from the paper
     """
     def __init__(self):
