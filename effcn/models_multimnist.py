@@ -83,9 +83,10 @@ class MultiMnistEffCapsNet(nn.Module):
         self.backbone = MultiMnistEcnBackbone()
         self.primcaps = PrimaryCaps(F=128, K=5, N=self.n_l, D=self.d_l, s=2) # F = n_l * d_l !!! # S=stride=2 reduces [1,128,6,6] -> [1,128,5,5]
         self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h) 
-        self.decoder = MultiMnistEcnDecoder()
+        self.decoder1 = MultiMnistEcnDecoder()
+        self.decoder2 = MultiMnistEcnDecoder()
 
-    def forward(self, x):
+    def forward(self, x, y_true=None, z_true=None):
         """
             IN:
                 x (b, 1, 36, 36)
@@ -102,7 +103,10 @@ class MultiMnistEffCapsNet(nn.Module):
         u_h = self.fcncaps(u_l)
         
         #Decoder
-        u_h_masked = masking(u_h, y_true)
-        x_rec = self.decoder(u_h_masked)
+        u_h_masked_y = masking(u_h, y_true)
+        x_rec_y = self.decoder1(u_h_masked_y)
+        
+        u_h_masked_z = masking(u_h, z_true)
+        x_rec_z = self.decoder2(u_h_masked_z)
 
-        return u_h, x_rec
+        return u_h, x_rec_y, x_rec_z
