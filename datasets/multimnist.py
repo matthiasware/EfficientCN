@@ -196,8 +196,13 @@ if __name__ == '__main__':
     print(A[1])
     B = MultiMNist(root='/mnt/data/datasets/multimnist_test',train=False)#, generate=True, g_samples=[20,10])
     print(B[1])
-
+    #MultiMNist(root='/mnt/data/datasets/multimnist1000',train=True, generate=True, g_samples=[1000,1000])
     #loadtrageds()
+
+    #create target 1
+    file_targets1 = open('/mnt/data/datasets/multimnist11/done.plk', 'wb')
+    pickle.dump('Done', file_targets1)
+    file_targets1.close()
 
 
 

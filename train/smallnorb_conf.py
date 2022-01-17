@@ -78,8 +78,8 @@ def conf():
             'ckpt': 10,   # [epochs]
         },
         'paths': {
-            'data': 'data/SmallNORB',
-            'experiments': 'experiments',
+            'data': '/mnt/data/datasets/smallnorb',
+            'experiments': '/mnt/data/experiments/EfficientCN/smallnorb',
         },
         'names': {
             'model_dir': 'effcn_smallnorb_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
@@ -100,7 +100,7 @@ def conf():
                 'weight': 1.0
             },
             'rec': {
-                'weight': 0.392,
+                'weight': 1.,#0.392,
                 'by_class': False
             }
         },
@@ -165,8 +165,8 @@ def conf_debug():
             'ckpt': 10,   # [epochs]
         },
         'paths': {
-            'data': 'data/SmallNORB',
-            'experiments': 'experiments',
+            'data': '/mnt/data/datasets/smallnorb',
+            'experiments': '/mnt/data/experiments/EfficientCN/smallnorb',
         },
         'names': {
             'model_dir': 'effcn_smallnorb_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
@@ -200,11 +200,13 @@ def conf_debug():
 
 if __name__ == '__main__':
 
-    train(conf_debug())
+    #train(conf_debug())
+
+    train(conf())
     
     """
     i = 0
     while i < 10:
-        train(conf1())
+        train(conf())
         i += 1
     """
