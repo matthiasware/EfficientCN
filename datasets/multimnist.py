@@ -192,11 +192,11 @@ def loadtrageds():
 if __name__ == '__main__':
     print('example')
 
-    A = MultiMNist(root='/mnt/data/datasets/multimnist_test',train=True)#, generate=True, g_samples=[20,10])
-    print(A[1])
-    B = MultiMNist(root='/mnt/data/datasets/multimnist_test',train=False)#, generate=True, g_samples=[20,10])
-    print(B[1])
-    #MultiMNist(root='/mnt/data/datasets/multimnist1000',train=True, generate=True, g_samples=[1000,1000])
+    #A = MultiMNist(root='/mnt/data/datasets/multimnist_test',train=True)#, generate=True, g_samples=[20,10])
+    #print(A[1])
+    #B = MultiMNist(root='/mnt/data/datasets/multimnist_test',train=False)#, generate=True, g_samples=[20,10])
+    #print(B[1])
+    MultiMNist(root='/mnt/data/datasets/multimnist10',train=True, generate=True, g_samples=[10,10])
     #loadtrageds()
 
     #create target 1
