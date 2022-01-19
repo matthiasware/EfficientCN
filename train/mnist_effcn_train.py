@@ -1,5 +1,6 @@
 import sys
 sys.path.append("./..")
+sys.path.append(".")
 
 # default libraries
 import time
@@ -34,17 +35,17 @@ NUM_EPOCHS = 150
 LEARNING_RATE = 5e-4 * 2**0
 SCHEDULER_GAMMA = 0.96
 REC_LOSS_WEIGHT = 0.392
-NUM_WORKERS = 6
+NUM_WORKERS = 2
 
 if torch.cuda.is_available():
-    dev = "cuda:0" 
+    dev = "cuda" 
 else:  
     dev = "cpu"  
 DEVICE = torch.device(dev)
 
 # paths
-P_DATA = "./../data"
-P_CKTPS = "./../data/ckpts"
+P_DATA = "/mnt/data/datasets"
+P_CKTPS = "/mnt/data/experiments/EfficientCN/mnist"
 
 def main():
     #########################
