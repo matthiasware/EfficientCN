@@ -128,12 +128,12 @@ class MultiMNist(Dataset):
         index = 1
         
         #test dataset
-        test = images[0:600]
-        print(test.size())
-        for j, image in enumerate(test):
+        #test = images[0:600]
+        #print(test.size())
+        #for j, image in enumerate(test):
         
         #generate for whole dataset
-        #for j, image in enumerate(images):
+        for j, image in enumerate(images):
         
             #reference img
             img_ref = images[j]
