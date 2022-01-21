@@ -100,9 +100,11 @@ class MultiMNist(Dataset):
         ds_valid = datasets.MNIST(root=self.p_root, train=False, download=True, transform=T.ToTensor())
 
         print('generate multimnist...')
-        
+        START = time.time()
         self. __multimatch__(p_data=self.p_root / "Train", images=ds_train.data, labels=ds_train.targets,n=n_train)
+        END_TRAIN = time.time()
         self. __multimatch__(p_data=self.p_root / "Valid", images=ds_valid.data, labels=ds_valid.targets,n=n_valid)
+        END_VALID = time.time()
 
         print('generation done')
 
