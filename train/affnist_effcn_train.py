@@ -1,5 +1,6 @@
 import sys
 sys.path.append("./..")
+sys.path.append('.')
 
 # standard lib
 import argparse
@@ -413,8 +414,8 @@ if __name__ == "__main__":
     parser.add_argument('--num_epochs', type=int, default=150)
     parser.add_argument('--weight_decay', type=float, default=0)
     parser.add_argument('--loss_weight_rec', type=float, default=0)
-    parser.add_argument('--device', type=str, default="cuda:0")
-    parser.add_argument('--p_experiment', type=str, default="/mnt/experiments/effcn/affnist")
+    parser.add_argument('--device', type=str, default="cuda")
+    parser.add_argument('--p_experiment', type=str, default="/mnt/data/experiments/EfficientCN/affnist")
     args = parser.parse_args()
 
     config = {
@@ -449,7 +450,7 @@ if __name__ == "__main__":
             'ckpt': 10,   # [epochs]
         },
         'paths': {
-            'data': '/home/matthias/projects/EfficientCN/data',
+            'data': '/mnt/data/datasets/affnist',
             'experiments': args.p_experiment,
         },
         'names': {

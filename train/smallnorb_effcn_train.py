@@ -89,8 +89,8 @@ def default():
             'ckpt': 10,   # [epochs]
         },
         'paths': {
-            'data': 'data/SmallNORB',
-            'experiments': 'experiments',
+            'data': '/mnt/data/datasets/smallnorb',
+            'experiments': '/mnt/data/experiments/EfficientCN/smallnorb',
         },
         'names': {
             'model_dir': 'effcn_smallnorb_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
