@@ -37,12 +37,13 @@ torch.backends.cudnn.benchmark = True
 
 def default():
     #Tranformations
-    transform_train = T.ToTensor()
-    transform_valid = T.ToTensor()
+    transform_train = None
+    transform_valid = None
 
-    batch_size = 64
-    num_epochs = 100
+    batch_size = 4000
+    num_epochs = 1
     num_workers = 2
+    leraning_rate = 1e-3
 
     config = {
         'device': 'cuda:0',
@@ -68,7 +69,7 @@ def default():
         },
         'optimizer': 'adam',
         'optimizer_args': {
-            'lr': 5e-4,
+            'lr': leraning_rate,
             'weight_decay': 0.,
         },
         'scheduler': 'exponential_decay',
@@ -82,7 +83,7 @@ def default():
             'ckpt': 10,   # [epochs]
         },
         'paths': {
-            'data': '/mnt/data/datasets/multimnist_test',
+            'data': '/mnt/data/datasets/multimnist',
             'experiments': '/mnt/data/experiments/EfficientCN/multimnist',
         },
         'names': {

@@ -103,6 +103,11 @@ class MultiMnistEffCapsNet(nn.Module):
         u_h = self.fcncaps(u_l)
         
         #Decoder
+        if y_true is None:
+            yz_pred = torch.topk(torch.norm(u_h, dim=2), k=2, dim=1).indices
+            y_true = yz_pred[:,0]
+            z_true = yz_pred[:,1]
+
         u_h_masked_y = masking(u_h, y_true)
         x_rec_y = self.decoder1(u_h_masked_y)
         
