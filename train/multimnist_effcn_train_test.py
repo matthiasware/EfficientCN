@@ -40,8 +40,8 @@ def default():
     transform_train = None
     transform_valid = None
 
-    batch_size = 4000
-    num_epochs = 1
+    batch_size = 1000
+    num_epochs = 3
     num_workers = 2
     leraning_rate = 1e-3
 

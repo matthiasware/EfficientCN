@@ -29,7 +29,7 @@ def conf():
     transform_train = None
     transform_valid = None
 
-    batch_size = 4000
+    batch_size = 1000
     num_epochs = 3
     num_workers = 2
     leraning_rate = 1e-3
@@ -111,26 +111,26 @@ if __name__ == '__main__':
 
     #train(conf())
 
-    c1 = conf()
-    c1.train.batch_size = 500
-    c1.valid.batch_size = 500
-    train(c1)
-    time.sleep(1)
+    #c1 = conf()
+    #c1.train.batch_size = 500
+    #c1.valid.batch_size = 500
+    #train(c1)
+    #time.sleep(1)
 
     c2 = conf()
-    c2.train.batch_size = 1000
-    c2.valid.batch_size = 1000
+    #c2.train.batch_size = 1000
+    #c2.valid.batch_size = 1000
     train(c2)
-    time.sleep(1)
+    #time.sleep(1)
     
-    c3 = conf()
-    c3.train.batch_size = 2000
-    c3.valid.batch_size = 2000
-    train(c3)
-    time.sleep(1)
+    #c3 = conf()
+    #c3.train.batch_size = 2000
+    #c3.valid.batch_size = 2000
+    #train(c3)
+    #time.sleep(1)
     
-    c4 = conf()
-    c4.train.batch_size = 4000
-    c4.valid.batch_size = 4000
-    train(c4)
+    #c4 = conf()
+    #c4.train.batch_size = 4000
+    #c4.valid.batch_size = 4000
+    #train(c4)
     
