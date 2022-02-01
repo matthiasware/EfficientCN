@@ -5,7 +5,7 @@ import torch.nn as nn
 
 
 class Squash(nn.Module):
-    def __init__(self, eps=10e-21):
+    def __init__(self, eps=1e-21):
         super().__init__()
         self.eps = eps
 

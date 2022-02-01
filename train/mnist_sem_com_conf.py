@@ -21,40 +21,52 @@ import numpy as np
 from dotted_dict import DottedDict
 
 # local imports
-from train.multimnist_effcn_train_test import train
+from train.mnist_train_sem_com import train
 
 
 def conf():
     #Tranformations
-    transform_train = None
-    transform_valid = None
+    transform_train = T.Compose([
+        T.RandomAffine(
+            degrees=(-30, 30),
+            shear=(-30, 30),
+            # translate=(0.9, 0.9),
+        ),
+        T.RandomResizedCrop(
+            28,
+            scale=(0.8, 1.2),
+            ratio=(1, 1),
+        ),
+        T.ToTensor()
+    ])
+    transform_valid = T.Compose([
+        T.ToTensor()
+    ])
 
-    batch_size = 64
+    batch_size = 256
     num_epochs = 150
     num_workers = 2
-    leraning_rate = 1e-4
+    leraning_rate = 5e-4
+    model = 'CNN_R' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
 
     config = {
+        'model': model,
         'device': 'cuda:0',
         'debug': True,
         'train': {
             'batch_size': batch_size,
             'num_epochs': num_epochs,
             'num_workers': num_workers,
-            'num_vis': 8,
+            'num_vis': 16,
             'pin_memory': True,
             'transform' : transform_train,
         },
         'valid': {
             'num_workers': num_workers,       # Either set num_worker high or pin_memory=True
             'batch_size': batch_size,
-            'num_vis': 8,
+            'num_vis': 16,
             'pin_memory': True,
             'transform' : transform_valid,
-        },
-        'gen': {
-            'generate': False,       
-            'num': [1000,1000]
         },
         'optimizer': 'adam',
         'optimizer_args': {
@@ -72,11 +84,11 @@ def conf():
             'ckpt': 10,   # [epochs]
         },
         'paths': {
-            'data': '/mnt/data/datasets/multimnist_10',
-            'experiments': '/mnt/data/experiments/EfficientCN/multimnist',
+            'data': '/mnt/data/datasets',
+            'experiments': '/mnt/data/experiments/EfficientCN/mnist',
         },
         'names': {
-            'model_dir': 'effcn_multimnist_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'model_dir': 'effcn_mnist_{a}_{b}'.format(a = model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
             'ckpt_dir': 'ckpts',
             'img_dir': 'imgs',
             'log_dir': 'logs',
@@ -111,29 +123,41 @@ if __name__ == '__main__':
 
     #train(conf())
 
-    c1 = conf()
-    c1.train.batch_size = 64
-    c1.valid.batch_size = 64
-    c1.optimizer_args.lr = 5e-5
-    train(c1)
+    c = conf()
+    c.train.batch_size = 16
+    c.valid.batch_size = 16
+    c.optimizer_args.lr = 5e-4
+    c.model = 'MnistEffCapsNet' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
+    c.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
+    train(c)
     time.sleep(1)
 
-    c2 = conf()
-    c2.train.batch_size = 64
-    c2.valid.batch_size = 64
-    c2.optimizer_args.lr = 1e-4
-    train(c2)
+    c = conf()
+    c.train.batch_size = 16
+    c.valid.batch_size = 16
+    c.optimizer_args.lr = 5e-4
+    c.model = 'CNN_CR_SF' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
+    c.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
+    train(c)
     time.sleep(1)
-    
-    c3 = conf()
-    c3.train.batch_size = 64
-    c3.valid.batch_size = 64
-    c3.optimizer_args.lr = 5e-4
-    train(c3)
-    #time.sleep(1)
-    
-    #c4 = conf()
-    #c4.train.batch_size = 4000
-    #c4.valid.batch_size = 4000
-    #train(c4)
-    
+
+    c = conf()
+    c.train.batch_size = 16
+    c.valid.batch_size = 16
+    c.optimizer_args.lr = 5e-4
+    c.model = 'CNN_CR' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
+    c.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
+    train(c)
+    time.sleep(1)
+
+    c = conf()
+    c.train.batch_size = 16
+    c.valid.batch_size = 16
+    c.optimizer_args.lr = 5e-4
+    c.model = 'CNN_R' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
+    c.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
+    train(c)
+
+
+
+
