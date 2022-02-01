@@ -127,10 +127,7 @@ def eval_model(model, device, data_loader, config, func_margin, func_rec):
         z_true = z_true.to(device)
 
         with torch.no_grad():
-            if config.loss.rec.by_class == True:
-                u_h, x_rec_y, x_rec_z = model.forward(x, y_true, z_true)
-            else:
-                u_h, x_rec_y, x_rec_z = model.forward(x)
+            u_h, x_rec_y, x_rec_z = model.forward(x)
 
             # Margin & Reconstruction Loss
             y_one_hot = F.one_hot(y_true, num_classes=10)
