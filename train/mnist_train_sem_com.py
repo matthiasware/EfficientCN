@@ -27,7 +27,7 @@ from tqdm import tqdm
 from dotted_dict import DottedDict
 
 # local imports
-from effcn.models import MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
+from effcn.models import MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R
 from effcn.functions import create_margin_loss, create_margin_loss_cnn_r
 from effcn.utils import count_parameters
 from misc.optimizer import get_optimizer, get_scheduler
@@ -60,7 +60,7 @@ def default():
     num_epochs = 150
     num_workers = 2
     leraning_rate = 5e-4
-    model = 'CNN_R' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
+    model = 'MnistCNN_R' #MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R
 
     config = {
         'model': model,
@@ -153,7 +153,7 @@ def eval_model(model, device, data_loader, config, func_margin, func_rec):
             loss = loss_margin + loss_rec
 
             # validate batch
-            if model.__class__.__name__ == "CNN_R":
+            if model.__class__.__name__ == "MnistCNN_R":
                 y_pred = torch.argmax(u_h, dim=1)
             else:        
                 y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
@@ -246,7 +246,7 @@ def train(config=None):
     p_loss_plot = p_experiment / config.names.loss_plot
 
 
-    if (config.model != 'CNN_R') and (config.model != 'MnistEffCapsNet') and (config.model != 'CNN_CR_SF') and (config.model != 'CNN_CR') :
+    if (config.model != 'MnistCNN_R') and (config.model != 'MnistEffCapsNet') and (config.model != 'MnistCNN_CR_SF') and (config.model != 'MnistCNN_CR') :
         print('Indicated model {} doesnt exist'.format(config.model))
         exit()
 
@@ -300,12 +300,12 @@ def train(config=None):
     #Model
     if config.model == 'MnistEffCapsNet':
         model = MnistEffCapsNet()
-    elif config.model == 'CNN_CR_SF':
-        model = CNN_CR_SF()
-    elif config.model == 'CNN_CR':
-        model = CNN_CR()
-    elif config.model == 'CNN_R':
-        model = CNN_R()
+    elif config.model == 'MnistCNN_CR_SF':
+        model = MnistCNN_CR_SF()
+    elif config.model == 'MnistCNN_CR':
+        model = MnistCNN_CR()
+    elif config.model == 'MnistCNN_R':
+        model = MnistCNN_R()
     model = model.to(device)
 
     # optimizer
@@ -366,7 +366,7 @@ def train(config=None):
     stop_run = False  # set if some event occurs
 
     # LOSS FUNCTIONS [create in advance for speed]
-    if model.__class__.__name__ == "CNN_R":
+    if model.__class__.__name__ == "MnistCNN_R":
         func_margin_loss = create_margin_loss_cnn_r(
             lbd=config.loss.margin.lbd,
             m_plus=config.loss.margin.m_plus,
@@ -423,7 +423,7 @@ def train(config=None):
             
             optimizer.step()
             
-            if model.__class__.__name__ == "CNN_R":
+            if model.__class__.__name__ == "MnistCNN_R":
                 y_pred = torch.argmax(u_h, dim=1)
             else:        
                 y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)

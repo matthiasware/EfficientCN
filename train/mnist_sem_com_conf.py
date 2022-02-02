@@ -47,12 +47,12 @@ def conf():
     num_epochs = 150
     num_workers = 2
     leraning_rate = 5e-4
-    model = 'CNN_R' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
+    model = 'MnistCNN_R' #MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R
 
     config = {
         'model': model,
         'device': 'cuda:0',
-        'debug': True,
+        'debug': False,
         'train': {
             'batch_size': batch_size,
             'num_epochs': num_epochs,
@@ -122,41 +122,41 @@ if __name__ == '__main__':
     #print(conf())
 
     #train(conf())
-
-    c = conf()
-    c.train.batch_size = 16
-    c.valid.batch_size = 16
-    c.optimizer_args.lr = 5e-4
-    c.model = 'MnistEffCapsNet' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
-    c.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
-    train(c)
+    """
+    c1 = conf()
+    c1.train.batch_size = 16
+    c1.valid.batch_size = 16
+    c1.optimizer_args.lr = 5e-4
+    c1.model = 'MnistEffCapsNet' #MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R
+    c1.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c1.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
+    train(c1)
+    time.sleep(1)
+    """
+    c2 = conf()
+    c2.train.batch_size = 16
+    c2.valid.batch_size = 16
+    c2.optimizer_args.lr = 1e-4
+    c2.model = 'MnistCNN_CR_SF' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
+    c2.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c2.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
+    train(c2)
     time.sleep(1)
 
-    c = conf()
-    c.train.batch_size = 16
-    c.valid.batch_size = 16
-    c.optimizer_args.lr = 5e-4
-    c.model = 'CNN_CR_SF' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
-    c.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
-    train(c)
+    c3 = conf()
+    c3.train.batch_size = 16
+    c3.valid.batch_size = 16
+    c3.optimizer_args.lr = 5e-4
+    c3.model = 'MnistCNN_CR' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
+    c3.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c3.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
+    train(c3)
     time.sleep(1)
 
-    c = conf()
-    c.train.batch_size = 16
-    c.valid.batch_size = 16
-    c.optimizer_args.lr = 5e-4
-    c.model = 'CNN_CR' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
-    c.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
-    train(c)
-    time.sleep(1)
-
-    c = conf()
-    c.train.batch_size = 16
-    c.valid.batch_size = 16
-    c.optimizer_args.lr = 5e-4
-    c.model = 'CNN_R' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
-    c.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
-    train(c)
+    c4 = conf()
+    c4.train.batch_size = 16
+    c4.valid.batch_size = 16
+    c4.optimizer_args.lr = 5e-4
+    c4.model = 'MnistCNN_R' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
+    c4.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c4.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
+    train(c4)
 
 
 

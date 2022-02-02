@@ -23,7 +23,7 @@ from dotted_dict import DottedDict
 #
 from misc.plot_utils import plot_mat, imshow
 from effcn.functions import max_norm_masking
-from effcn.models import MnistEcnBackbone, MnistEcnDecoder, MnistEffCapsNet
+from effcn.models import MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R
 from misc.utils import mkdir_directories
 
 def affine_xtrans(img, target, range=[-5.,5.,1]):
@@ -122,7 +122,17 @@ def sem_comp(conf):
 
     #Model to device
     device = torch.device("cuda")
-    model = MnistEffCapsNet()
+    if config.model == 'MnistEffCapsNet':
+        model = MnistEffCapsNet()
+    elif config.model == 'MnistCNN_CR_SF':
+        model = MnistCNN_CR_SF()
+    elif config.model == 'MnistCNN_CR':
+        model = MnistCNN_CR()
+    elif config.model == 'MnistCNN_R':
+        model = MnistCNN_R()
+    else:
+        print('Indicated model {} isnt avalible'.format(config.model))
+        exit()
     model.load_state_dict(torch.load(p_model))
     model = model.to(device)
     model.eval()
@@ -171,29 +181,42 @@ def sem_comp(conf):
                 x_aff = x_aff.to(device)
                 uh_aff, _ = model.forward(x_aff)
 
-                #PCA
-                #Covariance from Caps
-                cov_uh = cov_uh_trans(uh_aff)
-                #Eigenvals
-                eig, v_eig = torch.linalg.eig(cov_uh)
-                sig = eig.float() / eig.float().sum()
-                #PCA eigenvalues
-                pca_eig.append(sig.tolist())
 
+                if config.model == 'MnistCNN_R':
+                    #PCA
+                    #not possible on MnistCNN_R
 
-                #KL-Divergence
-                #Caps from valid
-                uh_aff_th = uh_aff[:,y[i],:]
-                #Variance over each dimension
-                var_uh_aff = torch.var(uh_aff_th, dim=0)
-                #Variance normalized
-                nor_uh_aff = var_uh_aff / var_uh_aff.sum()
-                #uniform prior
-                uni_p = 1/nor_uh_aff.shape[0]
-                #Kullback-Leibler-Divergenz
-                kl = (nor_uh_aff * torch.log((nor_uh_aff/uni_p))).sum()
-                kl_div.append(kl.tolist())
+                    #KL-Divergence
+                    #Variance over each dimension
+                    var_uh_aff = torch.var(uh_aff, dim=0)
+                    #Variance normalized
+                    nor_uh_aff = var_uh_aff / var_uh_aff.sum()
+                    #uniform prior
+                    uni_p = 1/nor_uh_aff.shape[0]
+                    #Kullback-Leibler-Divergenz
+                    kl = (nor_uh_aff * torch.log((nor_uh_aff/uni_p))).sum()
+                    kl_div.append(kl.tolist())
+                else:
+                    #Covariance from Caps
+                    cov_uh = cov_uh_trans(uh_aff)
+                    #Eigenvals
+                    eig, v_eig = torch.linalg.eig(cov_uh)
+                    sig = eig.float() / eig.float().sum()
+                    #PCA eigenvalues
+                    pca_eig.append(sig.tolist())
 
+                    #KL-Divergence
+                    #Caps from valid
+                    uh_aff_th = uh_aff[:,y[i],:]
+                    #Variance over each dimension
+                    var_uh_aff = torch.var(uh_aff_th, dim=0)
+                    #Variance normalized
+                    nor_uh_aff = var_uh_aff / var_uh_aff.sum()
+                    #uniform prior
+                    uni_p = 1/nor_uh_aff.shape[0]
+                    #Kullback-Leibler-Divergenz
+                    kl = (nor_uh_aff * torch.log((nor_uh_aff/uni_p))).sum()
+                    kl_div.append(kl.tolist())
 
         pca_mean = torch.tensor(pca_eig).mean(dim=0)
         kld_mean = torch.tensor(kl_div).mean()    
@@ -228,14 +251,16 @@ def sem_comp(conf):
 
 
 if __name__ == "__main__":
+    model = 'MnistCNN_CR' #MnistEffCapsNet MnistCNN_CR_SF MnistCNN_CR MnistCNN_R
     config = {
+        'model': model, #MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R,
         "path" : {
-            "p_experiment": "/mnt/data/experiments/EfficientCN/mnist",
-            "p_ckpts": "run_2022-01-19_14-50-25",
-            "p_model": "ecn_mnist_epoch_150.ckpt",
+            "p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_CNN_CR_2022_02_02_13_38_11",
+            "p_ckpts": "ckpts",
+            "p_model": "model_150.ckpt",
             "p_data" : "/mnt/data/datasets",
             "p_semcomp" : "/mnt/data/experiments/EfficientCN/sem_comp",
-            "p_stats" : 'semcomp_mnist_{da}'.format(da=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
+            "p_stats" : 'semcomp_mnist_{mo}_{da}'.format(mo=model, da=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
         },
         "ds" : {
             "train" : True,
@@ -249,7 +274,7 @@ if __name__ == "__main__":
             "shear"   : True,
             "x_range"  : [-5.,5.,1],
             "y_range"  : [-5.,5.,1],
-            "rot_range": [-25.,25.,1],
+            "rot_range": [-10.,10.,2],
             "sc_range"  : [0.75,1.25,0.05],
             "sh_range"  : [-10.,10.,2],
         }
