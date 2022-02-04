@@ -369,15 +369,17 @@ class MnistCNN_R_Backbone(nn.Module):
             nn.Conv2d(256, 256, 9, 2),     
             nn.ReLU(),                                 
         )
-        self.fc1 = nn.Linear(256 * 6 * 6, 10)
+        self.fc1 = nn.Linear(256 * 6 * 6, 10 * 16)
+        self.fc2 = nn.Linear(10 * 16, 10)
     
     def forward(self,x):
         x = self.conv1(x)
         x = self.conv2(x)
         x = torch.flatten(x, start_dim=1)
-        x = self.fc1(x)        
-        x = x.view(-1,10)
-        return x
+        x = self.fc1(x)      
+        out = self.fc2(x)
+        out = out.view(-1,10)
+        return out, x
 
 
 class MnistCNN_R_Decoder(nn.Module):
@@ -414,7 +416,8 @@ class MnistCNN_R(nn.Module):
     def __init__(self):
         super().__init__()
         self.backbone = MnistCNN_R_Backbone()
-        self.decoder = MnistCNN_R_Decoder()
+        self.decoder = MnistEcnDecoder()
+        #self.decoder = MnistCNN_R_Decoder()
 
     def forward(self, x, y_true=None):
         """
@@ -429,8 +432,8 @@ class MnistCNN_R(nn.Module):
                     reconstruction of x
         """
 
-        y_pred = self.backbone(x)
-        x_rec = self.decoder(y_pred)
+        y_pred, x_dec = self.backbone(x)
+        x_rec = self.decoder(x_dec)
 
         return y_pred, x_rec        
 
@@ -457,13 +460,16 @@ class MnistCNN_CR_Backbone(nn.Module):
             nn.ReLU(),                                 
         )
         self.fc1 = nn.Linear(256 * 6 * 6, 10 * 16)
+        self.sig = nn.Sigmoid()
     
     def forward(self,x):
         x = self.conv1(x)
         x = self.conv2(x)
         x = torch.flatten(x, start_dim=1)
-        x = self.fc1(x)        
+        x = self.fc1(x)
+        #x = self.sig(x)              
         x = x.view(-1,10,16)
+
         return x
 
 

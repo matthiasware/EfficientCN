@@ -126,9 +126,9 @@ if __name__ == '__main__':
     time.sleep(1)
     
     c3 = conf()
-    c3.train.batch_size = 64
-    c3.valid.batch_size = 64
-    c3.optimizer_args.lr = 5e-4
+    c3.train.batch_size = 1064
+    c3.valid.batch_size = 1064
+    c3.optimizer_args.lr = 1e-4
     train(c3)
     #time.sleep(1)
     
