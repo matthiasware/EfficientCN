@@ -41,9 +41,9 @@ def default():
     transform_valid = None
 
     batch_size = 1000
-    num_epochs = 3
+    num_epochs = 100
     num_workers = 2
-    leraning_rate = 1e-3
+    leraning_rate = 1e-4
 
     config = {
         'device': 'cuda:0',
@@ -52,14 +52,14 @@ def default():
             'batch_size': batch_size,
             'num_epochs': num_epochs,
             'num_workers': num_workers,
-            'num_vis': 8,
+            'num_vis': 16,
             'pin_memory': True,
             'transform' : transform_train,
         },
         'valid': {
             'num_workers': num_workers,       # Either set num_worker high or pin_memory=True
             'batch_size': batch_size,
-            'num_vis': 8,
+            'num_vis': 16,
             'pin_memory': True,
             'transform' : transform_valid,
         },
@@ -83,8 +83,8 @@ def default():
             'ckpt': 10,   # [epochs]
         },
         'paths': {
-            'data': '/mnt/data/datasets/multimnist',
-            'experiments': '/mnt/data/experiments/EfficientCN/multimnist',
+            'data': '/mnt/data/datasets/multimnist_overfit',
+            'experiments': '/mnt/data/experiments/EfficientCN/multimnist_overfit',
         },
         'names': {
             'model_dir': 'effcn_multimnist_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
@@ -121,7 +121,7 @@ def eval_model(model, device, data_loader, config, func_margin, func_rec):
     epoch_correct = 0
     epoch_total = 0
 
-    for x, y_true, z_true in data_loader:
+    for x, y_true, z_true, xy, xz in data_loader:
         x = x.to(device)
         y_true = y_true.to(device)
         z_true = z_true.to(device)
@@ -156,7 +156,7 @@ def eval_model(model, device, data_loader, config, func_margin, func_rec):
     epoch_acc = epoch_correct / epoch_total
     return epoch_loss, epoch_acc
 
-def create_reconstruction_grid_img(model, device, x, y, z, permute=False):
+def create_reconstruction_grid_img(model, device, x, y, z, xy, xz, permute=False):
     model.eval()
     with torch.no_grad():
         _, x_rec1,x_rec2 = model.forward(x.to(device))
@@ -167,10 +167,12 @@ def create_reconstruction_grid_img(model, device, x, y, z, permute=False):
     x_rec_y2 = x_rec_y2.cpu()
     scal = lambda x: (x-x.min())/(x.max()-x.min())
     img = torchvision.utils.make_grid(
-        torch.cat([scal(x), 
+        torch.cat([scal(x),
+                    scal(xy), 
                     scal(x_rec1),
                     scal(x_rec_y1),
                     scal((x_rec1 - x_rec_y1)),
+                    scal(xz),
                     scal(x_rec2),
                     scal(x_rec_y2), 
                     scal((x_rec2-x_rec_y2))], dim=0), nrow=x.shape[0])
@@ -253,7 +255,7 @@ def train(config=None):
     #load Dataset
     ds_train = MultiMNist(root=p_data,train=True, transform=transform_train, generate=config.gen.generate, g_samples=config.gen.num)
     ds_valid = MultiMNist(root=p_data,train=False, transform=transform_valid)
-    
+
     #stack data to batches
     dl_train = torch.utils.data.DataLoader(ds_train, 
                                         batch_size=config.train.batch_size, 
@@ -270,15 +272,19 @@ def train(config=None):
     
     
     # Data for visualization of the img reconstructions
-    x, y, z = next(iter(dl_train))
+    x, y, z, xy, xz = next(iter(dl_train))
     x_vis_train = x[:config.train.num_vis]
     y_vis_train = y[:config.train.num_vis]
     z_vis_train = z[:config.train.num_vis]
+    xy_vis_train = xy[:config.train.num_vis]
+    xz_vis_train = xz[:config.train.num_vis]
     
-    x, y, z = next(iter(dl_valid))
+    x, y, z, xy, xz = next(iter(dl_valid))
     x_vis_valid = x[:config.valid.num_vis]
     y_vis_valid = y[:config.valid.num_vis]
     z_vis_valid = z[:config.valid.num_vis]
+    xy_vis_valid = xy[:config.valid.num_vis]
+    xz_vis_valid = xz[:config.valid.num_vis]
 
 
     ##################################
@@ -371,10 +377,12 @@ def train(config=None):
         epoch_correct = 0
 
 
-        for x, y_true, z_true in pbar:
+        for x, y_true, z_true, xy, xz in pbar:
             x = x.to(device)
             y_true = y_true.to(device)
             z_true = z_true.to(device)
+            xy = xy.to(device)
+            xz = xz.to(device)
 
             #optimizer.zero_grad()
             # way faster than optimizer.zero_grad()
@@ -391,7 +399,7 @@ def train(config=None):
             z_one_hot = F.one_hot(z_true, num_classes=10)
             loss_margin = (func_margin_loss(u_h, y_one_hot) + func_margin_loss(u_h, z_one_hot)) / 2
             loss_margin = loss_margin * config.loss.margin.weight
-            loss_rec = (func_rec_loss(x, x_rec_y) + func_rec_loss(x, x_rec_z)) / 2
+            loss_rec = (func_rec_loss(xy, x_rec_y) + func_rec_loss(xz, x_rec_z)) / 2
             loss_rec = loss_rec * config.loss.rec.weight
 
             # Total Loss
@@ -455,20 +463,52 @@ def train(config=None):
         if (epoch_idx % config.freqs.rec == 0) or (config.train.num_epochs == epoch_idx):
 
             img_train = create_reconstruction_grid_img(
-                model, device, x_vis_train, y_vis_train, z_vis_train)
+                model, device, x_vis_train, y_vis_train, z_vis_train, xy_vis_train, xz_vis_train)
             img_valid = create_reconstruction_grid_img(
-                model, device, x_vis_valid, y_vis_valid, z_vis_train)
+                model, device, x_vis_valid, y_vis_valid, z_vis_valid, xy_vis_valid, xz_vis_valid)
 
+            y_ticks = ['img',
+                       'ref img 1',
+                       'img rec 1 by argmax', 
+                       'img rec 1 by class', 
+                       'delta x rec 1',
+                       'ref img 2',
+                       'img rec 2 by argmax', 
+                       'img rec 2 by class', 
+                       'delta x rec 2']
+            
+            x_ticks = torch.transpose(torch.cat((torch.unsqueeze(y_vis_train,dim=0), torch.unsqueeze(z_vis_train,dim=0)),dim=0), 0, 1).tolist()
+            fig, ax = plt.subplots()
+            fig.tight_layout()
+            ax.imshow(img_train.permute((1,2,0)))
+            ax.set_yticks((np.arange(len(y_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=y_ticks)
+            ax.set_xticks((np.arange(len(x_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=x_ticks)
+            fig.savefig(p_imgs / "img_train_{:03d}.png".format(epoch_idx))
+            fig.tight_layout()
+            plt.close()
+
+            x_ticks = torch.transpose(torch.cat((torch.unsqueeze(y_vis_valid,dim=0), torch.unsqueeze(z_vis_valid,dim=0)),dim=0), 0, 1).tolist()
+            fig, ax = plt.subplots()
+            fig.tight_layout()
+            ax.imshow(img_valid.permute((1,2,0)))
+            ax.set_yticks((np.arange(len(y_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=y_ticks)
+            ax.set_xticks((np.arange(len(x_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=x_ticks)
+            fig.savefig(p_imgs / "img_valid_{:03d}.png".format(epoch_idx))
+            fig.tight_layout()
+            plt.close()
+
+
+            """
             plt.imshow(img_train.permute(1,2,0))
             plt.tight_layout()
             plt.savefig(p_imgs / "img_train_{:03d}.png".format(epoch_idx))
             plt.tight_layout()
-            plt.close()
+
 
             plt.imshow(img_valid.permute(1,2,0))
             plt.savefig(p_imgs / "img_valid_{:03d}.png".format(epoch_idx))
             plt.close()
-
+            """
 
             sw.add_image("train/rec", img_train, epoch_idx)
             sw.add_image("valid/rec", img_valid, epoch_idx)

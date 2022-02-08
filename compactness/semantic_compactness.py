@@ -190,8 +190,10 @@ def sem_comp(conf):
                     uh_aff_th = uh_aff[:,y[i]]
                     #Variance over each dimension
                     var_uh_aff = torch.var(uh_aff_th, dim=0)
+                    #Variance normalized
+                    nor_uh_aff = var_uh_aff / var_uh_aff.sum()
                     #Kullback-Leibler-Divergenz
-                    kl = (var_uh_aff * torch.log((var_uh_aff)))
+                    kl = (var_uh_aff * torch.log(nor_uh_aff))
                     kl_div.append(kl.tolist())
                 else:
                     #Covariance from Caps
@@ -255,10 +257,10 @@ if __name__ == "__main__":
     config = {
         'model': model, #MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R,
         "path" : {
-            #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistCNN_CR_2022_02_03_05_27_20",
-            #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistCNN_CR_SF_2022_02_03_02_41_40",
-            "p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistCNN_R_2022_02_04_01_02_39",
-            #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistEffCapsNet_2022_02_03_00_32_47",
+            #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistCNN_CR_2022_02_06_17_49_47",
+            #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistCNN_CR_SF_2022_02_06_17_49_16",
+            "p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistCNN_R_2022_02_06_17_51_14",
+            #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistEffCapsNet_2022_02_06_17_48_52",
             "p_ckpts": "ckpts",
             "p_model": "model_150.ckpt",
             "p_data" : "/mnt/data/datasets",

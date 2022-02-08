@@ -106,7 +106,7 @@ def conf():
                 'weight': 1.0
             },
             'rec': {
-                'weight': 0.392,
+                'weight': 0., #0.392,
                 'by_class': True
             }
         },
@@ -131,7 +131,7 @@ if __name__ == '__main__':
     c1.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c1.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
     train(c1)
     time.sleep(1)
-
+    
     c2 = conf()
     c2.train.batch_size = 16
     c2.valid.batch_size = 16
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     c2.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c2.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
     train(c2)
     time.sleep(1)
-
+    
     c3 = conf()
     c3.train.batch_size = 16
     c3.valid.batch_size = 16
@@ -157,6 +157,7 @@ if __name__ == '__main__':
     c4.model = 'MnistCNN_R' #MnistEffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
     c4.names.model_dir = 'effcn_mnist_{a}_{b}'.format(a = c4.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
     train(c4)
+    
 
 
 

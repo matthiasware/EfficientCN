@@ -65,18 +65,20 @@ class MultiMNist(Dataset):
         self.mnist_idx_1, self.mnist_idx_2, self.padding_1, self.padding_2 = self.__load_meta__()
 
     def __getitem__(self, mmn_idx):
-        x = self.__mm_clamp__(mmn_idx)
+        x, xy, xz = self.__mm_clamp__(mmn_idx)
         y = self.labels[self.mnist_idx_1[mmn_idx]]
         z = self.labels[self.mnist_idx_2[mmn_idx]]
         
         if self.transform is not None:
             x = self.transform(x)
-            
+            xy = self.transform(xy)
+            xz = self.transform(xz)
+
         if self.target_transform is not None:
             y = self.target_transform(y)
             z = self.target_transform(z)
         
-        return x, y, z
+        return x, y, z, xy, xz
     
     def __len__(self):
         return len(self.mnist_idx_1)
@@ -114,7 +116,7 @@ class MultiMNist(Dataset):
         base  = T.Pad(padding=self.padding_1[mmn_idx])(self.mnist_ds[self.mnist_idx_1[mmn_idx]][0])
         top   = T.Pad(padding=self.padding_2[mmn_idx])(self.mnist_ds[self.mnist_idx_2[mmn_idx]][0])
         merge = torch.clamp(base + top, min=0, max=1)
-        return merge
+        return merge, base, top
 
     def __generator__(self,g_samples=[1000,1000]):
         #mnist
@@ -157,6 +159,7 @@ class MultiMNist(Dataset):
         for k in all_label:
             top_idx.append(np.where(labels != k)[0])
 
+
         #generate merging labels
         for j, label in enumerate(labels):
             list_top = np.random.choice(top_idx[label.item()],n,replace=False).tolist()
@@ -193,7 +196,7 @@ class MultiMNist(Dataset):
 if __name__ == '__main__':
     print('example')
 
-    A = MultiMNist(root='/mnt/data/datasets/multimnist_test',train=True, generate=True, g_samples=[10,10])
+    A = MultiMNist(root='/mnt/data/datasets/multimnist_test',train=True, generate=True, g_samples=[1,1])
 
     print(A)
     print(A[0]) 
