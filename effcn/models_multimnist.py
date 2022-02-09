@@ -86,6 +86,9 @@ class MultiMnistEffCapsNet(nn.Module):
         self.decoder1 = MultiMnistEcnDecoder()
         self.decoder2 = MultiMnistEcnDecoder()
 
+        #initializer
+        self.initialize_weights()
+
     def forward(self, x, y_true=None, z_true=None):
         """
             IN:
@@ -115,3 +118,21 @@ class MultiMnistEffCapsNet(nn.Module):
         x_rec_z = self.decoder2(u_h_masked_z)
 
         return u_h, x_rec_y, x_rec_z
+
+    def initialize_weights(self):
+        #initialize backbone
+        nn.init.kaiming_uniform_(self.backbone.layers[0].weight, a=0, mode='fan_in', nonlinearity='relu')
+        nn.init.kaiming_uniform_(self.backbone.layers[3].weight, a=0, mode='fan_in', nonlinearity='relu')
+        nn.init.kaiming_uniform_(self.backbone.layers[6].weight, a=0, mode='fan_in', nonlinearity='relu')
+        nn.init.kaiming_uniform_(self.backbone.layers[9].weight, a=0, mode='fan_in', nonlinearity='relu')
+
+        #initialize decoder1
+        nn.init.kaiming_uniform_(self.decoder1.layers[0].weight, a=0, mode='fan_in', nonlinearity='relu')
+        nn.init.kaiming_uniform_(self.decoder1.layers[2].weight, a=0, mode='fan_in', nonlinearity='relu')
+        torch.nn.init.xavier_normal_(self.decoder1.layers[4].weight)
+
+        #initialize decoder1
+        nn.init.kaiming_uniform_(self.decoder2.layers[0].weight, a=0, mode='fan_in', nonlinearity='relu')
+        nn.init.kaiming_uniform_(self.decoder2.layers[2].weight, a=0, mode='fan_in', nonlinearity='relu')
+        torch.nn.init.xavier_normal_(self.decoder2.layers[4].weight)
+

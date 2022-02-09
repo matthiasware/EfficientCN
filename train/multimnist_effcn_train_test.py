@@ -133,12 +133,12 @@ def eval_model(model, device, data_loader, config, func_margin, func_rec):
             y_one_hot = F.one_hot(y_true, num_classes=10)
             z_one_hot = F.one_hot(z_true, num_classes=10)
             loss_margin = (func_margin(u_h, y_one_hot) + func_margin(u_h, z_one_hot)) / 2
-            loss_margin = loss_margin * config.loss.margin.weight
-            loss_rec = (func_rec(x, x_rec_y) + func_rec(x, x_rec_z)) / 2
-            loss_rec = loss_rec * config.loss.rec.weight
+            #loss_margin = loss_margin * config.loss.margin.weight
+            #loss_rec = (func_rec(x, x_rec_y) + func_rec(x, x_rec_z)) / 2
+            #loss_rec = loss_rec * config.loss.rec.weight
 
             # Total Loss
-            loss = loss_margin + loss_rec
+            loss = loss_margin #+ loss_rec
 
             # validate batch
             yz_pred = torch.topk(torch.norm(u_h, dim=2), k=2, dim=1).indices
