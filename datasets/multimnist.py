@@ -196,10 +196,11 @@ class MultiMNist(Dataset):
 if __name__ == '__main__':
     print('example')
 
-    A = MultiMNist(root='/mnt/data/datasets/multimnist_test',train=True, generate=True, g_samples=[1,1])
+    A = MultiMNist(root='/mnt/data/datasets/multimnist_100',train=True, generate=True, g_samples=[100,100])
 
     print(A)
     print(A[0]) 
+    print(A.__len__())
 
 
 

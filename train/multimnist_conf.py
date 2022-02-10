@@ -30,9 +30,9 @@ def conf():
     transform_valid = None
 
     batch_size = 64
-    num_epochs = 150
+    num_epochs = 10 #150
     num_workers = 2
-    leraning_rate = 1e-4
+    leraning_rate = 5e-4
 
     config = {
         'device': 'cuda:0',
@@ -72,7 +72,7 @@ def conf():
             'ckpt': 10,   # [epochs]
         },
         'paths': {
-            'data': '/mnt/data/datasets/multimnist_10',
+            'data': '/mnt/data/datasets/multimnist_100',
             'experiments': '/mnt/data/experiments/EfficientCN/multimnist',
         },
         'names': {
@@ -110,26 +110,28 @@ if __name__ == '__main__':
     #print(conf())
 
     #train(conf())
-
+    """
     c1 = conf()
     c1.train.batch_size = 64
     c1.valid.batch_size = 64
     c1.optimizer_args.lr = 5e-5
     train(c1)
     time.sleep(1)
-
+    """
     c2 = conf()
     c2.train.batch_size = 64
     c2.valid.batch_size = 64
     c2.optimizer_args.lr = 1e-4
+    c2.freqs.ckpt = 1
     train(c2)
-    time.sleep(1)
-    
+    """
     c3 = conf()
     c3.train.batch_size = 1064
     c3.valid.batch_size = 1064
-    c3.optimizer_args.lr = 1e-4
+    c3.optimizer_args.lr = 1e-3
+    c3.freqs.ckpt = 1
     train(c3)
+    """
     #time.sleep(1)
     
     #c4 = conf()

@@ -26,7 +26,7 @@ from tqdm import tqdm
 from dotted_dict import DottedDict
 
 # local imports
-from effcn.models_multimnist import MultiMnistEffCapsNet
+from effcn.models_multimnist import MultiMnistEffCapsNet, MultiMnistEffCapsNet2
 from effcn.functions import create_margin_loss
 from effcn.utils import count_parameters
 from datasets.multimnist import MultiMNist
@@ -41,7 +41,7 @@ def default():
     transform_valid = None
 
     batch_size = 1000
-    num_epochs = 100
+    num_epochs = 20
     num_workers = 2
     leraning_rate = 1e-4
 
@@ -109,7 +109,7 @@ def default():
                 'by_class': True
             }
         },
-        'stop_acc': 0.9973
+        'stop_acc': 1.1#0.9973
     }
 
     config = DottedDict(config)
@@ -291,7 +291,8 @@ def train(config=None):
     #Train Model
 
     #Model
-    model = MultiMnistEffCapsNet()
+    #model = MultiMnistEffCapsNet()
+    model = MultiMnistEffCapsNet2()
     model = model.to(device)
 
     # optimizer
@@ -458,60 +459,6 @@ def train(config=None):
         if (epoch_idx % config.freqs.ckpt == 0) or (config.train.num_epochs == epoch_idx):
             p_ckpt = p_ckpts / config.names.model_file.format(epoch_idx)
             torch.save(model.state_dict(), p_ckpt)    
-        
-        #Generate and save grids
-        if (epoch_idx % config.freqs.rec == 0) or (config.train.num_epochs == epoch_idx):
-
-            img_train = create_reconstruction_grid_img(
-                model, device, x_vis_train, y_vis_train, z_vis_train, xy_vis_train, xz_vis_train)
-            img_valid = create_reconstruction_grid_img(
-                model, device, x_vis_valid, y_vis_valid, z_vis_valid, xy_vis_valid, xz_vis_valid)
-
-            y_ticks = ['img',
-                       'ref img 1',
-                       'img rec 1 by argmax', 
-                       'img rec 1 by class', 
-                       'delta x rec 1',
-                       'ref img 2',
-                       'img rec 2 by argmax', 
-                       'img rec 2 by class', 
-                       'delta x rec 2']
-            
-            x_ticks = torch.transpose(torch.cat((torch.unsqueeze(y_vis_train,dim=0), torch.unsqueeze(z_vis_train,dim=0)),dim=0), 0, 1).tolist()
-            fig, ax = plt.subplots()
-            fig.tight_layout()
-            ax.imshow(img_train.permute((1,2,0)))
-            ax.set_yticks((np.arange(len(y_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=y_ticks)
-            ax.set_xticks((np.arange(len(x_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=x_ticks)
-            fig.savefig(p_imgs / "img_train_{:03d}.png".format(epoch_idx))
-            fig.tight_layout()
-            plt.close()
-
-            x_ticks = torch.transpose(torch.cat((torch.unsqueeze(y_vis_valid,dim=0), torch.unsqueeze(z_vis_valid,dim=0)),dim=0), 0, 1).tolist()
-            fig, ax = plt.subplots()
-            fig.tight_layout()
-            ax.imshow(img_valid.permute((1,2,0)))
-            ax.set_yticks((np.arange(len(y_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=y_ticks)
-            ax.set_xticks((np.arange(len(x_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=x_ticks)
-            fig.savefig(p_imgs / "img_valid_{:03d}.png".format(epoch_idx))
-            fig.tight_layout()
-            plt.close()
-
-
-            """
-            plt.imshow(img_train.permute(1,2,0))
-            plt.tight_layout()
-            plt.savefig(p_imgs / "img_train_{:03d}.png".format(epoch_idx))
-            plt.tight_layout()
-
-
-            plt.imshow(img_valid.permute(1,2,0))
-            plt.savefig(p_imgs / "img_valid_{:03d}.png".format(epoch_idx))
-            plt.close()
-            """
-
-            sw.add_image("train/rec", img_train, epoch_idx)
-            sw.add_image("valid/rec", img_valid, epoch_idx)
 
         #Validation loop
         if (epoch_idx % config.freqs.valid == 0) or (config.train.num_epochs == epoch_idx):
@@ -534,6 +481,49 @@ def train(config=None):
                 print(print_str)
                 stats["notes"].append(print_str)
                 stop_run = True
+
+        #Generate and save grids
+        if (epoch_idx % config.freqs.rec == 0) or (config.train.num_epochs == epoch_idx):
+
+            img_train = create_reconstruction_grid_img(
+                model, device, x_vis_train, y_vis_train, z_vis_train, xy_vis_train, xz_vis_train)
+            img_valid = create_reconstruction_grid_img(
+                model, device, x_vis_valid, y_vis_valid, z_vis_valid, xy_vis_valid, xz_vis_valid)
+
+            y_ticks = ['img',
+                       'ref img 1',
+                       'img rec 1 by argmax', 
+                       'img rec 1 by class', 
+                       'delta img rec 1',
+                       'ref img 2',
+                       'img rec 2 by argmax', 
+                       'img rec 2 by class', 
+                       'delta img rec 2']
+            
+            x_ticks = torch.transpose(torch.cat((torch.unsqueeze(y_vis_train,dim=0), torch.unsqueeze(z_vis_train,dim=0)),dim=0), 0, 1).tolist()
+            fig, ax = plt.subplots()
+            fig.tight_layout()
+            ax.imshow(img_train.permute((1,2,0)))
+            ax.set_yticks((np.arange(len(y_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=y_ticks)
+            ax.set_xticks((np.arange(len(x_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=x_ticks)
+            fig.suptitle('epoch {} train acc: {}'.format(epoch_idx, (epoch_correct / len(ds_train))))
+            fig.tight_layout()
+            fig.savefig(p_imgs / "img_train_{:03d}.png".format(epoch_idx))
+            plt.close()
+
+            x_ticks = torch.transpose(torch.cat((torch.unsqueeze(y_vis_valid,dim=0), torch.unsqueeze(z_vis_valid,dim=0)),dim=0), 0, 1).tolist()
+            fig, ax = plt.subplots()
+            fig.tight_layout()
+            ax.imshow(img_valid.permute((1,2,0)))
+            ax.set_yticks((np.arange(len(y_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=y_ticks)
+            ax.set_xticks((np.arange(len(x_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=x_ticks)
+            fig.suptitle('epoch {} valid acc: {}'.format(epoch_idx, acc_valid))
+            fig.tight_layout()
+            fig.savefig(p_imgs / "img_valid_{:03d}.png".format(epoch_idx))
+            plt.close()
+
+            sw.add_image("train/rec", img_train, epoch_idx)
+            sw.add_image("valid/rec", img_valid, epoch_idx)
 
         if stop_run:
             break
