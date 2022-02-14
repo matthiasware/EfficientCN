@@ -71,7 +71,7 @@ if __name__ == '__main__':
             y_pred = model(x_train)
             loss = loss_func(y_pred, y_train)         
             loss.backward()
-            return loss, y_pred
+            return loss, y_pred, 1
 
         loss, y_predict = optimizer.step(closure)
         

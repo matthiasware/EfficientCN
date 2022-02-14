@@ -9,6 +9,7 @@ import pickle
 import pprint
 from pathlib import Path
 import math
+import argparse
 
 
 # third party libraries
@@ -26,7 +27,7 @@ from tqdm import tqdm
 from dotted_dict import DottedDict
 
 # local imports
-from effcn.models_multimnist import MultiMnistEffCapsNet
+from effcn.models_multimnist import MultiMnistEffCapsNet, MultiMnistEffCapsNet2
 from effcn.functions import create_margin_loss
 from effcn.utils import count_parameters
 from datasets.multimnist import MultiMNist
@@ -37,12 +38,13 @@ torch.backends.cudnn.benchmark = True
 
 def default():
     #Tranformations
-    transform_train = T.ToTensor()
-    transform_valid = T.ToTensor()
+    transform_train = None
+    transform_valid = None
 
-    batch_size = 64
-    num_epochs = 100
+    batch_size = 1000
+    num_epochs = 20
     num_workers = 2
+    leraning_rate = 1e-4
 
     config = {
         'device': 'cuda:0',
@@ -51,14 +53,14 @@ def default():
             'batch_size': batch_size,
             'num_epochs': num_epochs,
             'num_workers': num_workers,
-            'num_vis': 8,
+            'num_vis': 16,
             'pin_memory': True,
             'transform' : transform_train,
         },
         'valid': {
             'num_workers': num_workers,       # Either set num_worker high or pin_memory=True
             'batch_size': batch_size,
-            'num_vis': 8,
+            'num_vis': 16,
             'pin_memory': True,
             'transform' : transform_valid,
         },
@@ -68,7 +70,7 @@ def default():
         },
         'optimizer': 'adam',
         'optimizer_args': {
-            'lr': 5e-4,
+            'lr': leraning_rate,
             'weight_decay': 0.,
         },
         'scheduler': 'exponential_decay',
@@ -82,8 +84,8 @@ def default():
             'ckpt': 10,   # [epochs]
         },
         'paths': {
-            'data': '/mnt/data/datasets/multimnist_test',
-            'experiments': '/mnt/data/experiments/EfficientCN/multimnist',
+            'data': '/mnt/data/datasets/multimnist_overfit',
+            'experiments': '/mnt/data/experiments/EfficientCN/multimnist_overfit',
         },
         'names': {
             'model_dir': 'effcn_multimnist_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
@@ -108,7 +110,7 @@ def default():
                 'by_class': True
             }
         },
-        'stop_acc': 0.9973
+        'stop_acc': 1.1#0.9973
     }
 
     config = DottedDict(config)
@@ -120,27 +122,24 @@ def eval_model(model, device, data_loader, config, func_margin, func_rec):
     epoch_correct = 0
     epoch_total = 0
 
-    for x, y_true, z_true in data_loader:
+    for x, y_true, z_true, xy, xz in data_loader:
         x = x.to(device)
         y_true = y_true.to(device)
         z_true = z_true.to(device)
 
         with torch.no_grad():
-            if config.loss.rec.by_class == True:
-                u_h, x_rec_y, x_rec_z = model.forward(x, y_true, z_true)
-            else:
-                u_h, x_rec_y, x_rec_z = model.forward(x)
+            u_h, x_rec_y, x_rec_z = model.forward(x)
 
             # Margin & Reconstruction Loss
             y_one_hot = F.one_hot(y_true, num_classes=10)
             z_one_hot = F.one_hot(z_true, num_classes=10)
             loss_margin = (func_margin(u_h, y_one_hot) + func_margin(u_h, z_one_hot)) / 2
-            loss_margin = loss_margin * config.loss.margin.weight
-            loss_rec = (func_rec(x, x_rec_y) + func_rec(x, x_rec_z)) / 2
-            loss_rec = loss_rec * config.loss.rec.weight
+            #loss_margin = loss_margin * config.loss.margin.weight
+            #loss_rec = (func_rec(x, x_rec_y) + func_rec(x, x_rec_z)) / 2
+            #loss_rec = loss_rec * config.loss.rec.weight
 
             # Total Loss
-            loss = loss_margin + loss_rec
+            loss = loss_margin #+ loss_rec
 
             # validate batch
             yz_pred = torch.topk(torch.norm(u_h, dim=2), k=2, dim=1).indices
@@ -158,7 +157,7 @@ def eval_model(model, device, data_loader, config, func_margin, func_rec):
     epoch_acc = epoch_correct / epoch_total
     return epoch_loss, epoch_acc
 
-def create_reconstruction_grid_img(model, device, x, y, z, permute=False):
+def create_reconstruction_grid_img(model, device, x, y, z, xy, xz, permute=False):
     model.eval()
     with torch.no_grad():
         _, x_rec1,x_rec2 = model.forward(x.to(device))
@@ -169,10 +168,12 @@ def create_reconstruction_grid_img(model, device, x, y, z, permute=False):
     x_rec_y2 = x_rec_y2.cpu()
     scal = lambda x: (x-x.min())/(x.max()-x.min())
     img = torchvision.utils.make_grid(
-        torch.cat([scal(x), 
+        torch.cat([scal(x),
+                    scal(xy), 
                     scal(x_rec1),
                     scal(x_rec_y1),
                     scal((x_rec1 - x_rec_y1)),
+                    scal(xz),
                     scal(x_rec2),
                     scal(x_rec_y2), 
                     scal((x_rec2-x_rec_y2))], dim=0), nrow=x.shape[0])
@@ -255,7 +256,7 @@ def train(config=None):
     #load Dataset
     ds_train = MultiMNist(root=p_data,train=True, transform=transform_train, generate=config.gen.generate, g_samples=config.gen.num)
     ds_valid = MultiMNist(root=p_data,train=False, transform=transform_valid)
-    
+
     #stack data to batches
     dl_train = torch.utils.data.DataLoader(ds_train, 
                                         batch_size=config.train.batch_size, 
@@ -272,22 +273,27 @@ def train(config=None):
     
     
     # Data for visualization of the img reconstructions
-    x, y, z = next(iter(dl_train))
+    x, y, z, xy, xz = next(iter(dl_train))
     x_vis_train = x[:config.train.num_vis]
     y_vis_train = y[:config.train.num_vis]
     z_vis_train = z[:config.train.num_vis]
+    xy_vis_train = xy[:config.train.num_vis]
+    xz_vis_train = xz[:config.train.num_vis]
     
-    x, y, z = next(iter(dl_valid))
+    x, y, z, xy, xz = next(iter(dl_valid))
     x_vis_valid = x[:config.valid.num_vis]
     y_vis_valid = y[:config.valid.num_vis]
     z_vis_valid = z[:config.valid.num_vis]
+    xy_vis_valid = xy[:config.valid.num_vis]
+    xz_vis_valid = xz[:config.valid.num_vis]
 
 
     ##################################
     #Train Model
 
     #Model
-    model = MultiMnistEffCapsNet()
+    #model = MultiMnistEffCapsNet()
+    model = MultiMnistEffCapsNet2()
     model = model.to(device)
 
     # optimizer
@@ -373,10 +379,12 @@ def train(config=None):
         epoch_correct = 0
 
 
-        for x, y_true, z_true in pbar:
+        for x, y_true, z_true, xy, xz in pbar:
             x = x.to(device)
             y_true = y_true.to(device)
             z_true = z_true.to(device)
+            xy = xy.to(device)
+            xz = xz.to(device)
 
             #optimizer.zero_grad()
             # way faster than optimizer.zero_grad()
@@ -393,7 +401,7 @@ def train(config=None):
             z_one_hot = F.one_hot(z_true, num_classes=10)
             loss_margin = (func_margin_loss(u_h, y_one_hot) + func_margin_loss(u_h, z_one_hot)) / 2
             loss_margin = loss_margin * config.loss.margin.weight
-            loss_rec = (func_rec_loss(x, x_rec_y) + func_rec_loss(x, x_rec_z)) / 2
+            loss_rec = (func_rec_loss(xy, x_rec_y) + func_rec_loss(xz, x_rec_z)) / 2
             loss_rec = loss_rec * config.loss.rec.weight
 
             # Total Loss
@@ -452,28 +460,6 @@ def train(config=None):
         if (epoch_idx % config.freqs.ckpt == 0) or (config.train.num_epochs == epoch_idx):
             p_ckpt = p_ckpts / config.names.model_file.format(epoch_idx)
             torch.save(model.state_dict(), p_ckpt)    
-        
-        #Generate and save grids
-        if (epoch_idx % config.freqs.rec == 0) or (config.train.num_epochs == epoch_idx):
-
-            img_train = create_reconstruction_grid_img(
-                model, device, x_vis_train, y_vis_train, z_vis_train)
-            img_valid = create_reconstruction_grid_img(
-                model, device, x_vis_valid, y_vis_valid, z_vis_train)
-
-            plt.imshow(img_train.permute(1,2,0))
-            plt.tight_layout()
-            plt.savefig(p_imgs / "img_train_{:03d}.png".format(epoch_idx))
-            plt.tight_layout()
-            plt.close()
-
-            plt.imshow(img_valid.permute(1,2,0))
-            plt.savefig(p_imgs / "img_valid_{:03d}.png".format(epoch_idx))
-            plt.close()
-
-
-            sw.add_image("train/rec", img_train, epoch_idx)
-            sw.add_image("valid/rec", img_valid, epoch_idx)
 
         #Validation loop
         if (epoch_idx % config.freqs.valid == 0) or (config.train.num_epochs == epoch_idx):
@@ -497,6 +483,49 @@ def train(config=None):
                 stats["notes"].append(print_str)
                 stop_run = True
 
+        #Generate and save grids
+        if (epoch_idx % config.freqs.rec == 0) or (config.train.num_epochs == epoch_idx):
+
+            img_train = create_reconstruction_grid_img(
+                model, device, x_vis_train, y_vis_train, z_vis_train, xy_vis_train, xz_vis_train)
+            img_valid = create_reconstruction_grid_img(
+                model, device, x_vis_valid, y_vis_valid, z_vis_valid, xy_vis_valid, xz_vis_valid)
+
+            y_ticks = ['img',
+                       'ref img 1',
+                       'img rec 1 by argmax', 
+                       'img rec 1 by class', 
+                       'delta img rec 1',
+                       'ref img 2',
+                       'img rec 2 by argmax', 
+                       'img rec 2 by class', 
+                       'delta img rec 2']
+            
+            x_ticks = torch.transpose(torch.cat((torch.unsqueeze(y_vis_train,dim=0), torch.unsqueeze(z_vis_train,dim=0)),dim=0), 0, 1).tolist()
+            fig, ax = plt.subplots()
+            fig.tight_layout()
+            ax.imshow(img_train.permute((1,2,0)))
+            ax.set_yticks((np.arange(len(y_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=y_ticks)
+            ax.set_xticks((np.arange(len(x_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=x_ticks)
+            fig.suptitle('epoch {} train acc: {}'.format(epoch_idx, (epoch_correct / len(ds_train))))
+            fig.tight_layout()
+            fig.savefig(p_imgs / "img_train_{:03d}.png".format(epoch_idx))
+            plt.close()
+
+            x_ticks = torch.transpose(torch.cat((torch.unsqueeze(y_vis_valid,dim=0), torch.unsqueeze(z_vis_valid,dim=0)),dim=0), 0, 1).tolist()
+            fig, ax = plt.subplots()
+            fig.tight_layout()
+            ax.imshow(img_valid.permute((1,2,0)))
+            ax.set_yticks((np.arange(len(y_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=y_ticks)
+            ax.set_xticks((np.arange(len(x_ticks))*(x.shape[-1]+2)+(x.shape[-1]/2)), labels=x_ticks)
+            fig.suptitle('epoch {} valid acc: {}'.format(epoch_idx, acc_valid))
+            fig.tight_layout()
+            fig.savefig(p_imgs / "img_valid_{:03d}.png".format(epoch_idx))
+            plt.close()
+
+            sw.add_image("train/rec", img_train, epoch_idx)
+            sw.add_image("valid/rec", img_valid, epoch_idx)
+
         if stop_run:
             break
 
@@ -515,7 +544,86 @@ def train(config=None):
      
 
 if __name__ == '__main__':
-    
-    #run train with default settings
-    train()
-    print("fi9ne")
+    parser = argparse.ArgumentParser(description='Run Efficient CapsNet on MultiMNIST')
+    parser.add_argument('--lr', type=float, default=0.0001, metavar='', required=False, help='learning rate')
+    parser.add_argument('--bs', type=int, default=64, metavar='', required=False, help='batch size')
+    parser.add_argument('--num_epochs', type=int, default=150, metavar='', required=False, help='number of training epochs')
+    parser.add_argument('--weight_decay', type=float, default=0, metavar='', required=False, help='weight decay while training')
+    parser.add_argument('--loss_weight_rec', type=float, default=0.392, metavar='', required=False, help='weight of reconstruction loss')
+    parser.add_argument('--device', type=str, default='cuda:0', metavar='', required=False, help='device')
+    parser.add_argument('--p_data', type=str, default='/mnt/data/datasets/multimnist', metavar='', required=False, help='path of dataset')
+    parser.add_argument('--p_experiment', type=str, default='/mnt/data/experiments/EfficientCN/multimnist', metavar='', required=False, help='path of experiment')
+    parser.add_argument('--ds_gen', type=bool, default=False, metavar='', required=False, help='generate dataset')
+    parser.add_argument('--ds_size', type=list, default=[1000,1000], metavar='', required=False, help='Number of generated multimatch Imgs via MNIST Img')
+    args = parser.parse_args()
+
+
+    config = {
+        'device': args.device,
+        'debug': True,
+        'train': {
+            'batch_size': args.bs,
+            'num_epochs': args.num_epochs,
+            'num_workers': 2,
+            'num_vis': 8,
+            'pin_memory': True,
+            'transform' : None,
+        },
+        'valid': {
+            'num_workers': 2,       # Either set num_worker high or pin_memory=True
+            'batch_size': args.bs,
+            'num_vis': 8,
+            'pin_memory': True,
+            'transform' : None,
+        },
+        'gen': {
+            'generate': args.ds_gen,       
+            'num': args.ds_size
+        },
+        'optimizer': 'adam',
+        'optimizer_args': {
+            'lr': args.lr,
+            'weight_decay': args.weight_decay,
+        },
+        'scheduler': 'exponential_decay',
+        'scheduler_burnin': 10,  # [epochs]
+        'scheduler_args': {
+            'gamma': 0.97
+        },
+        'freqs': {
+            'valid': 1,   # [epochs]
+            'rec': 1,     # [epochs] show reconstructions
+            'ckpt': 10,   # [epochs]
+        },
+        'paths': {
+            'data': args.p_data,
+            'experiments': args.p_experiment,
+        },
+        'names': {
+            'model_dir': 'effcn_multimnist_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'ckpt_dir': 'ckpts',
+            'img_dir': 'imgs',
+            'log_dir': 'logs',
+            'model_file': 'model_{}.ckpt',
+            'stats_file': 'stats.pkl',
+            'config_file': 'config.pkl',
+            'acc_plot': 'acc.png',
+            'loss_plot': 'loss.png',
+        },
+        'loss': {
+            'margin': {
+                'lbd': 0.5,
+                'm_plus': 0.9,
+                'm_minus': 0.1,
+                'weight': 1.0
+            },
+            'rec': {
+                'weight': args.loss_weight_rec,
+                'by_class': True
+            }
+        },
+        'stop_acc': 0.9973
+    }
+
+    config = DottedDict(config)
+    train(config)

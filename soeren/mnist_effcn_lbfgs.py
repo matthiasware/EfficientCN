@@ -23,7 +23,7 @@ if torch.cuda.is_available():
     dev = "cuda:0" 
 else:  
     dev = "cpu"  
-# dev = 'cpu'
+dev = 'cpu'
 device = torch.device(dev)
 
 print("Using device: {}".format(device))
@@ -33,8 +33,8 @@ if __name__ == '__main__':
     ds_train = datasets.MNIST(root='./../data', train=True, download=True, transform=T.ToTensor())
     ds_valid = datasets.MNIST(root="./../data", train=False, download=True, transform=T.ToTensor())
 
-    batch_size_train = ds_train.__len__() // 20
-    batch_size_valid = ds_valid.__len__() // 20
+    batch_size_train = ds_train.__len__() // 1
+    batch_size_valid = ds_valid.__len__() // 1
     dl_train = torch.utils.data.DataLoader(ds_train, 
                                            batch_size=batch_size_train, 
                                            shuffle=False, 
@@ -86,7 +86,7 @@ if __name__ == '__main__':
                        
             y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
 
-            return loss, y_pred
+            return loss, y_pred, 1
 
         loss, y_predict = optimizer.step(closure)
         

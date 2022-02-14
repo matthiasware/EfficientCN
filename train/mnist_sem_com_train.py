@@ -15,6 +15,7 @@ import argparse
 # third party libraries
 import torch
 import torchvision
+import torchvision.datasets as datasets
 import torchvision.transforms as T
 import torch.nn as nn
 import torch.nn.functional as F
@@ -27,56 +28,62 @@ from tqdm import tqdm
 from dotted_dict import DottedDict
 
 # local imports
-from effcn.models_smallnorb import SmallNorbEffCapsNet
-from effcn.functions import create_margin_loss
+from effcn.models import MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R
+from effcn.functions import create_margin_loss, create_margin_loss_cnn_r
 from effcn.utils import count_parameters
-from datasets.smallnorb import SmallNORB
 from misc.optimizer import get_optimizer, get_scheduler
 
 # will most likely result in a 30% speed up
 torch.backends.cudnn.benchmark = True
 
+
+
 def default():
     #Tranformations
     transform_train = T.Compose([
-        T.ColorJitter(brightness= [0.5,1.], contrast=[0.5,1.], saturation=0, hue=0),
-        T.Resize(64),
-        T.RandomCrop(48),
-        T.Normalize(mean=[191.7811/255,193.0594/255,0],std=[45.2232/255, 44.2558/255,1]),
+        T.RandomAffine(
+            degrees=(-30, 30),
+            shear=(-30, 30),
+        ),
+        T.RandomResizedCrop(
+            28,
+            scale=(0.8, 1.2),
+            ratio=(1, 1),
+        ),
+        T.ToTensor()
     ])
     transform_valid = T.Compose([
-        T.Resize(64),
-        T.CenterCrop(48),        
-        T.Normalize(mean=[191.0684/255,192.0952/255,0],std=[45.4354/255, 44.3388/255,1]),        
+        T.ToTensor()
     ])
 
     batch_size = 16
-    num_epochs = 200
+    num_epochs = 150
     num_workers = 2
+    leraning_rate = 5e-4
+    model = 'MnistCNN_R' #MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R
 
     config = {
+        'model': model,
         'device': 'cuda:0',
         'debug': True,
         'train': {
             'batch_size': batch_size,
-            'num_epochs': 1,
+            'num_epochs': num_epochs,
             'num_workers': num_workers,
-            'num_vis': 8,
+            'num_vis': 16,
             'pin_memory': True,
             'transform' : transform_train,
-            'mode' : "pseudo"
         },
         'valid': {
             'num_workers': num_workers,       # Either set num_worker high or pin_memory=True
             'batch_size': batch_size,
-            'num_vis': 8,
+            'num_vis': 16,
             'pin_memory': True,
             'transform' : transform_valid,
-            'mode' : "pseudo"
         },
         'optimizer': 'adam',
         'optimizer_args': {
-            'lr': 5e-4,
+            'lr': leraning_rate,
             'weight_decay': 0.,
         },
         'scheduler': 'exponential_decay',
@@ -90,11 +97,11 @@ def default():
             'ckpt': 10,   # [epochs]
         },
         'paths': {
-            'data': '/mnt/data/datasets/smallnorb',
-            'experiments': '/mnt/data/experiments/EfficientCN/smallnorb',
+            'data': '/mnt/data/datasets',
+            'experiments': '/mnt/data/experiments/EfficientCN/mnist',
         },
         'names': {
-            'model_dir': 'effcn_smallnorb_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'model_dir': 'effcn_mnist_{a}_{b}'.format(a = model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
             'ckpt_dir': 'ckpts',
             'img_dir': 'imgs',
             'log_dir': 'logs',
@@ -128,30 +135,33 @@ def eval_model(model, device, data_loader, config, func_margin, func_rec):
     epoch_correct = 0
     epoch_total = 0
 
-    for x, y_true, _ in data_loader:
+    for x, y_true in data_loader:
         x = x.to(device)
         y_true = y_true.to(device)
 
         with torch.no_grad():
-            if config.loss.rec.by_class == True:
-                u_h, x_rec = model.forward(x, y_true)
-            else:
-                u_h, x_rec = model.forward(x)
+            u_h, x_rec_y = model.forward(x)
 
-            # LOSS
-            y_one_hot = F.one_hot(y_true, num_classes=5)
+            # Margin & Reconstruction Loss
+            y_one_hot = F.one_hot(y_true, num_classes=10)
             loss_margin = func_margin(u_h, y_one_hot)
-            loss_rec = func_rec(x, x_rec)
+            loss_margin = loss_margin * config.loss.margin.weight
+            loss_rec = func_rec(x, x_rec_y)
+            loss_rec = loss_rec * config.loss.rec.weight
 
-            # total loss
-            loss = (loss_margin * config.loss.margin.weight) + \
-                (loss_rec * config.loss.rec.weight)
+            # Total Loss
+            loss = loss_margin + loss_rec
 
             # validate batch
-            y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
+            if model.__class__.__name__ == "MnistCNN_R":
+                y_pred = torch.argmax(u_h, dim=1)
+            else:        
+                y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
+
+            correct = (y_true == y_pred).sum()
 
             epoch_loss += loss.item()
-            epoch_correct += (y_true == y_pred).sum().item()
+            epoch_correct += correct.item()
             epoch_total += x.shape[0]
     epoch_acc = epoch_correct / epoch_total
     return epoch_loss, epoch_acc
@@ -163,16 +173,13 @@ def create_reconstruction_grid_img(model, device, x, y, permute=False):
         _, x_rec_y = model.forward(x.to(device),y.to(device))
     x_rec = x_rec.cpu()
     x_rec_y = x_rec_y.cpu()
+
     scal = lambda x: (x-x.min())/(x.max()-x.min())
     img = torchvision.utils.make_grid(
-        torch.cat([scal(x[:,:1,:,:]), 
-                    scal(x_rec[:,:1,:,:]),
-                    scal(x_rec_y[:,:1,:,:]),
-                    scal((x_rec[:,:1,:,:] - x_rec_y[:,:1,:,:])),
-                    scal(x[:,1:2,:,:]), 
-                    scal(x_rec[:,1:2,:,:]),
-                    scal(x_rec_y[:,1:2,:,:]), 
-                    scal((x_rec[:,1:2,:,:]-x_rec_y[:,1:2,:,:]))], dim=0), nrow=x.shape[0])
+        torch.cat([scal(x), 
+                    scal(x_rec),
+                    scal(x_rec_y),
+                    scal((x_rec - x_rec_y))], dim=0), nrow=x.shape[0])
     if permute:
         img = img.permute(1, 2, 0)
     return img
@@ -228,7 +235,7 @@ def train(config=None):
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(config)
     
-    p_data = config.paths.data
+    p_data = Path(config.paths.data)
     p_experiment = Path(config.paths.experiments) / config.names.model_dir
     p_ckpts = p_experiment / config.names.ckpt_dir
     p_logs = p_experiment / config.names.log_dir
@@ -236,9 +243,15 @@ def train(config=None):
     p_stats = p_experiment / config.names.stats_file
     p_imgs = p_experiment / config.names.img_dir
     p_acc_plot = p_experiment / config.names.acc_plot
-    p_loss_plot = p_experiment / config.names.loss_plot    
+    p_loss_plot = p_experiment / config.names.loss_plot
 
-    
+
+    if (config.model != 'MnistCNN_R') and (config.model != 'MnistEffCapsNet') and (config.model != 'MnistCNN_CR_SF') and (config.model != 'MnistCNN_CR') :
+        print('Indicated model {} doesnt exist'.format(config.model))
+        exit()
+
+
+     
     device = torch.device(config.device)  
     
     ##################################
@@ -247,12 +260,13 @@ def train(config=None):
     #Tranformations
     transform_train = config.train.transform
     transform_valid = config.valid.transform
-    mode_train = config.train.mode
-    mode_valid = config.valid.mode
 
+    
     #load Dataset
-    ds_train = SmallNORB(root=p_data,train=True, download=True, transform=transform_train, mode=mode_train)
-    ds_valid = SmallNORB(root=p_data,train=False, download=True, transform=transform_valid, mode=mode_valid)
+
+    ds_train = datasets.MNIST(root=p_data, train=True, download=True, transform=transform_train)
+    ds_valid = datasets.MNIST(root=p_data, train=False, download=True, transform=transform_valid)
+
     
     #stack data to batches
     dl_train = torch.utils.data.DataLoader(ds_train, 
@@ -268,23 +282,30 @@ def train(config=None):
                                         pin_memory=config.valid.pin_memory,
                                         num_workers=config.valid.num_workers)
     
-
+   
     # Data for visualization of the img reconstructions
-    x, y, _ = next(iter(dl_train))
+    x, y = next(iter(dl_train))
     x_vis_train = x[:config.train.num_vis]
     y_vis_train = y[:config.train.num_vis]
+
     
-    x, y, _ = next(iter(dl_valid))
+    x, y = next(iter(dl_valid))
     x_vis_valid = x[:config.valid.num_vis]
     y_vis_valid = y[:config.valid.num_vis]
 
-  
 
     ##################################
     #Train Model
 
     #Model
-    model = SmallNorbEffCapsNet()
+    if config.model == 'MnistEffCapsNet':
+        model = MnistEffCapsNet()
+    elif config.model == 'MnistCNN_CR_SF':
+        model = MnistCNN_CR_SF()
+    elif config.model == 'MnistCNN_CR':
+        model = MnistCNN_CR()
+    elif config.model == 'MnistCNN_R':
+        model = MnistCNN_R()
     model = model.to(device)
 
     # optimizer
@@ -340,19 +361,24 @@ def train(config=None):
     print("#params:            {:,}".format(count_parameters(model)))
     print("#" * 100)
 
-
+    
     start = time.time()
     stop_run = False  # set if some event occurs
 
     # LOSS FUNCTIONS [create in advance for speed]
-    func_margin_loss = create_margin_loss(
-        lbd=config.loss.margin.lbd,
-        m_plus=config.loss.margin.m_plus,
-        m_minus=config.loss.margin.m_minus
-    )
+    if model.__class__.__name__ == "MnistCNN_R":
+        func_margin_loss = create_margin_loss_cnn_r(
+            lbd=config.loss.margin.lbd,
+            m_plus=config.loss.margin.m_plus,
+            m_minus=config.loss.margin.m_minus
+        )
+    else:
+        func_margin_loss = create_margin_loss(
+            lbd=config.loss.margin.lbd,
+            m_plus=config.loss.margin.m_plus,
+            m_minus=config.loss.margin.m_minus
+        )
     func_rec_loss = torch.nn.MSELoss()
-
-
 
     #best result
     best_acc = 0.
@@ -370,7 +396,7 @@ def train(config=None):
         epoch_correct = 0
 
 
-        for x, y_true, _ in pbar:
+        for x, y_true in pbar:
             x = x.to(device)
             y_true = y_true.to(device)
 
@@ -380,15 +406,15 @@ def train(config=None):
                 param.grad = None
             
             if config.loss.rec.by_class == True:
-                u_h, x_rec = model.forward(x, y_true)
+                u_h, x_rec_y= model.forward(x, y_true)
             else:
-                u_h, x_rec = model.forward(x)
+                u_h, x_rec_y = model.forward(x)
 
             # Margin & Reconstruction Loss
-            y_one_hot = F.one_hot(y_true, num_classes=5)
+            y_one_hot = F.one_hot(y_true, num_classes=10)
             loss_margin = func_margin_loss(u_h, y_one_hot)
             loss_margin = loss_margin * config.loss.margin.weight
-            loss_rec = func_rec_loss(x, x_rec)
+            loss_rec = func_rec_loss(x, x_rec_y)
             loss_rec = loss_rec * config.loss.rec.weight
 
             # Total Loss
@@ -397,8 +423,10 @@ def train(config=None):
             
             optimizer.step()
             
-            # validate batch
-            y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
+            if model.__class__.__name__ == "MnistCNN_R":
+                y_pred = torch.argmax(u_h, dim=1)
+            else:        
+                y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
 
             correct = (y_true == y_pred).sum()
             acc = correct / x.shape[0]
@@ -458,9 +486,10 @@ def train(config=None):
             plt.close()
 
             plt.imshow(img_valid.permute(1,2,0))
+            plt.tight_layout()
             plt.savefig(p_imgs / "img_valid_{:03d}.png".format(epoch_idx))
+            plt.tight_layout()
             plt.close()
-
 
             sw.add_image("train/rec", img_train, epoch_idx)
             sw.add_image("valid/rec", img_valid, epoch_idx)
@@ -502,36 +531,40 @@ def train(config=None):
     plot_acc_from_stats(stats, p_acc_plot)
     plot_loss_from_stats(stats, p_loss_plot)
     return stats
-        
+
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Run Efficient CapsNet on Smallnorb')
-
-    parser.add_argument('--lr', type=float, default=0.0005)
-    parser.add_argument('--bs', type=int, default=16)
-    parser.add_argument('--num_epochs', type=int, default=200)
-    parser.add_argument('--weight_decay', type=float, default=0)
-    parser.add_argument('--loss_weight_rec', type=float, default=0.392)
-    parser.add_argument('--device', type=str, default="cuda:0")
-    parser.add_argument('--p_experiment', type=str, default='/mnt/data/experiments/EfficientCN/smallnorb')
+    parser = argparse.ArgumentParser(description='Run Efficient CapsNet, CNN_CR_SF, CNN_CR or CNN_R on MNIST')
+    parser.add_argument('--model', type=str, default='MnistEffCapsNet', metavar='', required=False, help='Possible Models: MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R')
+    parser.add_argument('--lr', type=float, default=0.0005, metavar='', required=False, help='learning rate')
+    parser.add_argument('--bs', type=int, default=256, metavar='', required=False, help='batch size')
+    parser.add_argument('--num_epochs', type=int, default=150, metavar='', required=False, help='number of training epochs')
+    parser.add_argument('--weight_decay', type=float, default=0, metavar='', required=False, help='weight decay while training')
+    parser.add_argument('--loss_weight_rec', type=float, default=0.392, metavar='', required=False, help='weight of reconstruction loss')
+    parser.add_argument('--device', type=str, default='cuda:0', metavar='', required=False, help='device')
+    parser.add_argument('--p_experiment', type=str, default='/mnt/data/experiments/EfficientCN/mnist', metavar='', required=False, help='path of experiment')
     args = parser.parse_args()
-
-
 
     #Tranformations
     transform_train = T.Compose([
-        T.ColorJitter(brightness= [0.5,1.], contrast=[0.5,1.], saturation=0, hue=0),
-        T.Resize(64),
-        T.RandomCrop(48),
-        T.Normalize(mean=[191.7811/255,193.0594/255,0],std=[45.2232/255, 44.2558/255,1]),
+        T.RandomAffine(
+            degrees=(-30, 30),
+            shear=(-30, 30),
+        ),
+        T.RandomResizedCrop(
+            28,
+            scale=(0.8, 1.2),
+            ratio=(1, 1),
+        ),
+        T.ToTensor()
     ])
     transform_valid = T.Compose([
-        T.Resize(64),
-        T.CenterCrop(48),        
-        T.Normalize(mean=[191.0684/255,192.0952/255,0],std=[45.4354/255, 44.3388/255,1]),        
-    ])  
+        T.ToTensor()
+    ])
+
 
     config = {
+        'model': args.model,
         'device': args.device,
         'debug': False,
         'train': {
@@ -541,7 +574,6 @@ if __name__ == '__main__':
             'num_vis': 16,
             'pin_memory': True,
             'transform' : transform_train,
-            'mode' : "pseudo"
         },
         'valid': {
             'num_workers': 2,       # Either set num_worker high or pin_memory=True
@@ -549,7 +581,6 @@ if __name__ == '__main__':
             'num_vis': 16,
             'pin_memory': True,
             'transform' : transform_valid,
-            'mode' : "pseudo"
         },
         'optimizer': 'adam',
         'optimizer_args': {
@@ -567,11 +598,11 @@ if __name__ == '__main__':
             'ckpt': 10,   # [epochs]
         },
         'paths': {
-            'data': '/mnt/data/datasets/smallnorb',
+            'data': '/mnt/data/datasets',
             'experiments': args.p_experiment,
         },
         'names': {
-            'model_dir': 'effcn_smallnorb_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'model_dir': 'effcn_mnist_{a}_{b}'.format(a = args.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
             'ckpt_dir': 'ckpts',
             'img_dir': 'imgs',
             'log_dir': 'logs',
@@ -590,12 +621,10 @@ if __name__ == '__main__':
             },
             'rec': {
                 'weight': args.loss_weight_rec,
-                'by_class': False
+                'by_class': True
             }
         },
         'stop_acc': 0.9973
     }
     config = DottedDict(config)
     train(config)
-
-    
