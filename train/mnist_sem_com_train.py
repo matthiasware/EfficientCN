@@ -9,6 +9,7 @@ import pickle
 import pprint
 from pathlib import Path
 import math
+import argparse
 
 
 # third party libraries
@@ -43,7 +44,6 @@ def default():
         T.RandomAffine(
             degrees=(-30, 30),
             shear=(-30, 30),
-            # translate=(0.9, 0.9),
         ),
         T.RandomResizedCrop(
             28,
@@ -534,7 +534,97 @@ def train(config=None):
 
 
 if __name__ == '__main__':
-    
-    #run train with default settings
-    train()
-    print("fi9ne")
+    parser = argparse.ArgumentParser(description='Run Efficient CapsNet, CNN_CR_SF, CNN_CR or CNN_R on MNIST')
+    parser.add_argument('--model', type=str, default='MnistEffCapsNet', metavar='', required=False, help='Possible Models: MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R')
+    parser.add_argument('--lr', type=float, default=0.0005, metavar='', required=False, help='learning rate')
+    parser.add_argument('--bs', type=int, default=256, metavar='', required=False, help='batch size')
+    parser.add_argument('--num_epochs', type=int, default=150, metavar='', required=False, help='number of training epochs')
+    parser.add_argument('--weight_decay', type=float, default=0, metavar='', required=False, help='weight decay while training')
+    parser.add_argument('--loss_weight_rec', type=float, default=0.392, metavar='', required=False, help='weight of reconstruction loss')
+    parser.add_argument('--device', type=str, default='cuda:0', metavar='', required=False, help='device')
+    parser.add_argument('--p_experiment', type=str, default='/mnt/data/experiments/EfficientCN/mnist', metavar='', required=False, help='path of experiment')
+    args = parser.parse_args()
+
+    #Tranformations
+    transform_train = T.Compose([
+        T.RandomAffine(
+            degrees=(-30, 30),
+            shear=(-30, 30),
+        ),
+        T.RandomResizedCrop(
+            28,
+            scale=(0.8, 1.2),
+            ratio=(1, 1),
+        ),
+        T.ToTensor()
+    ])
+    transform_valid = T.Compose([
+        T.ToTensor()
+    ])
+
+
+    config = {
+        'model': args.model,
+        'device': args.device,
+        'debug': False,
+        'train': {
+            'batch_size': args.bs,
+            'num_epochs': args.num_epochs,
+            'num_workers': 2,
+            'num_vis': 16,
+            'pin_memory': True,
+            'transform' : transform_train,
+        },
+        'valid': {
+            'num_workers': 2,       # Either set num_worker high or pin_memory=True
+            'batch_size': args.bs,
+            'num_vis': 16,
+            'pin_memory': True,
+            'transform' : transform_valid,
+        },
+        'optimizer': 'adam',
+        'optimizer_args': {
+            'lr': args.lr,
+            'weight_decay': args.weight_decay,
+        },
+        'scheduler': 'exponential_decay',
+        'scheduler_burnin': 10,  # [epochs]
+        'scheduler_args': {
+            'gamma': 0.97
+        },
+        'freqs': {
+            'valid': 1,   # [epochs]
+            'rec': 1,     # [epochs] show reconstructions
+            'ckpt': 10,   # [epochs]
+        },
+        'paths': {
+            'data': '/mnt/data/datasets',
+            'experiments': args.p_experiment,
+        },
+        'names': {
+            'model_dir': 'effcn_mnist_{a}_{b}'.format(a = args.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'ckpt_dir': 'ckpts',
+            'img_dir': 'imgs',
+            'log_dir': 'logs',
+            'model_file': 'model_{}.ckpt',
+            'stats_file': 'stats.pkl',
+            'config_file': 'config.pkl',
+            'acc_plot': 'acc.png',
+            'loss_plot': 'loss.png',
+        },
+        'loss': {
+            'margin': {
+                'lbd': 0.5,
+                'm_plus': 0.9,
+                'm_minus': 0.1,
+                'weight': 1.0
+            },
+            'rec': {
+                'weight': args.loss_weight_rec,
+                'by_class': True
+            }
+        },
+        'stop_acc': 0.9973
+    }
+    config = DottedDict(config)
+    train(config)

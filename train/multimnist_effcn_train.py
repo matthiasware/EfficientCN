@@ -9,6 +9,7 @@ import pickle
 import pprint
 from pathlib import Path
 import math
+import argparse
 
 
 # third party libraries
@@ -543,7 +544,86 @@ def train(config=None):
      
 
 if __name__ == '__main__':
-    
-    #run train with default settings
-    train()
-    print("fi9ne")
+    parser = argparse.ArgumentParser(description='Run Efficient CapsNet on MultiMNIST')
+    parser.add_argument('--lr', type=float, default=0.0001, metavar='', required=False, help='learning rate')
+    parser.add_argument('--bs', type=int, default=64, metavar='', required=False, help='batch size')
+    parser.add_argument('--num_epochs', type=int, default=150, metavar='', required=False, help='number of training epochs')
+    parser.add_argument('--weight_decay', type=float, default=0, metavar='', required=False, help='weight decay while training')
+    parser.add_argument('--loss_weight_rec', type=float, default=0.392, metavar='', required=False, help='weight of reconstruction loss')
+    parser.add_argument('--device', type=str, default='cuda:0', metavar='', required=False, help='device')
+    parser.add_argument('--p_data', type=str, default='/mnt/data/datasets/multimnist', metavar='', required=False, help='path of dataset')
+    parser.add_argument('--p_experiment', type=str, default='/mnt/data/experiments/EfficientCN/multimnist', metavar='', required=False, help='path of experiment')
+    parser.add_argument('--ds_gen', type=bool, default=False, metavar='', required=False, help='generate dataset')
+    parser.add_argument('--ds_size', type=list, default=[1000,1000], metavar='', required=False, help='Number of generated multimatch Imgs via MNIST Img')
+    args = parser.parse_args()
+
+
+    config = {
+        'device': args.device,
+        'debug': True,
+        'train': {
+            'batch_size': args.bs,
+            'num_epochs': args.num_epochs,
+            'num_workers': 2,
+            'num_vis': 8,
+            'pin_memory': True,
+            'transform' : None,
+        },
+        'valid': {
+            'num_workers': 2,       # Either set num_worker high or pin_memory=True
+            'batch_size': args.bs,
+            'num_vis': 8,
+            'pin_memory': True,
+            'transform' : None,
+        },
+        'gen': {
+            'generate': args.ds_gen,       
+            'num': args.ds_size
+        },
+        'optimizer': 'adam',
+        'optimizer_args': {
+            'lr': args.lr,
+            'weight_decay': args.weight_decay,
+        },
+        'scheduler': 'exponential_decay',
+        'scheduler_burnin': 10,  # [epochs]
+        'scheduler_args': {
+            'gamma': 0.97
+        },
+        'freqs': {
+            'valid': 1,   # [epochs]
+            'rec': 1,     # [epochs] show reconstructions
+            'ckpt': 10,   # [epochs]
+        },
+        'paths': {
+            'data': args.p_data,
+            'experiments': args.p_experiment,
+        },
+        'names': {
+            'model_dir': 'effcn_multimnist_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'ckpt_dir': 'ckpts',
+            'img_dir': 'imgs',
+            'log_dir': 'logs',
+            'model_file': 'model_{}.ckpt',
+            'stats_file': 'stats.pkl',
+            'config_file': 'config.pkl',
+            'acc_plot': 'acc.png',
+            'loss_plot': 'loss.png',
+        },
+        'loss': {
+            'margin': {
+                'lbd': 0.5,
+                'm_plus': 0.9,
+                'm_minus': 0.1,
+                'weight': 1.0
+            },
+            'rec': {
+                'weight': args.loss_weight_rec,
+                'by_class': True
+            }
+        },
+        'stop_acc': 0.9973
+    }
+
+    config = DottedDict(config)
+    train(config)

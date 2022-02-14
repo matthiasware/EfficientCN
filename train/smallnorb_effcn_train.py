@@ -9,6 +9,7 @@ import pickle
 import pprint
 from pathlib import Path
 import math
+import argparse
 
 
 # third party libraries
@@ -504,7 +505,97 @@ def train(config=None):
         
 
 if __name__ == '__main__':
-    
-    #run train with default settings
-    train()
+    parser = argparse.ArgumentParser(description='Run Efficient CapsNet on Smallnorb')
+
+    parser.add_argument('--lr', type=float, default=0.0005)
+    parser.add_argument('--bs', type=int, default=16)
+    parser.add_argument('--num_epochs', type=int, default=200)
+    parser.add_argument('--weight_decay', type=float, default=0)
+    parser.add_argument('--loss_weight_rec', type=float, default=0.392)
+    parser.add_argument('--device', type=str, default="cuda:0")
+    parser.add_argument('--p_experiment', type=str, default='/mnt/data/experiments/EfficientCN/smallnorb')
+    args = parser.parse_args()
+
+
+
+    #Tranformations
+    transform_train = T.Compose([
+        T.ColorJitter(brightness= [0.5,1.], contrast=[0.5,1.], saturation=0, hue=0),
+        T.Resize(64),
+        T.RandomCrop(48),
+        T.Normalize(mean=[191.7811/255,193.0594/255,0],std=[45.2232/255, 44.2558/255,1]),
+    ])
+    transform_valid = T.Compose([
+        T.Resize(64),
+        T.CenterCrop(48),        
+        T.Normalize(mean=[191.0684/255,192.0952/255,0],std=[45.4354/255, 44.3388/255,1]),        
+    ])  
+
+    config = {
+        'device': args.device,
+        'debug': False,
+        'train': {
+            'batch_size': args.bs,
+            'num_epochs': args.num_epochs,
+            'num_workers': 2,
+            'num_vis': 16,
+            'pin_memory': True,
+            'transform' : transform_train,
+            'mode' : "pseudo"
+        },
+        'valid': {
+            'num_workers': 2,       # Either set num_worker high or pin_memory=True
+            'batch_size': args.bs,
+            'num_vis': 16,
+            'pin_memory': True,
+            'transform' : transform_valid,
+            'mode' : "pseudo"
+        },
+        'optimizer': 'adam',
+        'optimizer_args': {
+            'lr': args.lr,
+            'weight_decay': args.weight_decay,
+        },
+        'scheduler': 'exponential_decay',
+        'scheduler_burnin': 10,  # [epochs]
+        'scheduler_args': {
+            'gamma': 0.97
+        },
+        'freqs': {
+            'valid': 1,   # [epochs]
+            'rec': 1,     # [epochs] show reconstructions
+            'ckpt': 10,   # [epochs]
+        },
+        'paths': {
+            'data': '/mnt/data/datasets/smallnorb',
+            'experiments': args.p_experiment,
+        },
+        'names': {
+            'model_dir': 'effcn_smallnorb_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'ckpt_dir': 'ckpts',
+            'img_dir': 'imgs',
+            'log_dir': 'logs',
+            'model_file': 'model_{}.ckpt',
+            'stats_file': 'stats.pkl',
+            'config_file': 'config.pkl',
+            'acc_plot': 'acc.png',
+            'loss_plot': 'loss.png',
+        },
+        'loss': {
+            'margin': {
+                'lbd': 0.5,
+                'm_plus': 0.9,
+                'm_minus': 0.1,
+                'weight': 1.0
+            },
+            'rec': {
+                'weight': args.loss_weight_rec,
+                'by_class': False
+            }
+        },
+        'stop_acc': 0.9973
+    }
+    config = DottedDict(config)
+    train(config)
+
     
