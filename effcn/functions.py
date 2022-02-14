@@ -40,7 +40,6 @@ def margin_loss_cnn_r(u, y_true, lbd=0.5, m_plus=0.9, m_minus=0.1):
         loss, scalar
     """
 
-    #u_norm = torch.norm(u, dim=2)
     term_left = torch.square(F.relu(m_plus - u))
     term_right = torch.square(F.relu(u - m_minus))
     #
@@ -77,7 +76,6 @@ def create_margin_loss_cnn_r(lbd=0.5, m_plus=0.9, m_minus=0.1):
             loss, scalar
         """
 
-        #u_norm = torch.norm(u, dim=2)
         term_left = torch.square(F.relu(m_plus - u))
         term_right = torch.square(F.relu(u - m_minus))
         #
@@ -87,20 +85,7 @@ def create_margin_loss_cnn_r(lbd=0.5, m_plus=0.9, m_minus=0.1):
     return func_margin_loss_cnn_r
 
 def max_norm_masking(u):
-    """
-    IN:
-        u (b, n d) ... capsules
-    OUT:
-        masked(u)  (b, n, d) where:
-        - normalise over dimension d of u
-        - keep largest vector in dimension n
-        - mask out everything else
-    """
-    _, n_classes, _ = u.shape
-    u_norm = torch.norm(u, dim=2)
-    mask = F.one_hot(torch.argmax(u_norm, 1), num_classes=n_classes)
-    return torch.einsum('bnd,bn->bnd', u, mask)
-
+    return masking_max_norm(u)
 
 def masking_max_norm(u):
     """
