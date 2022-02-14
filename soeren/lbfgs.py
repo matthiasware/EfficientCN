@@ -278,7 +278,7 @@ class LBFGS(Optimizer):
         loss, y_predict, batches = closure()
         loss = float(loss) / batches
         flat_grad = self._gather_flat_grad() / batches
-#        print(loss, float(torch.norm(flat_grad, 2)))
+        print(loss, float(torch.norm(flat_grad, 2)))
         self._set_param(x)
         return loss, flat_grad, y_predict
 
@@ -327,7 +327,7 @@ class LBFGS(Optimizer):
             flat_grad = self._gather_flat_grad() / batches
         opt_cond = flat_grad.abs().max() <= tolerance_grad
 
-#        print(loss, float(torch.norm(flat_grad, 2)))
+        print(loss, float(torch.norm(flat_grad, 2)))
         # optimal condition
         if opt_cond:
             return orig_loss, state.get('y_predict')
@@ -449,7 +449,7 @@ class LBFGS(Optimizer):
                         loss, y_pred, batches = closure()
                     loss = float(loss) / batches
                     flat_grad = self._gather_flat_grad() / batches
-#                    print(loss, float(torch.norm(flat_grad, 2)))
+                    print(loss, float(torch.norm(flat_grad, 2)))
                     opt_cond = flat_grad.abs().max() <= tolerance_grad
                     ls_func_evals = 1
 
