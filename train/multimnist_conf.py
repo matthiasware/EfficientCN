@@ -72,7 +72,7 @@ def conf():
             'ckpt': 10,   # [epochs]
         },
         'paths': {
-            'data': '/mnt/data/datasets/multimnist_100',
+            'data': '/mnt/data/datasets/multimnist',
             'experiments': '/mnt/data/experiments/EfficientCN/multimnist',
         },
         'names': {
@@ -117,7 +117,7 @@ if __name__ == '__main__':
     c1.optimizer_args.lr = 5e-5
     train(c1)
     time.sleep(1)
-    """
+
     c2 = conf()
     c2.train.batch_size = 64
     c2.valid.batch_size = 64
@@ -128,10 +128,10 @@ if __name__ == '__main__':
     c3 = conf()
     c3.train.batch_size = 1064
     c3.valid.batch_size = 1064
-    c3.optimizer_args.lr = 1e-3
+    c3.optimizer_args.lr = 5e-4
     c3.freqs.ckpt = 1
     train(c3)
-    """
+
     #time.sleep(1)
     
     #c4 = conf()
