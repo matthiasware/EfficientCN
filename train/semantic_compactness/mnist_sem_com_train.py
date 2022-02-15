@@ -1,5 +1,5 @@
 import sys
-sys.path.append("./..")
+sys.path.append("./../..")
 sys.path.append('.')
 
 # default libraries
@@ -28,18 +28,17 @@ from tqdm import tqdm
 from dotted_dict import DottedDict
 
 # local imports
-from effcn.models import MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R
+from effcn.models_mnist import EffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
 from effcn.functions import create_margin_loss, create_margin_loss_cnn_r
-from effcn.utils import count_parameters
+from misc.utils import count_parameters
 from misc.optimizer import get_optimizer, get_scheduler
 
 # will most likely result in a 30% speed up
 torch.backends.cudnn.benchmark = True
 
 
-
 def default():
-    #Tranformations
+    # Tranformations
     transform_train = T.Compose([
         T.RandomAffine(
             degrees=(-30, 30),
@@ -60,7 +59,7 @@ def default():
     num_epochs = 150
     num_workers = 2
     leraning_rate = 5e-4
-    model = 'MnistCNN_R' #MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R
+    model = 'MnistCNN_R'  # EffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
 
     config = {
         'model': model,
@@ -72,14 +71,14 @@ def default():
             'num_workers': num_workers,
             'num_vis': 16,
             'pin_memory': True,
-            'transform' : transform_train,
+            'transform': transform_train,
         },
         'valid': {
             'num_workers': num_workers,       # Either set num_worker high or pin_memory=True
             'batch_size': batch_size,
             'num_vis': 16,
             'pin_memory': True,
-            'transform' : transform_valid,
+            'transform': transform_valid,
         },
         'optimizer': 'adam',
         'optimizer_args': {
@@ -101,7 +100,7 @@ def default():
             'experiments': '/mnt/data/experiments/EfficientCN/mnist',
         },
         'names': {
-            'model_dir': 'effcn_mnist_{a}_{b}'.format(a = model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'model_dir': 'effcn_mnist_{a}_{b}'.format(a=model, b=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
             'ckpt_dir': 'ckpts',
             'img_dir': 'imgs',
             'log_dir': 'logs',
@@ -129,6 +128,7 @@ def default():
     config = DottedDict(config)
     return config
 
+
 def eval_model(model, device, data_loader, config, func_margin, func_rec):
     model.eval()
     epoch_loss = 0
@@ -155,7 +155,7 @@ def eval_model(model, device, data_loader, config, func_margin, func_rec):
             # validate batch
             if model.__class__.__name__ == "MnistCNN_R":
                 y_pred = torch.argmax(u_h, dim=1)
-            else:        
+            else:
                 y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
 
             correct = (y_true == y_pred).sum()
@@ -166,23 +166,25 @@ def eval_model(model, device, data_loader, config, func_margin, func_rec):
     epoch_acc = epoch_correct / epoch_total
     return epoch_loss, epoch_acc
 
+
 def create_reconstruction_grid_img(model, device, x, y, permute=False):
     model.eval()
     with torch.no_grad():
         _, x_rec = model.forward(x.to(device))
-        _, x_rec_y = model.forward(x.to(device),y.to(device))
+        _, x_rec_y = model.forward(x.to(device), y.to(device))
     x_rec = x_rec.cpu()
     x_rec_y = x_rec_y.cpu()
 
-    scal = lambda x: (x-x.min())/(x.max()-x.min())
+    def scal(x): return (x - x.min()) / (x.max() - x.min())
     img = torchvision.utils.make_grid(
-        torch.cat([scal(x), 
-                    scal(x_rec),
-                    scal(x_rec_y),
-                    scal((x_rec - x_rec_y))], dim=0), nrow=x.shape[0])
+        torch.cat([scal(x),
+                   scal(x_rec),
+                   scal(x_rec_y),
+                   scal((x_rec - x_rec_y))], dim=0), nrow=x.shape[0])
     if permute:
         img = img.permute(1, 2, 0)
     return img
+
 
 def plot_acc_from_stats(stats, p_file):
     train_max = max(stats["train"]["acc"])
@@ -204,6 +206,7 @@ def plot_acc_from_stats(stats, p_file):
     plt.savefig(p_file)
     plt.close()
 
+
 def plot_loss_from_stats(stats, p_file):
     plt.figure(figsize=(10, 10))
     plt.plot(stats["train"]["epoch"], stats["train"]
@@ -218,6 +221,7 @@ def plot_loss_from_stats(stats, p_file):
     plt.savefig(p_file)
     plt.close()
 
+
 def mkdir_directories(dirs, parents, exist_ok):
     for director in dirs:
         Path(director).mkdir(parents=parents, exist_ok=exist_ok)
@@ -231,10 +235,10 @@ def train(config=None):
         print("Config isn't set. \n Default Settings are choosen!")
         print("#" * 100)
 
-    print("#"* 100)
+    print("#" * 100)
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(config)
-    
+
     p_data = Path(config.paths.data)
     p_experiment = Path(config.paths.experiments) / config.names.model_dir
     p_ckpts = p_experiment / config.names.ckpt_dir
@@ -245,67 +249,61 @@ def train(config=None):
     p_acc_plot = p_experiment / config.names.acc_plot
     p_loss_plot = p_experiment / config.names.loss_plot
 
-
-    if (config.model != 'MnistCNN_R') and (config.model != 'MnistEffCapsNet') and (config.model != 'MnistCNN_CR_SF') and (config.model != 'MnistCNN_CR') :
+    if (config.model != 'MnistCNN_R') and (config.model != 'EffCapsNet') and (config.model != 'CNN_CR_SF') and (config.model != 'CNN_CR'):
         print('Indicated model {} doesnt exist'.format(config.model))
         exit()
 
+    device = torch.device(config.device)
 
-     
-    device = torch.device(config.device)  
-    
     ##################################
-    #Get & Preprocess data
+    # Get & Preprocess data
 
-    #Tranformations
+    # Tranformations
     transform_train = config.train.transform
     transform_valid = config.valid.transform
 
-    
-    #load Dataset
+    # load Dataset
 
-    ds_train = datasets.MNIST(root=p_data, train=True, download=True, transform=transform_train)
-    ds_valid = datasets.MNIST(root=p_data, train=False, download=True, transform=transform_valid)
+    ds_train = datasets.MNIST(root=p_data, train=True,
+                              download=True, transform=transform_train)
+    ds_valid = datasets.MNIST(root=p_data, train=False,
+                              download=True, transform=transform_valid)
 
-    
-    #stack data to batches
-    dl_train = torch.utils.data.DataLoader(ds_train, 
-                                        batch_size=config.train.batch_size, 
-                                        shuffle=True, 
-                                        persistent_workers=True,
-                                        pin_memory=config.train.pin_memory,
-                                        num_workers=config.train.num_workers)
-    dl_valid = torch.utils.data.DataLoader(ds_valid, 
-                                        batch_size=config.valid.batch_size, 
-                                        shuffle=True, 
-                                        persistent_workers=True,
-                                        pin_memory=config.valid.pin_memory,
-                                        num_workers=config.valid.num_workers)
-    
-   
+    # stack data to batches
+    dl_train = torch.utils.data.DataLoader(ds_train,
+                                           batch_size=config.train.batch_size,
+                                           shuffle=True,
+                                           persistent_workers=True,
+                                           pin_memory=config.train.pin_memory,
+                                           num_workers=config.train.num_workers)
+    dl_valid = torch.utils.data.DataLoader(ds_valid,
+                                           batch_size=config.valid.batch_size,
+                                           shuffle=True,
+                                           persistent_workers=True,
+                                           pin_memory=config.valid.pin_memory,
+                                           num_workers=config.valid.num_workers)
+
     # Data for visualization of the img reconstructions
     x, y = next(iter(dl_train))
     x_vis_train = x[:config.train.num_vis]
     y_vis_train = y[:config.train.num_vis]
 
-    
     x, y = next(iter(dl_valid))
     x_vis_valid = x[:config.valid.num_vis]
     y_vis_valid = y[:config.valid.num_vis]
 
-
     ##################################
-    #Train Model
+    # Train Model
 
-    #Model
-    if config.model == 'MnistEffCapsNet':
-        model = MnistEffCapsNet()
-    elif config.model == 'MnistCNN_CR_SF':
-        model = MnistCNN_CR_SF()
-    elif config.model == 'MnistCNN_CR':
-        model = MnistCNN_CR()
-    elif config.model == 'MnistCNN_R':
-        model = MnistCNN_R()
+    # Model
+    if config.model == 'EffCapsNet':
+        model = EffCapsNet()
+    elif config.model == 'CNN_CR_SF':
+        model = CNN_CR_SF()
+    elif config.model == 'CNN_CR':
+        model = CNN_CR()
+    elif config.model == 'CNN_R':
+        model = CNN_R()
     model = model.to(device)
 
     # optimizer
@@ -315,8 +313,7 @@ def train(config=None):
         scheduler = get_scheduler(
             config.scheduler, optimizer, config.scheduler_args)
     else:
-        scheduler = None 
-
+        scheduler = None
 
     # create directories
     if config.debug:
@@ -329,7 +326,6 @@ def train(config=None):
         mkdir_directories([p_experiment, p_ckpts, p_logs,
                            p_imgs], parents=True, exist_ok=False)
 
-
     print("p_experiment:  {}".format(p_experiment))
     # summary writer
     sw = SummaryWriter(p_logs)
@@ -339,7 +335,6 @@ def train(config=None):
     # save configs
     with open(p_config, "wb") as file:
         pickle.dump(config, file)
-
 
     # custom training stats
     stats = {
@@ -361,7 +356,6 @@ def train(config=None):
     print("#params:            {:,}".format(count_parameters(model)))
     print("#" * 100)
 
-    
     start = time.time()
     stop_run = False  # set if some event occurs
 
@@ -380,7 +374,7 @@ def train(config=None):
         )
     func_rec_loss = torch.nn.MSELoss()
 
-    #best result
+    # best result
     best_acc = 0.
     best_epoch = None
 
@@ -391,22 +385,21 @@ def train(config=None):
         model.train()
         desc = "Train [{:3}/{:3}]:".format(epoch_idx, config.train.num_epochs)
         pbar = tqdm(dl_train, bar_format=desc + '{bar:10}{r_bar}{bar:-10b}')
-        
+
         epoch_loss = 0
         epoch_correct = 0
-
 
         for x, y_true in pbar:
             x = x.to(device)
             y_true = y_true.to(device)
 
-            #optimizer.zero_grad()
+            # optimizer.zero_grad()
             # way faster than optimizer.zero_grad()
             for param in model.parameters():
                 param.grad = None
-            
+
             if config.loss.rec.by_class == True:
-                u_h, x_rec_y= model.forward(x, y_true)
+                u_h, x_rec_y = model.forward(x, y_true)
             else:
                 u_h, x_rec_y = model.forward(x)
 
@@ -420,12 +413,12 @@ def train(config=None):
             # Total Loss
             loss = loss_margin + loss_rec
             loss.backward()
-            
+
             optimizer.step()
-            
+
             if model.__class__.__name__ == "MnistCNN_R":
                 y_pred = torch.argmax(u_h, dim=1)
-            else:        
+            else:
                 y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
 
             correct = (y_true == y_pred).sum()
@@ -435,11 +428,11 @@ def train(config=None):
             epoch_loss += loss.item()
 
             pbar.set_postfix(
-                    {'loss': loss.item(),
-                     'mar': loss_margin.item(),
-                     'rec': loss_rec.item(),
-                     'acc': acc.item()
-                    }
+                {'loss': loss.item(),
+                 'mar': loss_margin.item(),
+                 'rec': loss_rec.item(),
+                 'acc': acc.item()
+                 }
             )
 
         # TRAIN STAS
@@ -461,17 +454,16 @@ def train(config=None):
             stats["notes"].append(print_str)
             stop_run = True
 
-
         ##################################
         # Model Eval
         model.eval()
 
-        #Save Model ckpt
+        # Save Model ckpt
         if (epoch_idx % config.freqs.ckpt == 0) or (config.train.num_epochs == epoch_idx):
             p_ckpt = p_ckpts / config.names.model_file.format(epoch_idx)
-            torch.save(model.state_dict(), p_ckpt)    
-        
-        #Generate and save grids
+            torch.save(model.state_dict(), p_ckpt)
+
+        # Generate and save grids
         if (epoch_idx % config.freqs.rec == 0) or (config.train.num_epochs == epoch_idx):
 
             img_train = create_reconstruction_grid_img(
@@ -479,13 +471,13 @@ def train(config=None):
             img_valid = create_reconstruction_grid_img(
                 model, device, x_vis_valid, y_vis_valid)
 
-            plt.imshow(img_train.permute(1,2,0))
+            plt.imshow(img_train.permute(1, 2, 0))
             plt.tight_layout()
             plt.savefig(p_imgs / "img_train_{:03d}.png".format(epoch_idx))
             plt.tight_layout()
             plt.close()
 
-            plt.imshow(img_valid.permute(1,2,0))
+            plt.imshow(img_valid.permute(1, 2, 0))
             plt.tight_layout()
             plt.savefig(p_imgs / "img_valid_{:03d}.png".format(epoch_idx))
             plt.tight_layout()
@@ -494,7 +486,7 @@ def train(config=None):
             sw.add_image("train/rec", img_train, epoch_idx)
             sw.add_image("valid/rec", img_valid, epoch_idx)
 
-        #Validation loop
+        # Validation loop
         if (epoch_idx % config.freqs.valid == 0) or (config.train.num_epochs == epoch_idx):
             loss_valid, acc_valid = eval_model(
                 model, device, dl_valid, config, func_margin_loss, func_rec_loss)
@@ -534,18 +526,27 @@ def train(config=None):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Run Efficient CapsNet, CNN_CR_SF, CNN_CR or CNN_R on MNIST')
-    parser.add_argument('--model', type=str, default='MnistEffCapsNet', metavar='', required=False, help='Possible Models: MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R')
-    parser.add_argument('--lr', type=float, default=0.0005, metavar='', required=False, help='learning rate')
-    parser.add_argument('--bs', type=int, default=256, metavar='', required=False, help='batch size')
-    parser.add_argument('--num_epochs', type=int, default=150, metavar='', required=False, help='number of training epochs')
-    parser.add_argument('--weight_decay', type=float, default=0, metavar='', required=False, help='weight decay while training')
-    parser.add_argument('--loss_weight_rec', type=float, default=0.392, metavar='', required=False, help='weight of reconstruction loss')
-    parser.add_argument('--device', type=str, default='cuda:0', metavar='', required=False, help='device')
-    parser.add_argument('--p_experiment', type=str, default='/mnt/data/experiments/EfficientCN/mnist', metavar='', required=False, help='path of experiment')
+    parser = argparse.ArgumentParser(
+        description='Run Efficient CapsNet, CNN_CR_SF, CNN_CR or CNN_R on MNIST')
+    parser.add_argument('--model', type=str, default='EffCapsNet', metavar='',
+                        required=False, help='Possible Models: EffCapsNet, CNN_CR_SF, CNN_CR, CNN_R')
+    parser.add_argument('--lr', type=float, default=0.0005,
+                        metavar='', required=False, help='learning rate')
+    parser.add_argument('--bs', type=int, default=256,
+                        metavar='', required=False, help='batch size')
+    parser.add_argument('--num_epochs', type=int, default=150,
+                        metavar='', required=False, help='number of training epochs')
+    parser.add_argument('--weight_decay', type=float, default=0,
+                        metavar='', required=False, help='weight decay while training')
+    parser.add_argument('--loss_weight_rec', type=float, default=0.392,
+                        metavar='', required=False, help='weight of reconstruction loss')
+    parser.add_argument('--device', type=str, default='cuda:0',
+                        metavar='', required=False, help='device')
+    parser.add_argument('--p_experiment', type=str, default='/mnt/data/experiments/EfficientCN/mnist',
+                        metavar='', required=False, help='path of experiment')
     args = parser.parse_args()
 
-    #Tranformations
+    # Tranformations
     transform_train = T.Compose([
         T.RandomAffine(
             degrees=(-30, 30),
@@ -562,7 +563,6 @@ if __name__ == '__main__':
         T.ToTensor()
     ])
 
-
     config = {
         'model': args.model,
         'device': args.device,
@@ -573,14 +573,14 @@ if __name__ == '__main__':
             'num_workers': 2,
             'num_vis': 16,
             'pin_memory': True,
-            'transform' : transform_train,
+            'transform': transform_train,
         },
         'valid': {
             'num_workers': 2,       # Either set num_worker high or pin_memory=True
             'batch_size': args.bs,
             'num_vis': 16,
             'pin_memory': True,
-            'transform' : transform_valid,
+            'transform': transform_valid,
         },
         'optimizer': 'adam',
         'optimizer_args': {
@@ -602,7 +602,7 @@ if __name__ == '__main__':
             'experiments': args.p_experiment,
         },
         'names': {
-            'model_dir': 'effcn_mnist_{a}_{b}'.format(a = args.model, b = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'model_dir': 'effcn_mnist_{a}_{b}'.format(a=args.model, b=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
             'ckpt_dir': 'ckpts',
             'img_dir': 'imgs',
             'log_dir': 'logs',

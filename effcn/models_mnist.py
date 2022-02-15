@@ -129,7 +129,7 @@ class EffCapsNet(nn.Module):
         self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h)
         self.decoder = Decoder()
 
-    def forward(self, x):
+    def forward(self, x, y_true=None):
         """
             IN:
                 x (b, 1, 28, 28)
@@ -144,8 +144,7 @@ class EffCapsNet(nn.Module):
         u_l = self.primcaps(self.backbone(x))
         u_h = self.fcncaps(u_l)
         #
-        u_h_masked = max_norm_masking(u_h)
-        u_h_masked = torch.flatten(u_h_masked, start_dim=1)
+        u_h_masked = masking(u_h, y_true)
         x_rec = self.decoder(u_h_masked)
         return u_h, x_rec
 
@@ -154,7 +153,7 @@ class EffCapsNet(nn.Module):
 # CNN-R MNIST MODELS
 ######################################
 
-class MnistCNN_R_Backbone(nn.Module):
+class CNN_R_Backbone(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Sequential(
@@ -184,7 +183,7 @@ class MnistCNN_R_Backbone(nn.Module):
         return out, x
 
 
-class MnistCNN_R_Decoder(nn.Module):
+class CNN_R_Decoder(nn.Module):
     """
         Decoder model from Efficient-CapsNet for MNIST
     """
@@ -214,10 +213,10 @@ class MnistCNN_R_Decoder(nn.Module):
         return x
 
 
-class MnistCNN_R(nn.Module):
+class CNN_R(nn.Module):
     def __init__(self):
         super().__init__()
-        self.backbone = MnistCNN_R_Backbone()
+        self.backbone = CNN_R_Backbone()
         self.decoder = Decoder()
 
     def forward(self, x, y_true=None):
@@ -243,7 +242,7 @@ class MnistCNN_R(nn.Module):
 # CNN-CR MNIST MODELS
 ######################################
 
-class MnistCNN_CR_Backbone(nn.Module):
+class CNN_CR_Backbone(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Sequential(
@@ -273,10 +272,10 @@ class MnistCNN_CR_Backbone(nn.Module):
         return x
 
 
-class MnistCNN_CR(nn.Module):
+class CNN_CR(nn.Module):
     def __init__(self):
         super().__init__()
-        self.backbone = MnistCNN_CR_Backbone()
+        self.backbone = CNN_CR_Backbone()
         self.decoder = Decoder()
 
     def forward(self, x, y_true=None):
@@ -304,7 +303,7 @@ class MnistCNN_CR(nn.Module):
 # CNN-CR-SF MNIST MODELS
 ######################################
 
-class MnistCNN_CR_SF_Backbone(nn.Module):
+class CNN_CR_SF_Backbone(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Sequential(
@@ -339,10 +338,10 @@ class MnistCNN_CR_SF_Backbone(nn.Module):
         return x
 
 
-class MnistCNN_CR_SF(nn.Module):
+class CNN_CR_SF(nn.Module):
     def __init__(self):
         super().__init__()
-        self.backbone = MnistCNN_CR_SF_Backbone()
+        self.backbone = CNN_CR_SF_Backbone()
         self.decoder = Decoder()
 
     def forward(self, x, y_true=None):
