@@ -10,3 +10,7 @@ def get_sting_timestamp():
 def mkdir_directories(dirs, parents, exist_ok):
     for director in dirs:
         Path(director).mkdir(parents=parents, exist_ok=exist_ok)
+
+
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
