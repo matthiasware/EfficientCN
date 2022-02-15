@@ -1,5 +1,5 @@
 import sys
-sys.path.append("./..")
+sys.path.append("./../..")
 
 # default libraries
 import time
@@ -19,10 +19,9 @@ from tqdm import tqdm
 from pathlib import Path
 
 # local imports
-from effcn.models import MnistEcnBackbone, MnistEcnDecoder, MnistEffCapsNet
-from effcn.layers import PrimaryCaps, FCCaps
-from effcn.functions import margin_loss, max_norm_masking
-from effcn.utils import count_parameters
+from effcn.models_mnist import EffCapsNet
+from effcn.functions import margin_loss
+from misc.utils import count_parameters
 
 #########################
 #  CONFIG
@@ -37,14 +36,15 @@ REC_LOSS_WEIGHT = 0.392
 NUM_WORKERS = 6
 
 if torch.cuda.is_available():
-    dev = "cuda:0" 
-else:  
-    dev = "cpu"  
+    dev = "cuda:0"
+else:
+    dev = "cpu"
 DEVICE = torch.device(dev)
 
 # paths
 P_DATA = "./../data"
 P_CKTPS = "./../data/ckpts"
+
 
 def main():
     #########################
@@ -69,21 +69,21 @@ def main():
         T.ToTensor()
     ])
 
+    ds_train = datasets.MNIST(root=P_DATA, train=True,
+                              download=True, transform=transform_train)
+    ds_valid = datasets.MNIST(root=P_DATA, train=False,
+                              download=True, transform=transform_valid)
 
-    ds_train = datasets.MNIST(root=P_DATA, train=True, download=True, transform=transform_train)
-    ds_valid = datasets.MNIST(root=P_DATA, train=False, download=True, transform=transform_valid)
-
-    dl_train = torch.utils.data.DataLoader(ds_train, 
-                                        batch_size=BATCH_SIZE, 
-                                        shuffle=True, 
-                                        pin_memory=True,
-                                        num_workers=NUM_WORKERS)
-    dl_valid = torch.utils.data.DataLoader(ds_valid, 
-                                        batch_size=BATCH_SIZE, 
-                                        shuffle=True, 
-                                        pin_memory=True,
-                                        num_workers=NUM_WORKERS)
-    
+    dl_train = torch.utils.data.DataLoader(ds_train,
+                                           batch_size=BATCH_SIZE,
+                                           shuffle=True,
+                                           pin_memory=True,
+                                           num_workers=NUM_WORKERS)
+    dl_valid = torch.utils.data.DataLoader(ds_valid,
+                                           batch_size=BATCH_SIZE,
+                                           shuffle=True,
+                                           pin_memory=True,
+                                           num_workers=NUM_WORKERS)
 
     #
     # Data for visualization of the img reconstructions
@@ -93,15 +93,17 @@ def main():
     #########################
     #  TRAIN MODEL
     #########################
-    model = MnistEffCapsNet()
+    model = EffCapsNet()
     model = model.to(DEVICE)
 
     # optimizer
-    optimizer = optim.Adam(model.parameters(), lr = LEARNING_RATE)
-    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=SCHEDULER_GAMMA)
+    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
+        optimizer=optimizer, gamma=SCHEDULER_GAMMA)
 
     # checkpointing
-    st = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
+    st = datetime.datetime.fromtimestamp(
+        time.time()).strftime('%Y-%m-%d_%H-%M-%S')
     p_run = Path(P_CKTPS) / "run_{}".format(st)
     p_run.mkdir(exist_ok=True, parents=True)
 
@@ -120,8 +122,8 @@ def main():
     print("Writing results to: {}".format(p_run))
     print("#" * 100)
 
-    for epoch_idx in range(1, NUM_EPOCHS+1):
-        # 
+    for epoch_idx in range(1, NUM_EPOCHS + 1):
+        #
         # TRAIN LOOP
         #
         model.train()
@@ -129,27 +131,27 @@ def main():
         epoch_total = 0
         desc = "Train [{:3}/{:3}]:".format(epoch_idx, NUM_EPOCHS)
         pbar = tqdm(dl_train, bar_format=desc + '{bar:10}{r_bar}{bar:-10b}')
-        for x,y_true in pbar:
+        for x, y_true in pbar:
             x = x.to(DEVICE)
             y_true = y_true.to(DEVICE)
 
             # way faster than optimizer.zero_grad()
             for param in model.parameters():
                 param.grad = None
-            
+
             u_h, x_rec = model.forward(x)
-            
+
             # LOSS
             y_one_hot = F.one_hot(y_true, num_classes=10)
             loss_margin = margin_loss(u_h, y_one_hot)
             loss_rec = torch.nn.functional.mse_loss(x, x_rec)
-            
+
             # param from paper
             loss = loss_margin + REC_LOSS_WEIGHT * loss_rec
             loss.backward()
-            
+
             optimizer.step()
-            
+
             y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
 
             batch_correct = (y_true == y_pred).sum()
@@ -160,51 +162,51 @@ def main():
             epoch_total += batch_total
 
             pbar.set_postfix(
-                    {'loss': loss.item(),
-                     'mar': loss_margin.item(),
-                     'rec': loss_rec.item(),
-                     'acc': acc.item()
-                    }
+                {'loss': loss.item(),
+                 'mar': loss_margin.item(),
+                 'rec': loss_rec.item(),
+                 'acc': acc.item()
+                 }
             )
-        stats["acc_train"].append((epoch_correct/epoch_total).item())
+        stats["acc_train"].append((epoch_correct / epoch_total).item())
 
         #
         #  EVAL LOOP
         #
         model.eval()
-            
+
         epoch_correct = 0
         epoch_total = 0
 
-        for x,y_true in dl_valid:
+        for x, y_true in dl_valid:
             x = x.to(DEVICE)
             y_true = y_true.to(DEVICE)
-                
+
             with torch.no_grad():
                 u_h, x_rec = model.forward(x)
                 y_pred = torch.argmax(torch.norm(u_h, dim=2), dim=1)
                 epoch_correct += (y_true == y_pred).sum()
                 epoch_total += y_true.shape[0]
-        
+
         print("   acc_valid: {:.5f}".format(epoch_correct / epoch_total))
-        stats["acc_valid"].append((epoch_correct/epoch_total).item())
-    
+        stats["acc_valid"].append((epoch_correct / epoch_total).item())
+
         #
         #  save reconstructions
         #
         with torch.no_grad():
             _, x_rec = model.forward(x_vis.to(DEVICE))
         x_rec = x_rec.cpu()
-        img = torchvision.utils.make_grid(torch.cat([x_vis[:16], x_rec[:16]], dim=0), nrow=16)
-        img = img.permute(1,2,0)
+        img = torchvision.utils.make_grid(
+            torch.cat([x_vis[:16], x_rec[:16]], dim=0), nrow=16)
+        img = img.permute(1, 2, 0)
         plt.figure(figsize=(16, 2))
         plt.tight_layout()
         plt.axis('off')
         plt.imshow(img)
         plt.savefig(p_run / "rec_{}.png".format(epoch_idx))
         plt.close()
-        
-        
+
         # I guess this is done once per epoch
         lr_scheduler.step()
 
@@ -226,7 +228,7 @@ def main():
     plt.legend()
     plt.savefig(p_run / "acc.png")
     plt.close()
-    
+
 
 if __name__ == '__main__':
     main()
