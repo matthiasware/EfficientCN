@@ -5,6 +5,7 @@
 !*.yml
 !*.ipynb
 !*.md
+!results/*.png
 
 # latex stuff
 !*.tex
