@@ -1,5 +1,5 @@
 import sys
-sys.path.append("./..")
+sys.path.append("./../..")
 
 # standard lib
 import argparse
@@ -24,20 +24,14 @@ from tqdm import tqdm
 
 # local imports
 from datasets import AffNIST
-from effcn.models import AffnistEffCapsNet
-from effcn.layers import PrimaryCaps, FCCaps
+from effcn.models_affnist import EffCapsNet
 from effcn.functions import create_margin_loss, max_norm_masking, margin_loss
-from effcn.utils import count_parameters
+from misc.utils import count_parameters
 from misc.optimizer import get_optimizer, get_scheduler
 from misc.utils import get_sting_timestamp, mkdir_directories
 
 # will most likely result in a 30% speed up
 torch.backends.cudnn.benchmark = True
-
-# These may improve persormance around 5%-10%
-#torch.autograd.set_detect_anomaly(False)
-#torch.autograd.profiler.profile(False)
-#torch.autograd.profiler.emit_nvtx(False)
 
 
 def eval_model(model, device, data_loader, config, func_margin, func_rec):
@@ -185,7 +179,7 @@ def train(config):
     x, _ = next(iter(dl_affnist_valid))
     x_vis_affnist_valid = x[:config.valid.num_vis]
 
-    model = AffnistEffCapsNet()
+    model = EffCapsNet()
     model = model.to(device)
 
     optimizer = get_optimizer(

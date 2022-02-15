@@ -1,10 +1,11 @@
 import torch
 import torch.nn as nn
-from .layers import View, Squash, PrimaryCaps, FCCaps
-from .functions import masking
+from .layers import View, Squash, PrimaryCaps, FCCaps, FCCapsWOBias
+from .functions import max_norm_masking, masking
 
 
-class AffnistEcnDecoder(nn.Module):
+
+class Decoder(nn.Module):
     """
         Decoder model for AffNIST (40x40)
         Except for last layer identical with MNIST Decoder
@@ -35,7 +36,7 @@ class AffnistEcnDecoder(nn.Module):
         return x
 
 
-class AffnistEcnBackbone(nn.Module):
+class Backbone(nn.Module):
     """
         Backbone model for AffNIST (40x40)
         Identical to MNIST Backbone
@@ -68,7 +69,7 @@ class AffnistEcnBackbone(nn.Module):
         return self.layers(x)
 
 
-class AffnistEffCapsNet(nn.Module):
+class EffCapsNet(nn.Module):
     """
         EffCaps Implementation for AffNIST
         almost identical to MnistEffCapsNet
@@ -83,7 +84,7 @@ class AffnistEffCapsNet(nn.Module):
         self.n_h = 10  # num of output capsules
         self.d_h = 16  # dim of output capsules
 
-        self.backbone = AffnistEcnBackbone()
+        self.backbone = Backbone()
 
         # changed from K=9 to K=15 to compensate for larger image dims
         self.primcaps = PrimaryCaps(
@@ -91,7 +92,7 @@ class AffnistEffCapsNet(nn.Module):
         self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h)
 
         # changed large layer to output (40x40) instead of (28x28)
-        self.decoder = AffnistEcnDecoder()
+        self.decoder = Decoder()
 
     def forward(self, x):
         """
@@ -114,7 +115,7 @@ class AffnistEffCapsNet(nn.Module):
         return u_h, x_rec
 
 
-class AffnistEffCapsNetWOBias(nn.Module):
+class EffCapsNetWOBias(nn.Module):
     """
         EffCaps Implementation for AffNIST
         almost identical to MnistEffCapsNet
@@ -129,7 +130,7 @@ class AffnistEffCapsNetWOBias(nn.Module):
         self.n_h = 10  # num of output capsules
         self.d_h = 16  # dim of output capsules
 
-        self.backbone = AffnistEcnBackbone()
+        self.backbone = Backbone()
 
         # changed from K=9 to K=15 to compensate for larger image dims
         self.primcaps = PrimaryCaps(
@@ -137,7 +138,7 @@ class AffnistEffCapsNetWOBias(nn.Module):
         self.fcncaps = FCCapsWOBias(self.n_l, self.n_h, self.d_l, self.d_h)
 
         # changed large layer to output (40x40) instead of (28x28)
-        self.decoder = AffnistEcnDecoder()
+        self.decoder = Decoder()
 
     def forward(self, x):
         """
@@ -160,7 +161,7 @@ class AffnistEffCapsNetWOBias(nn.Module):
         return u_h, x_rec
 
 
-class AffnistEffCapsNetWORec(nn.Module):
+class EffCapsNetWORec(nn.Module):
     """
         EffCaps Implementation for AffNIST
         almost identical to MnistEffCapsNet
@@ -175,7 +176,7 @@ class AffnistEffCapsNetWORec(nn.Module):
         self.n_h = 10  # num of output capsules
         self.d_h = 16  # dim of output capsules
 
-        self.backbone = AffnistEcnBackbone()
+        self.backbone = Backbone()
 
         # changed from K=9 to K=15 to compensate for larger image dims
         self.primcaps = PrimaryCaps(
