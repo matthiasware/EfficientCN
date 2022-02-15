@@ -75,6 +75,100 @@
   Yes we will do this.
 \end{abstract}
 
+\section{Questions}
+\begin{itemize}
+	\item Do i get different representations when using a CN layer on top of a CNN?
+	\item Can I get rid of the CNN?
+	\item Theoretical advantage of routing?
+	\item Add cheaper routing
+\end{itemize}
+
+Paper questions:
+\begin{itemize}
+	\item Benefit of routing
+	\item Benefit of CNs
+	\item Benefit of removing CNNs
+\end{itemize}
+
+\section{ResNet Backbone}:
+
+Using a ResNet as backbone and a CN on top with varying number of CN layers. Results on AffNIST. These experiments are similar to \url{http://proceedings.mlr.press/v101/paik19a/paik19a.pdf}  where they analyzed differnt routing algorithms and did not find an advantage over random or uniform routing.
+In \url{https://liu.diva-portal.org/smash/get/diva2:1445181/FULLTEXT01.pdf} they made CNs deeper but used ResNet as a backbone. From the table below we can see that there is not a advantage in accuracy when it comes to putting a CN on top of a CNN.
+
+\begin{center}
+	\begin{tabular}{ c c c c}
+		Model & mnist valid & affnist valid & notes \\
+		\hline
+		ResNet18 + CN(PC + FCC) & 99.6 & 97.5 &  \\
+		ResNet18 + FC & 99.4 & 95.7 & \\
+		ResNet18 + CN(PC + FCC) Uniform Routing & 99.5 & 97.4 & converges slower \\
+		ResNet18 + CN(PC + FCC + FCC) & 99.6 & 97.1 & converges much slower \\
+		ResNet18 + CN(PC + FCC + FCC + FCC) & 99.5 & 97.3 & converges much slower \\
+		ResNet18 - Layer4 + CN(PC + FCC) & 99.5 & 97.5 & ResNet output dim = 256 -> PC(16,16) \\
+		ResNet18 - Layer4 + FC & 99.5  & 97.5 &  \\
+		ResNet18 - Layer3 + CN(PC + FCC) & 99.5  & 98.0  & ResNet output dim = 128 -> PC(16,8) \\
+		ResNet18 - Layer3 + FC & 99.5  & 97.9  &  \\
+		ResNet18 - Layer4,3,2 + CN(PC + FCC)  & 99.5 & 97.6 & \\
+		ResNet18 - Layer4,3,2 + FC & 99.5 & 97.0 & \\
+		ResNet18 - Layer4,3,2 + CN(PC + FCC)  & 99.3 & 92.2 & without augmentation \\
+		ResNet18 - Layer4,3,2 + FC & 99.2 & 91.5 & without augmentation \\
+		FSN & - & - & Crappy Results, Don't use \\
+	\end{tabular}
+\end{center}
+
+The Rouring does not really have an influence. Try with another backbone and more Layers!
+And maybe try to consecutively remove layers from the ResNet18 and then train a CNN and a CN on top!
+
+Even when removing any layer but 2 CNN layers (Conv BN Relu, Conv BN Relu, AVGpool) will not add improved accuracy:
+\begin{itemize}
+	\item CN: 70
+	\item CNN: 69
+\end{itemize}
+
+\section{Backbone}
+All the CNs use a CNN of varying complexity to extract features from an image. This is problematic, since in order for capsules to model any part in an image, they need to have access to the whole receptive field. This can be achieved by using Adaptive-Average pooling as used in the ResNet family. However this will result in primecaps that are always of magnitude one!
+EffCN therefore goes a different way and uses Depthwise separable convolutions to deal with that. However convolutions are still required. Furthermore the Depthwise convolution does not seem to perfectly squash the primecaps donwn. however it works much better than AvrgPooling!
+
+Can we come up with a CN only architecture?
+
+\begin{itemize}
+	\item Use either universal capsules that can adapt to every feature and work on subset of image
+	\item Use cross correlation
+\end{itemize}
+
+SInce the routing so far is comparingly simle, removing the CNN would require to make the CNs more complex in terms of non-linearities! -> Transformer :D
+
+
+\section{Routing}
+
+Oversvations with EffCN routing:
+\begin{itemize}
+	\item Routing is quite expensive in parameters and computation
+	\item We get a kind of parse tree
+	\item The accuracy is not improved by routing
+	\item Adding more layers does not improve routing
+	\item The parse tree for each class is more or less the same
+	\item There are Capsules that polarize a lot!
+	\item There are Capsules that never activate
+	\item THere are Capsules that take a lot of input (always) but never output. Trash capsules.
+	\item Adding more CN layers slows convergence down
+	\item The Primecaps are almost always activated! When using AdaptiveAvrgPooling instead of DWSC, it gets much worse.
+	\item Need to find a way around the high activation of the primecaps, or the softmax routing!
+\end{itemize}
+
+Metrics:
+\begin{itemize}
+	\item The average max coupling is often really low for upper capsules: 15-25
+	\item The average max std deviation coupling is really low for upper capsules, indicating no dynamics in the parse tree!
+\end{itemize}
+
+New Routing Algorithm
+\begin{itemize}
+	\item In layer layers multiple children can be connected to one parent and multiple parents can be connected to one children
+	\item In higher layers, one children has one parent but one parent can have multiple children
+	\item This is required to get the parse tree!
+\end{itemize}
+
 \section{Introduction}
 
 Since their first applicable appearance in \cite{DBLP:conf/nips/SabourFH17}, CapsNets (CNs) were highly praised for overcoming many shortcomings of traditional Convolutional Neural Networks (CNNs). Interestingly, and although CNs have gained popularity in a small community of devoting Adapts that do not fail to preach the imminent takeover of CNs, real world practitioner tend to stick to traditional CNN architectures or the newer Transformer based architectures in their applications. This might be explained with the fact, that so far CNs do not scale up to large scale tasks like ImageNet classification.
@@ -341,6 +435,46 @@ Architectures to consider
 Data on Howard:
 \begin{itemize}
 	\item Run on AffNIST \url{/mnt/experiments/effcn/affnist/effcn_affnist_2021_12_05_00_37_49_0x82d}, train-mn: 0.9992, valid-mn: 0.9933, valid-an: 0.8530
+\end{itemize}
+
+\section{Issues with EfficientCN}
+
+\begin{itemize}
+	\item ECN uses a large CNN backbone which does most of the work
+	\item ECN uses a huge Discrimator: 1.3m params on mnist vs 0.3m params for the Capsule part!
+	\item ECN uses fully connected attention. Since the atomic information unit is a vector, the Weights is a Tensor of 3. degree, that grows with the number of classes!
+\end{itemize}
+
+\section{Issues with CNs in General}
+
+\begin{itemize}
+	\item CNs pre-allocated capsules to a discrete set of possible parts. The more objects, the more capsules are required! Can be solved by universal capsules but this breaks Symmetry assumption and Routing will become impossible
+	\item ...
+\end{itemize}
+
+\section{Issues with Convolutions}
+The good:
+\begin{itemize}
+	\item strong bias for visual input
+	\item spatial agnostic
+	\item parameter efficient via weight sharing
+	\item translation invariance
+\end{itemize}
+
+The bad:
+\begin{itemize}
+	\item Hard to capture long range relationshipts other than stacking them up or using dilution, but dependencies are not guaranteed.
+	\item small receptive field
+	\item Fixed kernels after training!
+	\item Place coding in feature map
+\end{itemize}
+
+\section{Notes}
+
+\begin{itemize}
+	\item Dedicated capsule must have access to the whole receptive field. This is expensive. Furthermore if multiple instances of the respective object part are present, it cannot be expressed. However dynamic routing is possible with dedicated capsules.
+	\item Universal capsules on different locations have the advantage of being able to express any part of an object. With multiple layers of universal capsules, we get the problem of symmetry, as it is unclear to which capsule in an upper layer the information is routed.
+	\item Do a combination of both?
 \end{itemize}
 
 \begin{ack}

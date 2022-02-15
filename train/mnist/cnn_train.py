@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import sys
-sys.path.append("./..")
+sys.path.append("./../..")
 
 import torch
 import torchvision.datasets as datasets
@@ -11,8 +11,8 @@ import torch.nn as nn
 from torch import optim
 
 import numpy as np
-from effcn.models import MnistBaselineCNN
-from effcn.utils import count_parameters
+from effcn.models_mnist import BaselineCNN
+from misc.utils import count_parameters
 
 if torch.cuda.is_available():
     dev = "cuda:0"
@@ -38,7 +38,7 @@ def main():
                                            shuffle=True,
                                            num_workers=8)
 
-    model = MnistBaselineCNN()
+    model = BaselineCNN()
     model = model.to(device)
 
     print("#params: {}".format(count_parameters(model)))
