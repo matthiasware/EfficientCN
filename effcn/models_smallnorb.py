@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from .layers import View, Squash, PrimaryCaps, FCCaps
+from .layers import View, Squash, PrimaryCaps, FCCaps, PrimaryCapsLayer, CapsLayer
 from .functions import max_norm_masking, masking
 
 class SmallNorbEcnBackbone(nn.Module):
@@ -106,6 +106,51 @@ class SmallNorbEffCapsNet(nn.Module):
         u_l = self.backbone(x)
         u_l = self.primcaps(u_l)
         u_h = self.fcncaps(u_l)
+        
+        #Decoder
+        u_h_masked = masking(u_h, y_true)
+        x_rec = self.decoder(u_h_masked)
+        
+        return u_h,  x_rec
+
+
+class CapsNet(nn.Module):
+    """
+        CapsNet Implementation for SmallNorb
+        all parameters taken from the paper
+    """
+    def __init__(self):
+        super().__init__()
+        self.n_l = (32 * 12 * 12) # num of primary capsules
+        self.d_l = 8            # dim of primary capsules
+        self.n_h = 5           # num of output capsules
+        self.d_h = 16           # dim of output capsules
+        self.n_iter = 3
+        
+        self.backbone = nn.Sequential(
+                        nn.Conv2d(2, 256, kernel_size=9, stride=1),
+                        nn.Conv2d(256, 256, kernel_size=9, stride=1)
+        )
+        self.primcaps = PrimaryCapsLayer(c_in=256,c_out=32,d_l=self.d_l, kernel_size=9, stride=2)
+        self.digitcaps = CapsLayer(self.n_l, self.d_l, self.n_h, self. d_h, self.n_iter) 
+        self.decoder = SmallNorbEcnDecoder()
+
+    def forward(self, x, y_true=None):
+        """
+            IN:
+                x (b, 2, 48, 48)
+            OUT:
+                u_h    
+                    (b, n_h, d_h)
+                    output caps
+                x_rec  
+                    (b, 2, 48, 48)
+                    reconstruction of x
+        """
+        #Encoder
+        u_l = self.backbone(x)
+        u_l = self.primcaps(u_l)
+        u_h = self.digitcaps(u_l)
         
         #Decoder
         u_h_masked = masking(u_h, y_true)

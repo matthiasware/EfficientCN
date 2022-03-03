@@ -274,3 +274,27 @@ class CapsLayer(nn.Module):
         u_predict = u_predict.view(u_predict.size(0), self.n_l, self.n_h, self.d_h)
         v, c = self.routing_module.forward_debug(u_predict)
         return v, c
+
+class PrimaryCapsLayer(nn.Module):
+    """
+    c_in: input channels
+    c_out: output channels
+    d_l: dimension of prime caps
+    """
+    def __init__(self, c_in, c_out, d_l, kernel_size, stride):
+        super(PrimaryCapsLayer, self).__init__()
+        self.conv = nn.Conv2d(c_in, c_out * d_l, kernel_size=kernel_size, stride=stride)
+        self.c_in = c_in
+        self.c_out = c_out
+        self.d_l = d_l
+
+    def forward(self, input):
+        out = self.conv(input)
+        N, C, H, W = out.size()
+        out = out.view(N, self.c_out, self.d_l, H, W)
+
+        # will output N x OUT_CAPS x OUT_DIM
+        out = out.permute(0, 1, 3, 4, 2).contiguous()
+        out = out.view(out.size(0), -1, out.size(4))
+        out = squash_hinton(out)
+        return out

@@ -27,9 +27,9 @@ from tqdm import tqdm
 from dotted_dict import DottedDict
 
 # local imports
-from effcn.models_multimnist import MultiMnistEffCapsNet, MultiMnistEffCapsNet2
+from effcn.models_multimnist import MultiMnistEffCapsNet, MultiMnistEffCapsNet2, CapsNet
 from effcn.functions import create_margin_loss
-from effcn.utils import count_parameters
+from misc.utils import count_parameters
 from datasets.multimnist import MultiMNist
 from misc.optimizer import get_optimizer, get_scheduler
 
@@ -45,8 +45,10 @@ def default():
     num_epochs = 20
     num_workers = 2
     leraning_rate = 1e-4
+    model = 'EffCapsNet'  # CapsNet
 
     config = {
+        'model': "model",
         'device': 'cuda:0',
         'debug': True,
         'train': {
@@ -88,7 +90,7 @@ def default():
             'experiments': '/mnt/data/experiments/EfficientCN/multimnist_overfit',
         },
         'names': {
-            'model_dir': 'effcn_multimnist_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'model_dir': 'multimnist_{a}_{b}'.format(a=model, b=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
             'ckpt_dir': 'ckpts',
             'img_dir': 'imgs',
             'log_dir': 'logs',
@@ -242,6 +244,9 @@ def train(config=None):
     p_acc_plot = p_experiment / config.names.acc_plot
     p_loss_plot = p_experiment / config.names.loss_plot    
 
+    if (config.model != 'EffCapsNet')  and (config.model != 'CapsNet'):
+        print('Indicated model {} doesnt exist'.format(config.model))
+        exit()
 
     device = torch.device(config.device)  
     
@@ -290,10 +295,14 @@ def train(config=None):
 
     ##################################
     #Train Model
+    
+    # Model
+    if config.model == 'EffCapsNet':
+        #model = MultiMnistEffCapsNet()
+        model = MultiMnistEffCapsNet2()
+    elif config.model == 'CapsNet':
+        model = CapsNet()
 
-    #Model
-    #model = MultiMnistEffCapsNet()
-    model = MultiMnistEffCapsNet2()
     model = model.to(device)
 
     # optimizer
@@ -544,7 +553,9 @@ def train(config=None):
      
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Run Efficient CapsNet on MultiMNIST')
+    parser = argparse.ArgumentParser(description='Run EffCapsNet or CapsNet on MultiMNIST')
+    parser.add_argument('--model', type=str, default='EffCapsNet', metavar='',
+                        required=False, help='Possible Models: EffCapsNet or CapsNet')
     parser.add_argument('--lr', type=float, default=0.0001, metavar='', required=False, help='learning rate')
     parser.add_argument('--bs', type=int, default=64, metavar='', required=False, help='batch size')
     parser.add_argument('--num_epochs', type=int, default=150, metavar='', required=False, help='number of training epochs')
@@ -559,6 +570,7 @@ if __name__ == '__main__':
 
 
     config = {
+        'model': args.model,
         'device': args.device,
         'debug': True,
         'train': {
@@ -600,7 +612,7 @@ if __name__ == '__main__':
             'experiments': args.p_experiment,
         },
         'names': {
-            'model_dir': 'effcn_multimnist_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'model_dir': 'multimnist_{a}_{b}'.format(a=args.model, b=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
             'ckpt_dir': 'ckpts',
             'img_dir': 'imgs',
             'log_dir': 'logs',
