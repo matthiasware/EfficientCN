@@ -1,7 +1,8 @@
 import numpy as np
 import torch
 import torch.nn as nn
-# from .functions import squash_func
+import torch.nn.functional as F
+from .functions import squash_hinton
 
 
 class Squash(nn.Module):
@@ -216,3 +217,60 @@ class FCCapsWOBias(nn.Module):
         U_h_fin = torch.einsum('...ikl,...ik->...kl', U_hat, C)
         U_h_sq = self.squash(U_h_fin)
         return U_hat, A, A_scaled, A_sum, C, U_h_fin, U_h_sq
+
+
+
+class AgreementRouting(nn.Module):
+    def __init__(self, n_l, n_h, n_iter):
+        super(AgreementRouting, self).__init__()
+        self.n_iter = n_iter
+        self.b = nn.Parameter(torch.zeros((n_l, n_h)))
+
+    def forward(self, u_predict):
+        v, _ = self.forward_debug(u_predict)
+        return v
+
+    def forward_debug(self, u_predict):
+        batch_size, n_l, n_h, output_dim = u_predict.size()
+
+        c = F.softmax(self.b / 1, dim=-1)
+        s = (c.unsqueeze(2) * u_predict).sum(dim=1)
+        v = squash_hinton(s)
+
+        if self.n_iter > 0:
+            b_batch = self.b.expand((batch_size, n_l, n_h))
+            for r in range(self.n_iter):
+                v = v.unsqueeze(1)
+                b_batch = b_batch + (u_predict * v).sum(-1)
+
+                c = F.softmax(b_batch.view(-1, n_h) / 1, dim=-1).view(-1, n_l, n_h, 1)
+                s = (c * u_predict).sum(dim=1)
+                v = squash_hinton(s)
+        return v, c.squeeze()
+
+
+class CapsLayer(nn.Module):
+    def __init__(self, n_l, d_l, n_h, d_h, n_iter=3):
+        super(CapsLayer, self).__init__()
+        self.d_l = d_l
+        self.n_l = n_l
+        self.d_h = d_h
+        self.n_h = n_h
+        self.weights = nn.Parameter(torch.Tensor(n_l, d_l, n_h * d_h))
+        self.routing_module = AgreementRouting(n_l, n_h, n_iter)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        stdv = 1. / np.sqrt(self.n_l)
+        self.weights.data.uniform_(-stdv, stdv)
+
+    def forward(self, caps_output):
+        v, _ = self.forward_debug(caps_output)
+        return v
+
+    def forward_debug(self, caps_output):
+        caps_output = caps_output.unsqueeze(2)
+        u_predict = caps_output.matmul(self.weights)
+        u_predict = u_predict.view(u_predict.size(0), self.n_l, self.n_h, self.d_h)
+        v, c = self.routing_module.forward_debug(u_predict)
+        return v, c
