@@ -164,7 +164,10 @@ class CapsNet(nn.Module):
         self.d_h = 16           # dim of output capsules
         self.n_iter = 3
 
-        self.backbone = nn.Conv2d(1, 256, kernel_size=9, stride=1)
+        self.backbone = nn.Sequential(
+                        nn.Conv2d(1, 256, kernel_size=9, stride=1),
+                        nn.ReLU(inplace=True),
+        )
         self.primcaps = PrimaryCapsLayer(c_in=256,c_out=32,d_l=self.d_l, kernel_size=9, stride=2)
         self.digitcaps = CapsLayer(self.n_l, self.d_l, self.n_h, self. d_h, self.n_iter)
         self.decoder = Decoder()
