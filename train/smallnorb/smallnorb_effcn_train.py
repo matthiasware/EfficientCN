@@ -27,9 +27,9 @@ from tqdm import tqdm
 from dotted_dict import DottedDict
 
 # local imports
-from effcn.models_smallnorb import SmallNorbEffCapsNet
+from effcn.models_smallnorb import EffCapsNet, CapsNet
 from effcn.functions import create_margin_loss
-from effcn.utils import count_parameters
+from misc.utils import count_parameters
 from datasets.smallnorb import SmallNORB
 from misc.optimizer import get_optimizer, get_scheduler
 
@@ -53,8 +53,10 @@ def default():
     batch_size = 16
     num_epochs = 200
     num_workers = 2
+    model = 'EffCapsNet'  # CapsNet
 
     config = {
+        'model':  model,
         'device': 'cuda:0',
         'debug': True,
         'train': {
@@ -94,7 +96,7 @@ def default():
             'experiments': '/mnt/data/experiments/EfficientCN/smallnorb',
         },
         'names': {
-            'model_dir': 'effcn_smallnorb_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'model_dir': 'smallnorb_{a}_{b}'.format(a=model, b=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
             'ckpt_dir': 'ckpts',
             'img_dir': 'imgs',
             'log_dir': 'logs',
@@ -238,6 +240,9 @@ def train(config=None):
     p_acc_plot = p_experiment / config.names.acc_plot
     p_loss_plot = p_experiment / config.names.loss_plot    
 
+    if (config.model != 'EffCapsNet')  and (config.model != 'CapsNet'):
+        print('Indicated model {} doesnt exist'.format(config.model))
+        exit()
     
     device = torch.device(config.device)  
     
@@ -284,7 +289,11 @@ def train(config=None):
     #Train Model
 
     #Model
-    model = SmallNorbEffCapsNet()
+    if config.model == 'EffCapsNet':
+        model = EffCapsNet()
+    elif config.model == 'CapsNet':
+        model = CapsNet()
+
     model = model.to(device)
 
     # optimizer
@@ -506,7 +515,8 @@ def train(config=None):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run Efficient CapsNet on Smallnorb')
-
+    parser.add_argument('--model', type=str, default='EffCapsNet', metavar='',
+                        required=False, help='Possible Models: EffCapsNet or CapsNet')
     parser.add_argument('--lr', type=float, default=0.0005)
     parser.add_argument('--bs', type=int, default=16)
     parser.add_argument('--num_epochs', type=int, default=200)
@@ -532,6 +542,7 @@ if __name__ == '__main__':
     ])  
 
     config = {
+        'model': args.model,
         'device': args.device,
         'debug': False,
         'train': {
@@ -571,7 +582,7 @@ if __name__ == '__main__':
             'experiments': args.p_experiment,
         },
         'names': {
-            'model_dir': 'effcn_smallnorb_{}'.format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'model_dir': 'smallnorb_{a}_{b}'.format(a=args.model, b=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
             'ckpt_dir': 'ckpts',
             'img_dir': 'imgs',
             'log_dir': 'logs',

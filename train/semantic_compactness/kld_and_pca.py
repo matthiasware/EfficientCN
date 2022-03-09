@@ -1,4 +1,5 @@
 import sys
+#sys.path.append("./../..")
 sys.path.append("./../")
 sys.path.append(".")
 
@@ -8,6 +9,7 @@ import pickle
 import pprint
 import time
 import datetime
+import argparse
 #
 import torch
 import torchvision
@@ -23,7 +25,7 @@ from dotted_dict import DottedDict
 #
 from misc.plot_utils import plot_mat, imshow
 from effcn.functions import max_norm_masking
-from effcn.models import MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R
+from effcn.models_mnist import EffCapsNet, CNN_CR_SF, CNN_CR, CNN_R, CapsNet
 from misc.utils import mkdir_directories
 
 def affine_xtrans(img, target, range=[-5.,5.,1]):
@@ -120,16 +122,20 @@ def sem_comp(conf):
     pickle.dump(conf, file1)
     file1.close()
 
+    #device 
+    device = config.device
+
     #Model to device
-    device = torch.device("cuda")
-    if config.model == 'MnistEffCapsNet':
-        model = MnistEffCapsNet()
-    elif config.model == 'MnistCNN_CR_SF':
-        model = MnistCNN_CR_SF()
-    elif config.model == 'MnistCNN_CR':
-        model = MnistCNN_CR()
-    elif config.model == 'MnistCNN_R':
-        model = MnistCNN_R()
+    if config.model == 'EffCapsNet':
+        model = EffCapsNet()
+    elif config.model == 'CapsNet':
+        model = CapsNet()
+    elif config.model == 'CNN_CR_SF':
+        model = CNN_CR_SF()
+    elif config.model == 'CNN_CR':
+        model = CNN_CR()
+    elif config.model == 'CNN_R':
+        model = CNN_R()
     else:
         print('Indicated model {} isnt avalible'.format(config.model))
         exit()
@@ -250,22 +256,38 @@ def sem_comp(conf):
 
 
 if __name__ == "__main__":
-    #model = 'MnistCNN_CR' #MnistEffCapsNet MnistCNN_CR_SF MnistCNN_CR MnistCNN_R
-    #model = 'MnistCNN_CR_SF' #MnistEffCapsNet MnistCNN_CR_SF MnistCNN_CR MnistCNN_R
-    model = 'MnistCNN_R' #MnistEffCapsNet MnistCNN_CR_SF MnistCNN_CR MnistCNN_R
-    #model = 'MnistEffCapsNet' #MnistEffCapsNet MnistCNN_CR_SF MnistCNN_CR MnistCNN_R
+    parser = argparse.ArgumentParser(
+        description='Run Semantic Compactness on EffCapsNet, CapsNet, CNN_CR_SF, CNN_CR or CNN_R on MNIST')
+    parser.add_argument('-m','--model', type=str, default='CapsNet', metavar='',
+                        required=False, help='Possible Models: EffCapsNet,  CapsNet, CNN_CR_SF, CNN_CR, CNN_R')
+    parser.add_argument('-d','--device', type=str, default='cuda',
+                        metavar='', required=False, help='device')
+    parser.add_argument('-pe','--p_experiment', type=str, default='/mnt/data/experiments/EfficientCN/mnist/mnist_CapsNet_2022_03_06_23_45_54',
+                        metavar='', required=False, help='path of experiment')
+    parser.add_argument('-pm','--p_model', type=str, default='model_150.ckpt',
+                        metavar='', required=False, help='path of model')
+    parser.add_argument('-ps','--p_semcomp', type=str, default='/mnt/data/experiments/EfficientCN/sem_comp',
+                        metavar='', required=False, help='path for semantic compactness')
+    args = parser.parse_args()
+
+
+    #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistCNN_CR_2022_02_06_17_49_47",
+    #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistCNN_CR_SF_2022_02_06_17_49_16",
+    #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistCNN_R_2022_02_06_17_51_14",
+    #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistEffCapsNet_2022_02_06_17_48_52",
+    #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/mnist_CapsNet_2022_03_06_23_45_54",
+
+
     config = {
-        'model': model, #MnistEffCapsNet, MnistCNN_CR_SF, MnistCNN_CR, MnistCNN_R,
+        'model':args.model,
+        'device': args.device,
         "path" : {
-            #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistCNN_CR_2022_02_06_17_49_47",
-            #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistCNN_CR_SF_2022_02_06_17_49_16",
-            "p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistCNN_R_2022_02_06_17_51_14",
-            #"p_experiment": "/mnt/data/experiments/EfficientCN/mnist/effcn_mnist_MnistEffCapsNet_2022_02_06_17_48_52",
+            "p_experiment": args.p_experiment,
             "p_ckpts": "ckpts",
-            "p_model": "model_150.ckpt",
+            "p_model": args.p_model,
             "p_data" : "/mnt/data/datasets",
-            "p_semcomp" : "/mnt/data/experiments/EfficientCN/sem_comp",
-            "p_stats" : 'semcomp_mnist_{mo}_{da}'.format(mo=model, da=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
+            "p_semcomp" : args.p_semcomp,
+            "p_stats" : 'semcomp_mnist_{mo}_{da}'.format(mo=args.model, da=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
         },
         "ds" : {
             "train" : True,

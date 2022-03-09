@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from .layers import Squash, PrimaryCaps, FCCaps
+from .layers import Squash, PrimaryCaps, FCCaps, PrimaryCapsLayer, CapsLayer
 from .functions import max_norm_masking, masking
 
 
@@ -143,6 +143,69 @@ class EffCapsNet(nn.Module):
         """
         u_l = self.primcaps(self.backbone(x))
         u_h = self.fcncaps(u_l)
+        #
+        u_h_masked = masking(u_h, y_true)
+        x_rec = self.decoder(u_h_masked)
+        return u_h, x_rec
+
+
+class BackboneHinton(nn.Module):
+    """
+        Backbone model from Efficient-CapsNet for MNIST
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Sequential(
+                        nn.Conv2d(1, 256, kernel_size=9, stride=1),
+                        nn.ReLU(inplace=True),
+                        nn.BatchNorm2d(256),
+        )
+
+    def forward(self, x):
+        """
+            IN:
+                x (b, 1, 28, 28)
+            OUT:
+                x (b, 128, 9, 9)
+        """
+        return self.layers(x)
+
+
+class CapsNet(nn.Module):
+    """
+        CapsNet Implementation for MNIST
+        all parameters taken from the paper
+    """
+
+    def __init__(self):
+        super().__init__()
+        # values from paper, are fixed!
+        self.n_l = (32 * 6 * 6) # num of primary capsules
+        self.d_l = 8            # dim of primary capsules
+        self.n_h = 10           # num of output capsules
+        self.d_h = 16           # dim of output capsules
+        self.n_iter = 3
+
+        self.backbone = BackboneHinton()
+        self.primcaps = PrimaryCapsLayer(c_in=256,c_out=32,d_l=self.d_l, kernel_size=9, stride=2)
+        self.digitcaps = CapsLayer(self.n_l, self.d_l, self.n_h, self. d_h, self.n_iter)
+        self.decoder = Decoder()
+
+    def forward(self, x, y_true=None):
+        """
+            IN:
+                x (b, 1, 28, 28)
+            OUT:
+                u_h
+                    (b, n_h, d_h)
+                    output caps
+                x_rec
+                    (b, 1, 28, 28)
+                    reconstruction of x
+        """
+        u_l = self.primcaps(self.backbone(x))
+        u_h = self.digitcaps(u_l)
         #
         u_h_masked = masking(u_h, y_true)
         x_rec = self.decoder(u_h_masked)
