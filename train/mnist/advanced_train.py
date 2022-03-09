@@ -28,7 +28,7 @@ from tqdm import tqdm
 from dotted_dict import DottedDict
 
 # local imports
-from effcn.models_mnist import EffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
+from effcn.models_mnist import EffCapsNet, CNN_CR_SF, CNN_CR, CNN_R, CapsNet
 from effcn.functions import create_margin_loss, create_margin_loss_cnn_r
 from misc.utils import count_parameters
 from misc.optimizer import get_optimizer, get_scheduler
@@ -59,7 +59,7 @@ def default():
     num_epochs = 150
     num_workers = 2
     leraning_rate = 5e-4
-    model = 'MnistCNN_R'  # EffCapsNet, CNN_CR_SF, CNN_CR, CNN_R
+    model = 'EffCapsNet'  # EffCapsNet, CNN_CR_SF, CNN_CR, CNN_R, CapsNet
 
     config = {
         'model': model,
@@ -100,7 +100,7 @@ def default():
             'experiments': '/mnt/data/experiments/EfficientCN/mnist',
         },
         'names': {
-            'model_dir': 'effcn_mnist_{a}_{b}'.format(a=model, b=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'model_dir': 'mnist_{a}_{b}'.format(a=model, b=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
             'ckpt_dir': 'ckpts',
             'img_dir': 'imgs',
             'log_dir': 'logs',
@@ -249,7 +249,7 @@ def train(config=None):
     p_acc_plot = p_experiment / config.names.acc_plot
     p_loss_plot = p_experiment / config.names.loss_plot
 
-    if (config.model != 'MnistCNN_R') and (config.model != 'EffCapsNet') and (config.model != 'CNN_CR_SF') and (config.model != 'CNN_CR'):
+    if (config.model != 'MnistCNN_R') and (config.model != 'EffCapsNet') and (config.model != 'CNN_CR_SF') and (config.model != 'CNN_CR')and (config.model != 'CapsNet'):
         print('Indicated model {} doesnt exist'.format(config.model))
         exit()
 
@@ -298,6 +298,8 @@ def train(config=None):
     # Model
     if config.model == 'EffCapsNet':
         model = EffCapsNet()
+    elif config.model == 'CapsNet':
+        model = CapsNet()
     elif config.model == 'CNN_CR_SF':
         model = CNN_CR_SF()
     elif config.model == 'CNN_CR':
@@ -305,6 +307,7 @@ def train(config=None):
     elif config.model == 'CNN_R':
         model = CNN_R()
     model = model.to(device)
+
 
     # optimizer
     optimizer = get_optimizer(
@@ -527,7 +530,7 @@ def train(config=None):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Run Efficient CapsNet, CNN_CR_SF, CNN_CR or CNN_R on MNIST')
+        description='Run EffCapsNet, CapsNet, CNN_CR_SF, CNN_CR or CNN_R on MNIST')
     parser.add_argument('--model', type=str, default='EffCapsNet', metavar='',
                         required=False, help='Possible Models: EffCapsNet, CNN_CR_SF, CNN_CR, CNN_R')
     parser.add_argument('--lr', type=float, default=0.0005,
@@ -602,7 +605,7 @@ if __name__ == '__main__':
             'experiments': args.p_experiment,
         },
         'names': {
-            'model_dir': 'effcn_mnist_{a}_{b}'.format(a=args.model, b=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
+            'model_dir': 'mnist_{a}_{b}'.format(a=args.model, b=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')),
             'ckpt_dir': 'ckpts',
             'img_dir': 'imgs',
             'log_dir': 'logs',
