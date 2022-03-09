@@ -190,7 +190,8 @@ def rates_activities(U, C):
     rac = rac.mean()
     racnd = racnd.mean()
 
-    assert np.isclose(rnd * racnd, rac)
+    if not np.isclose(rnd * racnd, rac):
+        print("rnd * racnd != rac: {:.6f} != {:.6f}".format(rnd * racnd, rac))
 
     return rnd, rac, racnd
 

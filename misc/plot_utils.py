@@ -97,6 +97,8 @@ def plot_couplings(couplings: List[np.ndarray], scale_factor=2, title: str=None,
     
     for idx in range(1, len(couplings) + 1):
         C = couplings[idx - 1]
+        assert np.all(C < 1 + 1e-4)
+        C = np.minimum(C, 1)
         nl, nh = C.shape
         ax.scatter(range(nl), np.ones(nl) * idx, c=[plt.cm.prism(i) for i in range(nl)])
         ax.scatter(range(nh), np.ones(nh) * idx + 1, c=[plt.cm.prism(i) for i in range(nh)])
