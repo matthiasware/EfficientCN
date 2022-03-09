@@ -149,6 +149,29 @@ class EffCapsNet(nn.Module):
         return u_h, x_rec
 
 
+class BackboneHinton(nn.Module):
+    """
+        Backbone model from Efficient-CapsNet for MNIST
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Sequential(
+                        nn.Conv2d(1, 256, kernel_size=9, stride=1),
+                        nn.ReLU(inplace=True),
+                        nn.BatchNorm2d(256),
+        )
+
+    def forward(self, x):
+        """
+            IN:
+                x (b, 1, 28, 28)
+            OUT:
+                x (b, 128, 9, 9)
+        """
+        return self.layers(x)
+
+
 class CapsNet(nn.Module):
     """
         CapsNet Implementation for MNIST
@@ -164,10 +187,7 @@ class CapsNet(nn.Module):
         self.d_h = 16           # dim of output capsules
         self.n_iter = 3
 
-        self.backbone = nn.Sequential(
-                        nn.Conv2d(1, 256, kernel_size=9, stride=1),
-                        nn.ReLU(inplace=True),
-        )
+        self.backbone = BackboneHinton()
         self.primcaps = PrimaryCapsLayer(c_in=256,c_out=32,d_l=self.d_l, kernel_size=9, stride=2)
         self.digitcaps = CapsLayer(self.n_l, self.d_l, self.n_h, self. d_h, self.n_iter)
         self.decoder = Decoder()

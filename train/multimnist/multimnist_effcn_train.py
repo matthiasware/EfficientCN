@@ -27,7 +27,7 @@ from tqdm import tqdm
 from dotted_dict import DottedDict
 
 # local imports
-from effcn.models_multimnist import MultiMnistEffCapsNet, MultiMnistEffCapsNet2, CapsNet
+from effcn.models_multimnist import EffCapsNet, EffCapsNet2, CapsNet
 from effcn.functions import create_margin_loss
 from misc.utils import count_parameters
 from datasets.multimnist import MultiMNist
@@ -298,8 +298,8 @@ def train(config=None):
     
     # Model
     if config.model == 'EffCapsNet':
-        #model = MultiMnistEffCapsNet()
-        model = MultiMnistEffCapsNet2()
+        #model = EffCapsNet()
+        model = EffCapsNet2()
     elif config.model == 'CapsNet':
         model = CapsNet()
 
@@ -339,7 +339,7 @@ def train(config=None):
 
 
     # custom training stats
-    stats = {
+    stats = {bash
         "train": {
             'acc': [],
             'loss': [],

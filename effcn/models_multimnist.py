@@ -4,11 +4,7 @@ from .layers import View, Squash, PrimaryCaps, FCCaps, PrimaryCapsLayer, CapsLay
 from .functions import masking
 
 
-class MultiMnistBaselineCNN(nn.Module):
-    pass
-
-
-class MultiMnistEcnBackbone(nn.Module):
+class Backbone(nn.Module):
     """
         Backbone model from Efficient-CapsNet for MultiMNIST
     """
@@ -38,7 +34,7 @@ class MultiMnistEcnBackbone(nn.Module):
         return self.layers(x)
     
     
-class MultiMnistEcnDecoder(nn.Module):
+class Decoder(nn.Module):
     """
         Decoder model from Efficient-CapsNet for MultiMNIST
     """
@@ -67,7 +63,7 @@ class MultiMnistEcnDecoder(nn.Module):
         return x
 
     
-class MultiMnistEffCapsNet(nn.Module):
+class EffCapsNet(nn.Module):
     """
         EffCaps Implementation for MultiMNIST
         all parameters taken from the paper
@@ -80,11 +76,11 @@ class MultiMnistEffCapsNet(nn.Module):
         self.n_h = 10  # num of output capsules
         self.d_h = 16  # dim of output capsules
         
-        self.backbone = MultiMnistEcnBackbone()
+        self.backbone = Backbone()
         self.primcaps = PrimaryCaps(F=128, K=5, N=self.n_l, D=self.d_l, s=2) # F = n_l * d_l !!! # S=stride=2 reduces [1,128,6,6] -> [1,128,5,5]
         self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h) 
-        self.decoder1 = MultiMnistEcnDecoder()
-        self.decoder2 = MultiMnistEcnDecoder()
+        self.decoder1 = Decoder()
+        self.decoder2 = Decoder()
 
         #initializer
         #self.initialize_weights()
@@ -137,7 +133,7 @@ class MultiMnistEffCapsNet(nn.Module):
         torch.nn.init.xavier_normal_(self.decoder2.layers[4].weight)
 
 
-class MultiMnistEffCapsNet2(nn.Module):
+class EffCapsNet2(nn.Module):
     """
         EffCaps Implementation for MultiMNIST
         all parameters taken from the paper
@@ -150,11 +146,11 @@ class MultiMnistEffCapsNet2(nn.Module):
         self.n_h = 10  # num of output capsules
         self.d_h = 16  # dim of output capsules
         
-        self.backbone = MultiMnistEcnBackbone()
+        self.backbone = Backbone()
         self.primcaps = PrimaryCaps(F=128, K=6, N=self.n_l, D=self.d_l, s=1) # F = n_l * d_l !!! # S=stride=2 reduces [1,128,6,6] -> [1,128,5,5]
         self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h) 
-        self.decoder1 = MultiMnistEcnDecoder()
-        self.decoder2 = MultiMnistEcnDecoder()
+        self.decoder1 = Decoder()
+        self.decoder2 = Decoder()
 
         #initializer
         #self.initialize_weights()
@@ -228,8 +224,8 @@ class CapsNet(nn.Module):
         )
         self.primcaps = PrimaryCapsLayer(c_in=256,c_out=32,d_l=self.d_l, kernel_size=9, stride=2)
         self.digitcaps = CapsLayer(self.n_l, self.d_l, self.n_h, self. d_h, self.n_iter) 
-        self.decoder1 = MultiMnistEcnDecoder()
-        self.decoder2 = MultiMnistEcnDecoder()
+        self.decoder1 = Decoder()
+        self.decoder2 = Decoder()
 
         #initializer
         #self.initialize_weights()

@@ -3,7 +3,7 @@ import torch.nn as nn
 from .layers import View, Squash, PrimaryCaps, FCCaps, PrimaryCapsLayer, CapsLayer
 from .functions import max_norm_masking, masking
 
-class SmallNorbEcnBackbone(nn.Module):
+class Backbone(nn.Module):
     """
         Backbone model from Efficient-CapsNet for SmallNorb
     """
@@ -33,7 +33,7 @@ class SmallNorbEcnBackbone(nn.Module):
         return self.layers(x)
     
 
-class SmallNorbEcnDecoder(nn.Module):
+class Decoder(nn.Module):
     """
         Decoder model from Efficient-CapsNet for SmallNorb
     """
@@ -72,7 +72,7 @@ class SmallNorbEcnDecoder(nn.Module):
         return x
 
     
-class SmallNorbEffCapsNet(nn.Module):
+class EffCapsNet(nn.Module):
     """
         EffCaps Implementation for SmallNorb
         all parameters taken from the paper
@@ -85,10 +85,10 @@ class SmallNorbEffCapsNet(nn.Module):
         self.n_h = 5   # num of output capsules
         self.d_h = 16  # dim of output capsules
         
-        self.backbone = SmallNorbEcnBackbone()
+        self.backbone = Backbone()
         self.primcaps = PrimaryCaps(F=128, K=8, N=self.n_l, D=self.d_l, s=2) # F = n_l * d_l !!!
         self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h) 
-        self.decoder = SmallNorbEcnDecoder()
+        self.decoder = Decoder()
 
     def forward(self, x, y_true=None):
         """
@@ -135,7 +135,7 @@ class CapsNet(nn.Module):
         )
         self.primcaps = PrimaryCapsLayer(c_in=256,c_out=32,d_l=self.d_l, kernel_size=9, stride=2)
         self.digitcaps = CapsLayer(self.n_l, self.d_l, self.n_h, self. d_h, self.n_iter) 
-        self.decoder = SmallNorbEcnDecoder()
+        self.decoder = Decoder()
 
     def forward(self, x, y_true=None):
         """

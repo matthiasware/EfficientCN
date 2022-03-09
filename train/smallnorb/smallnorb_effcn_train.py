@@ -27,7 +27,7 @@ from tqdm import tqdm
 from dotted_dict import DottedDict
 
 # local imports
-from effcn.models_smallnorb import SmallNorbEffCapsNet, CapsNet
+from effcn.models_smallnorb import EffCapsNet, CapsNet
 from effcn.functions import create_margin_loss
 from misc.utils import count_parameters
 from datasets.smallnorb import SmallNORB
@@ -290,7 +290,7 @@ def train(config=None):
 
     #Model
     if config.model == 'EffCapsNet':
-        model = SmallNorbEffCapsNet()
+        model = EffCapsNet()
     elif config.model == 'CapsNet':
         model = CapsNet()
 
