@@ -27,7 +27,10 @@
 \usepackage{microtype}      % microtypography
 \usepackage{xcolor}         % colors
 
-\title{Demystifying Capsule Neural Networks or Capsule Neural Networks do not learn a parse-tree!}
+
+\newtheorem{theorem}{Theorem}
+
+\title{Demystifying Capsule Neural Networks or Capsule Neural Networks cannot learn complex parse-trees! or Challenging the dynamic parse-tree in Capsule Neural Networks or CapsNets cannot be used to learn dynamic and complex parse-trees!}
 
 % The \author macro works with any number of authors. There are two commands
 % used to separate the names and addresses of multiple authors: \And and \AND.
@@ -73,34 +76,67 @@
 \maketitle
 
 \begin{abstract}
-  We show, that CapsNet architectures that are based on softmax routing by agreement with and squashing activation are flawed
+  We show, that vectorized Capsule Neural Network architectures that are based on softmax routing by agreement with and squashing activation cannot be used to construct dynamic parse trees.
+  Complex parse trees requires strong coupling coefficients. This constraint limits the expressiveness and depth of CapsuleNeuralNetworks. Furthermore we show that even when relaxing this assumption, not necessarily dynamic!
   We show that mathematically und empirically.
 \end{abstract}
 
 \section{Introduction}
 
+The Capsule Network (CapsNet) \cite{nips/SabourFH17} was introduced for overcome the limitations prevalent Convolutional Network (ConvNet).
+Limitations of ConvNets in reference to beeing fooled easily and robustness to affine transformations ect.
+Inspired by biological human vision and psychological evidence." See also Recognition by components and geon theory"
+One key motivation in the design of the CapsNet was to the ability of the model to deconstruct a scene into a part-whole hierachy, where a complex object is deconstructed in smaller more simpler parts ~\cite{nips/SabourFH17}~\cite{corr/Hinton2021}. The process of dynamically creating such a part-whole hierarchy finds analogy in parsing a string according to some context-free-grammar. CapsNet can therefore be interpreted to deliver a kind of grammar for images. The way how they work is.
+Advantages of parse-trees.
 \begin{itemize}
-	\item Intro to what CapsNets are. The idea and concept.
-	\begin{itemize}
-		\item From a conceptual perspective: The idea of Hinton.
-		\item From a technical perspective: Various implementations and advancements. Lots of technical stuff but a lack af ablation studies and general vagueness of the definition.
-	\end{itemize}
-	\item General positive attitude towards CNs also in popular science.
-	\item Promised benefits by citing various references.
-	\item Contrary to benefits, some limitations found in literature and observation that CpasNet simply do not scale well. [Related Work]
-	\item Münchner paper to general insuperiority of CapsNet
-	\item Paper that shows that routing does not yield a benefit when it comes to accuracy and can be beaten by uniform and random routing
-	\item So far attention has not been paid to the parse-tree claim, that is what we do!
-	\item Shine lite on the routing by agreement routing. wha it is and why is it necessary. [PARSE TREE]
-	\item Observations so far: Common CN architectures use a CNN backbone, followed by a single layer of CapsNet.
-	\item It was found, that routing does not yield a general benefit in this setting.
+	\item Capsule: dedicated part
+	\item Multiple layers of those
+	\item Routing algorithm to assign lower level capsules to a parent.
+\end{itemize}
+CapsNet was further developed.
+Reference to survey papers and some prominent individual papers.
+
+CapsNets from a
+\begin{itemize}
+	\item From a conceptual perspective: The idea of Hinton. Parse Tree. Why do people want this? Interpretable
+	\item From a technical perspective: Various implementations and advancements. Lots of technical stuff but a lack af ablation studies and general vagueness of the definition.
+\end{itemize}
+
+Despite initial good results on small datasets, SOTA has not been claimed so far. Furthermore formal definition of what determines a CapsNet are vague.
+Furthermore recent publications tried to shine light on some aspects.
+Contrary to benefits, some limitations found in literature and observation that CpasNet simply do not scale well.
+\begin{itemize}
+	\item \cite{acml/PaikKK19}: routing algorithms do not provide any benefit when it comes to accuracy in image classification.
+	\item \cite{cvpr/GuT021}: extensive ablation study on the individual parts that constitute a CapsNet and come to mixed results. Furthermore they show that for each of the tasks they can construct a similarly parametrized ConvNet that beats the CapsNet.
+	\item \cite{prl/PeerSR21} show that RBA is limited in depth!
+\end{itemize}
+
+The idead also resonated well in popular science community [REFERENCES JOCHEN?].
+To the best of our knowledge, nobody paid attention to the initial idead, that is the whole-part hierachy.
+Our question: Can CapsNet create a dynamic parse tree?
+Parse tree:
+\begin{itemize}
+	\item Sparse capsule activation
+	\item Strong coupling coefficients
+	\item Dynamic assignment. Differnt input, different routing.
+	\item For complex parse-trees, depth is required.
+\end{itemize}
+
+Observations
+\begin{itemize}
+	\item PrimeCaps activations are not sparse!
 	\item Also a single layer of CapsNet does not yield a parse tree.
-	\item A complex parse tree requires multiple layers of capsules.
-	\item We focus on the routing by agreement with softmax and squashing function
-	\item List some CapsNet papers, that do that
-	\item Show common denominator of that papers
-	\item Routing-By-Agreement: Strong couplings with strong agreement limits the depth of the network.
-	\item Argue that only strong coupling coefficients yield a parse-tree.
+\end{itemize}
+
+Results:
+\begin{itemize}
+	\item Misconception of technical implementation and the motivation semantics around CapsNet
+	\item Popular Science hails CapsNet. We want to shine light on the matter.
+	\item Routing By Agreement limits the maximal possible depth and therefore expressiveness of CapsNets. Getting a parse-tree from features to output is therefore a difficult challenge. 
+	\item The depth of routing-by-agreement CNs are logarithmically limited depending on the number of PrimeCaps in best case! This prevents the CN from getting deeper! So no complex parse tree in this case or a huge number of primecaps required!
+	\item A Bias term allows depth but prevents parse-tree from forming.
+	\item The stronger the agreement, the shallower the architecture
+	\item The squashing function prevents gradient flow: strong couplings and weak couplings.
 	\item The Squashing function limits information flow and parameter learning because of vanishing gradient!
 	\begin{itemize}
 		\item Dense Setting: = "Uniform routing", capsules are equally squashed. This limits depth and expressiveness of parse-tree.
@@ -112,23 +148,285 @@
 		\item The norm of the gradients for Capsules
 		\item The loss lowers step wise, The capsules in upper layers take much longer to train.
 	\end{itemize}
-	\item The depth of routing-by-agreement CNs are logarithmically limited depending on the number of PrimeCaps in best case! This prevents the CN from getting deeper! So no complex parse tree in this case or a huge number of primecaps required!
+	\item Common parse-trees are largely of a static nature!
+	\item No meaningful features in backbone but deep Parse-Tree not possible
 	\item Show that strong coupling coefficients are not given automatically by the algorithms, but can be enforced via softmax temperature or more iterations in the routing rounds.
 	\item However this result in sparse capsules.
 	\item Strong coupling coefficients do not necessarily yield a dynamic parse tree!
 	\item Even inactive capsules are forced to route uniformly. This results in a bad signal to noise ratio and prevents effective learning.
 	\item No evidence for interpretable part-whole hierachy in learned capsnets. This may be the result of bad backbones. Better results with deeper CapsNets, but this requires a working routing.
 	\item The Bias prevents dynamic routing of capsules! With a Bias, the routing becomes static!
+	\item Inverse Pyramid: Complex objects are made out of simple objects, not Coomplex objects are made of simple objects.
 \end{itemize}
 
-\section{Datasets}
+With this model class, the idea of parsing a complex object into a hierachy of its parts can not be confirmed.
+
+\section{Background and Related Work}
+\subsection*{Transformer Analogy}
+\subsection*{Capsule Network with Dynamic Routing}
+\subsection*{Efficient-CapsNet}
+\subsection*{Capsule Network Follow-Ups}
+
+\subsection*{Parse-Tree}
+
+what is a parse tree?
 \begin{itemize}
-	\item CSPRITES
-	\item MNIST
-	\item CIFAR10
+	\item Nodes
+	\item Hierachy of Nodes
+	\item Each lower level node is linked to a parent node
+	\item part-whole relationship
+\end{itemize}
+why do we want a parse tree? Obvious reasons, hypothesized reasons or hopes. These hopes rely on the assumption that such a sematic concept would emerge.
+\begin{itemize}
+	\item Grammar of images
+	\item Interpretability
+	\item Debugging of neural networks
+	\item Transferability
+	\item Robustness
+	\item allows inference, as discrete
+	\item allows insights in learning
+	\item conceptual learning
+	\item ...
 \end{itemize}
 
-\section{Models}
+Implementation of a parse-tree in CapsNets:
+\begin{itemize}
+	\item Nodes via Capsules. = Vectors. Capsules represent dedicated objects, primecaps full receptive field.
+	\item No dynamic allocation possible, fixed number of capsules in each layers that can be either active or inactive. Sparse activation.
+	\item Activeness via norm. Probabilistic interpretation.
+	\item Instatiation parameters via direction. The values in the vectors are conceptually thought of beeing the instatiation parameters of the part, the capsule stands for!
+	\item Activeness implemented via a squashing function that ensures that the length of the capsule vector in in $[0,1)$.
+	\item Capsule activateed via routing.
+	\item Coupling coefficients calculated via a routing algorithm.
+	\item Coupling Ideally strong couplings for a clear parse-tree to emerge. Strong agreement. Non-iterative algorithms this can be done via softmax temperature, iterative algorithms that is the number of iterations can be directly linked to stronger couplings.
+	\item Ensure that each capsule is routed, softmax over coupling coefficients.
+	\item Coupling coefficients calculated via a routing algorithm.
+	\item Hierarchical: multiple layers of Capsules.
+	\item Sparse but strong activation via squashing function. Dynamic allocation not possible. therefore switch.
+	\item Dynamic routing via calculation of coupling coefficients via agreement.
+	\item Strong coupling via softmax temperature or number of iterations.
+\end{itemize}
+
+What do we want for a strong parse-tree to emerge:
+\begin{itemize}
+	\item Sparse but strong activation of the capsules
+	\item Strong coupling coefficients
+	\item Dynamic, as this should allow to reuse some parts. Semantically makes sense.
+	\item Mulilayer
+\end{itemize}
+
+\subsection*{Model Class}
+\begin{itemize}
+	\item Backbone, receptive field requirement!
+	\item Vectorized capsules
+	\item Coupling coefficients determined by routing
+	\item Bias
+	\item Softmax
+	\item Squash
+\end{itemize}
+
+
+\section{Questions to answer}
+\begin{itemize}
+	\item Why don't they scale?
+	\item What about the parse-tree!
+\end{itemize}
+
+\subsection{Why don't they scale?}
+\subsubsection*{Feature extraction problem and PrimeCaps}
+Usually CNN backbone with the requirement of a full receptive field as each Capsule must see everything.
+For a shallow CNN backbone:
+\begin{itemize}
+	\item Less abstract features
+	\item Capsule explosion with rise in input size. The larger the input, the more capsules there are.
+	\item Furthermore less abstract features may break the assumption that each capsule stands for a dedicated object, as edges occur more often.
+	\item This make routing extremely expensive. [TODO complexity of routing]
+	\item Shallow CNN must be followed by deeper CN layers. Has some limitations see RBA section.
+\end{itemize}
+For a deeper CNN backbone:
+\begin{itemize}
+	\item More abstract features
+	\item Loss of trackability. Feature to Output
+	\item Still not easy to implement since pooling layers are prohibited from a conceptual perspective.
+	\item Shifts more work to the CNN.
+	\item Using pooling features breaks with the conceptual component.
+	\item Unclear of the benefit of CapsNet layers, reference work that showed no additional benefit.
+	\item Also from interpretable perspective there might not be one.
+\end{itemize}
+Prime Caps:
+\begin{itemize}
+	\item Experimental flaw: PrimeCaps are densly populated.
+	\item CNN usually diversify [REFERENCE]. Learn features. Unclear why the CN layers should change that behaviour.
+	\item CNN uses full capacity
+	\item Entenglement literature does not suggest, that CNN per se learn interpret able features.
+	\item Why should it be different in this case?
+\end{itemize}
+\subsubsection*{PrimeCaps creation and connection to input}
+\begin{itemize}
+	\item Experimental flaw: PrimeCaps are densly populated. Always! No sparsity!
+	\item CNN usually diversify. Learn features. Unclear why the CN layers should change that behaviour.
+	\item SHow that Capsule for one sample activates for a certain part in the input and then show that it activates for another part in the transformed image.
+\end{itemize}
+
+\subsection*{The Squashing results in vanishing gradient}
+\begin{itemize}
+	\item Capsules only activate when other capsules route to them, by squashing.
+	\item Squashing leads to vanishing gradient for inactive capsules.
+	\item Vanishing gradient leads to dead capsules
+	\item Vanishing gradient leads to dead capsules
+	\item Dead capsules rarely activate
+\end{itemize}
+
+\subsection*{The squashing and Routing leads to information loss}
+two scenarios:
+\begin{itemize}
+	\item sparse but strong activation: dead capsules
+	\item dense but weak activation: no parse-tree and also no depth due to information loss
+\end{itemize}
+
+
+
+\section{Actual Paper}
+We show that the methods, that aim to reach that goal limit efficient and effective training.
+Furthermore adjusting those methods to a certain degree comes with the downside of preventing the parse-tree of taking form.
+In the sum all those arguments lead to the conclusion that the Parse-Tree cannot be realised with CapsNets, in contrary to common believe.
+Multiple reasons for the parse-tree to not work, we disregard the idea in this case.
+
+We found:
+\begin{itemize}
+	\item No parse tree in the current implementations
+	\item Technical implementation has some limitations.
+\end{itemize}
+
+
+\subsection{Notes}
+\begin{itemize}
+	\item From observation to method to explaination
+	\item From parse-tree to observation to explaination
+	\item From method to observation to explaination
+\end{itemize}
+
+\subsection{RBA limits the depth of a CN}
+
+
+Quite intuitive, with wide implications.
+Routing, that is based on agreement is limits the depth of the CN logarithmically with base agreement factor!
+There are multiple arguments for deeper CapsNets
+\begin{itemize}
+	\item Complex parse-trees
+	\item Minimizing the impact of the ConvNet backbone. It was also shown that in this case, CapsNets do not really yield a benefit ~\cite{acml/PaikKK19}.
+	\item Depth is required for abstract features to form.
+	\item Practical trend for deeper architectures.
+	\item There is also theoretical evidence, that depth is necessary.
+\end{itemize}
+We show that RBA limits the possible depth of CN.
+
+Stronger coupling coefficients require stronger agreement. 
+Strong agreement limits the depth of the Network.
+
+\begin{theorem}
+	The number of PrimeCaps rises exponentially with the number of capsule layers or
+	The depth of a CapsNet is logarithmically dependent on the number of primary capsules.
+	The base of the logarithm is the agreement factor.
+	Agreement factor is the average number of capsules that agree.
+\end{theorem}
+Routing beyond that limit seems pointless!
+If only one Caps remains, there is no point of agreement routing! so routing becomes random or static!
+
+Experiments
+\begin{itemize}
+	\item Make CapsNet deeper and wider and vary coupling strength [hopefully by softmax or by more routing iterations]
+	\item Show the number of capsules that are active on average.
+	\item Calculate the agreement factor!
+\end{itemize}
+
+Opposing requirements. Make it deeper or make the coupling stronger.
+Depth is a requirement for abstract features to form.
+
+The only choice that CNs have is to further rely on CNNs all the way offering no real alternative.
+It was also shown that in this case, CapsNets do not really yield a benefit ~\cite{acml/PaikKK19}.
+
+Other papers also noticed the problem with of training deep CapsNet. They added Bias term and showed that in this case accuracy does not vanish.
+Furthermore the work in \cite{prl/PeerSR21} or Efficient-CapsNet adds a Bias term to ensure a CapsNets to be layers.
+From a technical perspective this works but this also undermines the dynamic routing.
+Routing becomes static.
+
+Experiments
+\begin{itemize}
+	\item Show that the Bias term prevents dynamic routing!
+\end{itemize}
+
+number of active capsules with agreement factor for 12 layer
+\begin{itemize}
+	\item 2: 4096
+	\item 3: 531441
+	\item 4: 16777216
+\end{itemize}
+
+\subsection{The Squashing results in vanishing gradient}
+\begin{itemize}
+	\item Vanishing gradient leads to dead capsules
+\end{itemize}
+\subsection{The squashing and Routing lead to information loss}
+two scenarios:
+\begin{itemize}
+	\item sparse but strong activation: dead capsules
+	\item dense but weak activation: no parse-tree and also no depth due to information loss
+\end{itemize}
+\subsection{What about the dynamics}
+
+
+However all routes, active and inactive capsules are routed.
+
+on the one hand, in order for a parse tree to emerge, we want
+\begin{itemize}
+	\item sparse activation
+	\item strong couplings
+\end{itemize}
+this can be achieved via Stronger agreement via softmax temperature or number of routing iterations.
+However: This makes the depth of the network dependent on the number of capsules used.
+
+
+Since depth is logarithmic dependent on the number of PrmeCaps, The number of PrimeCaps rises exponentially with depth in order to sustain a healthy information flow. This is in stark contrast to the narrative that a large number of complex objects can be composed by a relative small number of less complex objects.
+Even keeping the number of capsules in each layer the same becomes challenging.
+
+\subsection{Sparse Capsule activation \& Squashing Function}
+The squashing function is required to force bipolar response and is necessary to knock capsules out. Furthermore it is required to allow the probabilistic interpretation of the capsule norm and the interpretation of a objects presence.
+
+A problem with the squashing function is the vanishing gradient!
+Inactive capsules learn really really slow. This becomes increasingly a problem when making a CapsNet deeper! It usually also gets sparser.
+
+\subsection{Backbone and PrimeCaps}
+\begin{itemize}
+	\item CapsNet require to access the whole receptive field.
+	\item Two layer CNN
+	\item Multiple layer CNN
+	\item PrimeCaps are always active.
+	\item Benefit of one additional layer of routings seems unclear!
+	\item CNN seem to deversify instead of consolidating.
+	\item No incentives for PrimeCaps to be inactive
+	\item Network has all reasons to use all its capacity
+\end{itemize}
+
+\subsection{Further conceptual problems}
+\begin{itemize}
+	\item Universal Capsule might be conceptually better
+	\item Problem of multiple instances of parts in one image. e.g legs
+\end{itemize}
+
+\section{Further Insights}
+
+
+\section{Ideas}
+
+\section{Experiments}
+\subsection{Datasets}
+\begin{itemize}
+	\item MNIST
+	\item (CIFAR10)
+\end{itemize}
+
+\subsection{Models}
 \begin{itemize}
 	\item Efficient-CapsNets
 	\item Routing-By-Agreement
@@ -136,412 +434,7 @@
 \end{itemize}
 
 
-\section{Submission of papers to NeurIPS 2021}
-
-Please read the instructions below carefully and follow them faithfully.
-
-\subsection{Style}
-
-Papers to be submitted to NeurIPS 2021 must be prepared according to the
-instructions presented here. Papers may only be up to {\bf nine} pages long,
-including figures. Additional pages \emph{containing only acknowledgments and
-references} are allowed. Papers that exceed the page limit will not be
-reviewed, or in any other way considered for presentation at the conference.
-
-The margins in 2021 are the same as those in 2007, which allow for $\sim$$15\%$
-more words in the paper compared to earlier years.
-
-Authors are required to use the NeurIPS \LaTeX{} style files obtainable at the
-NeurIPS website as indicated below. Please make sure you use the current files
-and not previous versions. Tweaking the style files may be grounds for
-rejection.
-
-\subsection{Retrieval of style files}
-
-The style files for NeurIPS and other conference information are available on
-the World Wide Web at
-\begin{center}
-  \url{http://www.neurips.cc/}
-\end{center}
-The file \verb+neurips_2021.pdf+ contains these instructions and illustrates the
-various formatting requirements your NeurIPS paper must satisfy.
-
-The only supported style file for NeurIPS 2021 is \verb+neurips_2021.sty+,
-rewritten for \LaTeXe{}.  \textbf{Previous style files for \LaTeX{} 2.09,
-  Microsoft Word, and RTF are no longer supported!}
-
-The \LaTeX{} style file contains three optional arguments: \verb+final+, which
-creates a camera-ready copy, \verb+preprint+, which creates a preprint for
-submission to, e.g., arXiv, and \verb+nonatbib+, which will not load the
-\verb+natbib+ package for you in case of package clash.
-
-\paragraph{Preprint option}
-If you wish to post a preprint of your work online, e.g., on arXiv, using the
-NeurIPS style, please use the \verb+preprint+ option. This will create a
-nonanonymized version of your work with the text ``Preprint. Work in progress.''
-in the footer. This version may be distributed as you see fit. Please \textbf{do
-  not} use the \verb+final+ option, which should \textbf{only} be used for
-papers accepted to NeurIPS.
-
-At submission time, please omit the \verb+final+ and \verb+preprint+
-options. This will anonymize your submission and add line numbers to aid
-review. Please do \emph{not} refer to these line numbers in your paper as they
-will be removed during generation of camera-ready copies.
-
-The file \verb+neurips_2021.tex+ may be used as a ``shell'' for writing your
-paper. All you have to do is replace the author, title, abstract, and text of
-the paper with your own.
-
-The formatting instructions contained in these style files are summarized in
-Sections \ref{gen_inst}, \ref{headings}, and \ref{others} below.
-
-\section{General formatting instructions}
-\label{gen_inst}
-
-The text must be confined within a rectangle 5.5~inches (33~picas) wide and
-9~inches (54~picas) long. The left margin is 1.5~inch (9~picas).  Use 10~point
-type with a vertical spacing (leading) of 11~points.  Times New Roman is the
-preferred typeface throughout, and will be selected for you by default.
-Paragraphs are separated by \nicefrac{1}{2}~line space (5.5 points), with no
-indentation.
-
-The paper title should be 17~point, initial caps/lower case, bold, centered
-between two horizontal rules. The top rule should be 4~points thick and the
-bottom rule should be 1~point thick. Allow \nicefrac{1}{4}~inch space above and
-below the title to rules. All pages should start at 1~inch (6~picas) from the
-top of the page.
-
-For the final version, authors' names are set in boldface, and each name is
-centered above the corresponding address. The lead author's name is to be listed
-first (left-most), and the co-authors' names (if different address) are set to
-follow. If there is only one co-author, list both author and co-author side by
-side.
-
-Please pay special attention to the instructions in Section \ref{others}
-regarding figures, tables, acknowledgments, and references.
-
-\section{Headings: first level}
-\label{headings}
-
-All headings should be lower case (except for first word and proper nouns),
-flush left, and bold.
-
-First-level headings should be in 12-point type.
-
-\subsection{Headings: second level}
-
-Second-level headings should be in 10-point type.
-
-\subsubsection{Headings: third level}
-
-Third-level headings should be in 10-point type.
-
-\paragraph{Paragraphs}
-
-There is also a \verb+\paragraph+ command available, which sets the heading in
-bold, flush left, and inline with the text, with the heading followed by 1\,em
-of space.
-
-\section{Citations, figures, tables, references}
-\label{others}
-
-These instructions apply to everyone.
-
-\subsection{Citations within the text}
-
-The \verb+natbib+ package will be loaded for you by default.  Citations may be
-author/year or numeric, as long as you maintain internal consistency.  As to the
-format of the references themselves, any style is acceptable as long as it is
-used consistently.
-
-The documentation for \verb+natbib+ may be found at
-\begin{center}
-  \url{http://mirrors.ctan.org/macros/latex/contrib/natbib/natnotes.pdf}
-\end{center}
-Of note is the command \verb+\citet+, which produces citations appropriate for
-use in inline text.  For example,
-\begin{verbatim}
-   \citet{hasselmo} investigated\dots
-\end{verbatim}
-produces
-\begin{quote}
-  Hasselmo, et al.\ (1995) investigated\dots
-\end{quote}
-
-If you wish to load the \verb+natbib+ package with options, you may add the
-following before loading the \verb+neurips_2021+ package:
-\begin{verbatim}
-   \PassOptionsToPackage{options}{natbib}
-\end{verbatim}
-
-If \verb+natbib+ clashes with another package you load, you can add the optional
-argument \verb+nonatbib+ when loading the style file:
-\begin{verbatim}
-   \usepackage[nonatbib]{neurips_2021}
-\end{verbatim}
-
-As submission is double blind, refer to your own published work in the third
-person. That is, use ``In the previous work of Jones et al.\ [4],'' not ``In our
-previous work [4].'' If you cite your other papers that are not widely available
-(e.g., a journal paper under review), use anonymous author names in the
-citation, e.g., an author of the form ``A.\ Anonymous.''
-
-\subsection{Footnotes}
-
-Footnotes should be used sparingly.  If you do require a footnote, indicate
-footnotes with a number\footnote{Sample of the first footnote.} in the
-text. Place the footnotes at the bottom of the page on which they appear.
-Precede the footnote with a horizontal rule of 2~inches (12~picas).
-
-Note that footnotes are properly typeset \emph{after} punctuation
-marks.\footnote{As in this example.}
-
-\subsection{Figures}
-
-\begin{figure}
-  \centering
-  \fbox{\rule[-.5cm]{0cm}{4cm} \rule[-.5cm]{4cm}{0cm}}
-  \caption{Sample figure caption.}
-\end{figure}
-
-All artwork must be neat, clean, and legible. Lines should be dark enough for
-purposes of reproduction. The figure number and caption always appear after the
-figure. Place one line space before the figure caption and one line space after
-the figure. The figure caption should be lower case (except for first word and
-proper nouns); figures are numbered consecutively.
-
-You may use color figures.  However, it is best for the figure captions and the
-paper body to be legible if the paper is printed in either black/white or in
-color.
-
-\subsection{Tables}
-
-All tables must be centered, neat, clean and legible.  The table number and
-title always appear before the table.  See Table~\ref{sample-table}.
-
-Place one line space before the table title, one line space after the
-table title, and one line space after the table. The table title must
-be lower case (except for first word and proper nouns); tables are
-numbered consecutively.
-
-Note that publication-quality tables \emph{do not contain vertical rules.} We
-strongly suggest the use of the \verb+booktabs+ package, which allows for
-typesetting high-quality, professional tables:
-\begin{center}
-  \url{https://www.ctan.org/pkg/booktabs}
-\end{center}
-This package was used to typeset Table~\ref{sample-table}.
-
-\begin{table}
-  \caption{Sample table title}
-  \label{sample-table}
-  \centering
-  \begin{tabular}{lll}
-    \toprule
-    \multicolumn{2}{c}{Part}                   \\
-    \cmidrule(r){1-2}
-    Name     & Description     & Size ($\mu$m) \\
-    \midrule
-    Dendrite & Input terminal  & $\sim$100     \\
-    Axon     & Output terminal & $\sim$10      \\
-    Soma     & Cell body       & up to $10^6$  \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\section{Final instructions}
-
-Do not change any aspects of the formatting parameters in the style files.  In
-particular, do not modify the width or length of the rectangle the text should
-fit into, and do not change font sizes (except perhaps in the
-\textbf{References} section; see below). Please note that pages should be
-numbered.
-
-\section{Preparing PDF files}
-
-Please prepare submission files with paper size ``US Letter,'' and not, for
-example, ``A4.''
-
-Fonts were the main cause of problems in the past years. Your PDF file must only
-contain Type 1 or Embedded TrueType fonts. Here are a few instructions to
-achieve this.
-
-\begin{itemize}
-
-\item You should directly generate PDF files using \verb+pdflatex+.
-
-\item You can check which fonts a PDF files uses.  In Acrobat Reader, select the
-  menu Files$>$Document Properties$>$Fonts and select Show All Fonts. You can
-  also use the program \verb+pdffonts+ which comes with \verb+xpdf+ and is
-  available out-of-the-box on most Linux machines.
-
-\item The IEEE has recommendations for generating PDF files whose fonts are also
-  acceptable for NeurIPS. Please see
-  \url{http://www.emfield.org/icuwb2010/downloads/IEEE-PDF-SpecV32.pdf}
-
-\item \verb+xfig+ "patterned" shapes are implemented with bitmap fonts.  Use
-  "solid" shapes instead.
-
-\item The \verb+\bbold+ package almost always uses bitmap fonts.  You should use
-  the equivalent AMS Fonts:
-\begin{verbatim}
-   \usepackage{amsfonts}
-\end{verbatim}
-followed by, e.g., \verb+\mathbb{R}+, \verb+\mathbb{N}+, or \verb+\mathbb{C}+
-for $\mathbb{R}$, $\mathbb{N}$ or $\mathbb{C}$.  You can also use the following
-workaround for reals, natural and complex:
-\begin{verbatim}
-   \newcommand{\RR}{I\!\!R} %real numbers
-   \newcommand{\Nat}{I\!\!N} %natural numbers
-   \newcommand{\CC}{I\!\!\!\!C} %complex numbers
-\end{verbatim}
-Note that \verb+amsfonts+ is automatically loaded by the \verb+amssymb+ package.
-
-\end{itemize}
-
-If your file contains type 3 fonts or non embedded TrueType fonts, we will ask
-you to fix it.
-
-\subsection{Margins in \LaTeX{}}
-
-Most of the margin problems come from figures positioned by hand using
-\verb+\special+ or other commands. We suggest using the command
-\verb+\includegraphics+ from the \verb+graphicx+ package. Always specify the
-figure width as a multiple of the line width as in the example below:
-\begin{verbatim}
-   \usepackage[pdftex]{graphicx} ...
-   \includegraphics[width=0.8\linewidth]{myfile.pdf}
-\end{verbatim}
-See Section 4.4 in the graphics bundle documentation
-(\url{http://mirrors.ctan.org/macros/latex/required/graphics/grfguide.pdf})
-
-A number of width problems arise when \LaTeX{} cannot properly hyphenate a
-line. Please give LaTeX hyphenation hints using the \verb+\-+ command when
-necessary.
-
-\begin{ack}
-Use unnumbered first level headings for the acknowledgments. All acknowledgments
-go at the end of the paper before the list of references. Moreover, you are required to declare
-funding (financial activities supporting the submitted work) and competing interests (related financial activities outside the submitted work).
-More information about this disclosure can be found at: \url{https://neurips.cc/Conferences/2021/PaperInformation/FundingDisclosure}.
-
-Do {\bf not} include this section in the anonymized submission, only in the final paper. You can use the \texttt{ack} environment provided in the style file to autmoatically hide this section in the anonymized submission.
-\end{ack}
-
-\section*{References}
-
-References follow the acknowledgments. Use unnumbered first-level heading for
-the references. Any choice of citation style is acceptable as long as you are
-consistent. It is permissible to reduce the font size to \verb+small+ (9 point)
-when listing the references.
-Note that the Reference section does not count towards the page limit.
-\medskip
-
-{
-\small
-
-[1] Alexander, J.A.\ \& Mozer, M.C.\ (1995) Template-based algorithms for
-connectionist rule extraction. In G.\ Tesauro, D.S.\ Touretzky and T.K.\ Leen
-(eds.), {\it Advances in Neural Information Processing Systems 7},
-pp.\ 609--616. Cambridge, MA: MIT Press.
-
-[2] Bower, J.M.\ \& Beeman, D.\ (1995) {\it The Book of GENESIS: Exploring
-  Realistic Neural Models with the GEneral NEural SImulation System.}  New York:
-TELOS/Springer--Verlag.
-
-[3] Hasselmo, M.E., Schnell, E.\ \& Barkai, E.\ (1995) Dynamics of learning and
-recall at excitatory recurrent synapses and cholinergic modulation in rat
-hippocampal region CA3. {\it Journal of Neuroscience} {\bf 15}(7):5249-5262.
-}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Checklist}
-
-%%% BEGIN INSTRUCTIONS %%%
-The checklist follows the references.  Please
-read the checklist guidelines carefully for information on how to answer these
-questions.  For each question, change the default \answerTODO{} to \answerYes{},
-\answerNo{}, or \answerNA{}.  You are strongly encouraged to include a {\bf
-justification to your answer}, either by referencing the appropriate section of
-your paper or providing a brief inline description.  For example:
-\begin{itemize}
-  \item Did you include the license to the code and datasets? \answerYes{See Section~\ref{gen_inst}.}
-  \item Did you include the license to the code and datasets? \answerNo{The code and the data are proprietary.}
-  \item Did you include the license to the code and datasets? \answerNA{}
-\end{itemize}
-Please do not modify the questions and only use the provided macros for your
-answers.  Note that the Checklist section does not count towards the page
-limit.  In your paper, please delete this instructions block and only keep the
-Checklist section heading above along with the questions/answers below.
-%%% END INSTRUCTIONS %%%
-
-\begin{enumerate}
-
-\item For all authors...
-\begin{enumerate}
-  \item Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?
-    \answerTODO{}
-  \item Did you describe the limitations of your work?
-    \answerTODO{}
-  \item Did you discuss any potential negative societal impacts of your work?
-    \answerTODO{}
-  \item Have you read the ethics review guidelines and ensured that your paper conforms to them?
-    \answerTODO{}
-\end{enumerate}
-
-\item If you are including theoretical results...
-\begin{enumerate}
-  \item Did you state the full set of assumptions of all theoretical results?
-    \answerTODO{}
-	\item Did you include complete proofs of all theoretical results?
-    \answerTODO{}
-\end{enumerate}
-
-\item If you ran experiments...
-\begin{enumerate}
-  \item Did you include the code, data, and instructions needed to reproduce the main experimental results (either in the supplemental material or as a URL)?
-    \answerTODO{}
-  \item Did you specify all the training details (e.g., data splits, hyperparameters, how they were chosen)?
-    \answerTODO{}
-	\item Did you report error bars (e.g., with respect to the random seed after running experiments multiple times)?
-    \answerTODO{}
-	\item Did you include the total amount of compute and the type of resources used (e.g., type of GPUs, internal cluster, or cloud provider)?
-    \answerTODO{}
-\end{enumerate}
-
-\item If you are using existing assets (e.g., code, data, models) or curating/releasing new assets...
-\begin{enumerate}
-  \item If your work uses existing assets, did you cite the creators?
-    \answerTODO{}
-  \item Did you mention the license of the assets?
-    \answerTODO{}
-  \item Did you include any new assets either in the supplemental material or as a URL?
-    \answerTODO{}
-  \item Did you discuss whether and how consent was obtained from people whose data you're using/curating?
-    \answerTODO{}
-  \item Did you discuss whether the data you are using/curating contains personally identifiable information or offensive content?
-    \answerTODO{}
-\end{enumerate}
-
-\item If you used crowdsourcing or conducted research with human subjects...
-\begin{enumerate}
-  \item Did you include the full text of instructions given to participants and screenshots, if applicable?
-    \answerTODO{}
-  \item Did you describe any potential participant risks, with links to Institutional Review Board (IRB) approvals, if applicable?
-    \answerTODO{}
-  \item Did you include the estimated hourly wage paid to participants and the total amount spent on participant compensation?
-    \answerTODO{}
-\end{enumerate}
-
-\end{enumerate}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\appendix
-
-\section{Appendix}
-
-Optionally include extra information (complete proofs, additional experiments and plots) in the appendix.
-This section will often be part of the supplemental material.
-
+%\bibliographystyle{apalike}
+\bibliographystyle{plainnat}
+\bibliography{references}
 \end{document}
