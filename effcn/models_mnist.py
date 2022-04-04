@@ -159,7 +159,7 @@ class BackboneHinton(nn.Module):
         self.layers = nn.Sequential(
                         nn.Conv2d(1, 256, kernel_size=9, stride=1),
                         nn.ReLU(inplace=True),
-                        nn.BatchNorm2d(256),
+                        #nn.BatchNorm2d(256),
         )
 
     def forward(self, x):
