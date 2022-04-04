@@ -30,7 +30,15 @@
 
 \newtheorem{theorem}{Theorem}
 
-\title{Demystifying Capsule Neural Networks or Capsule Neural Networks cannot learn complex parse-trees! or Challenging the dynamic parse-tree in Capsule Neural Networks or CapsNets cannot be used to learn dynamic and complex parse-trees!}
+\title{
+	The holy grail of CapsNets \\
+	On CapsNets and Dragons \\
+	Ivory Tower of Capsule Neural Networks \\
+	Understanding Capsule Neural Networks \\
+	Why CapsNets dont't scale! \\
+	Demystifying Capsule Neural Networks \\
+	Capsule Neural Networks cannot learn complex parse-trees! \\
+	Challenging the dynamic parse-tree in Capsule Neural Networks}
 
 % The \author macro works with any number of authors. There are two commands
 % used to separate the names and addresses of multiple authors: \And and \AND.
@@ -81,7 +89,85 @@
   We show that mathematically und empirically.
 \end{abstract}
 
+\section{Notes}
+\begin{itemize}
+	\item \url{https://luckytoilet.wordpress.com/2018/03/07/publishing-negative-results-in-machine-learning-is-like-proving-dragons-dont-exist/#:~:text=If%20your%20model%20fails%20to,wrong%20loss%20function%20%2F%20wrong%20optimizer}
+\end{itemize}
+
+\section{Related Work}
+
+~\cite{cogsci/Hinton79} Some reference to the hierachy of parts.
+~\cite{icann/HintonKW11} Transforming Autoencoders
+~\cite{nips/SabourFH17} CapsNet.
+~\cite{iclr/HintonSF18} EM Routing
+~\cite{nips/KosiorekSTH19} SCAE
+~\cite{nips/HahnPK19} Self-Routing Capsule Networks
+~\cite{nips/AhmedT19} Star-Caps: No clue what to do with them.
+~\cite{iclr/TsaiSGS20} Inverted Dot-Product Attention Routing.
+~\cite{corr/Hinton2021} GLOM
+~\cite{icml/SabourTYHF21} Flow Capsules: Learning PrimeCaps
+
+
+~\cite{iclr/Wang018} framed the routing in ~\cite{nips/SabourFH17} as an optimization problems.
+
+~\cite{corr/Rawlinson2018} introduced an unsupervised learning scheme for CapsNet. Furthermore they show that is is necessary to introduce sparsity alongside unsupervised training. Otherwise Capsules don't specialize. Labels create sparsity.
+The work~\cite{corr/Michels19} showed that CapsNet can be fooled as easily as ConvNets.
+~\cite{acml/PaikKK19} showed that increasing depth did not improve accuracy. However theey used ResNet-34 backbone. They prosume
+capsules are more appropriate to represent high-level concepts than low-level concepts
+such as lines and edges, because they are more informative and their part-whole
+relations are less ambiguous than those of low-level concepts. They find the link polarization problem [OptimCaps and AttnCaps] suffer from the same problem. EMCaps are observed to suffer from the same problem.
+~\cite{prl/PeerSR21} showed limitations of CapsNet when going deeper. They propose a Bias. However a bias term prevents the routing and emerging of a parse-tree.
+The receptive field problem was also recognized in ~\cite{spl/XiangZTZX18}, the authors propose a MultiScale Architecture to reduce parameters, still this work relies on dynamic routing.
+~\cite{cvpr/GuT021} emprical sutdy on the individual parts of the CapsNet. Better ConvNet baslines required. CapsNet are not more robust than ConvNets.
+~\cite{iclr/TsaiSGS20} Inverted Dot-Product Attention Routing. No Activation, So what about the parse-tree? Layer-Norm will prevent sparsity.
+~\cite{cvpr/RajasegaranJJJS19} Gooing deeper
+
+GLOM ~\cite{corr/Hinton2021}
+
+
+\subsection*{Read Carefully and think about impact on the paper}
+\begin{itemize}
+	\item ~\cite{iclr/TsaiSGS20} Inverted Dot-Product Attention Routing. No Activation, So what about the parse-tree? Layer-Norm will prevent sparsity. It may be necessary to implement and test this method!
+	\item ~\cite{nips/AhmedT19} Star-Caps: No clue what to do with them.
+	\item ~\cite{iclr/TsaiSGS20} Inverted Dot-Product Attention Routing.
+	\item ~\cite{cvpr/RajasegaranJJJS19} Going Deeper with Capsule Networks
+	\item ~\cite{nips/LenssenFL18} provably equivariance
+\end{itemize}
+
+\subsection*{Read and/or include}
+\begin{itemize}
+	\item ~\cite{eccv/LiGDOW18} Neural Capsule Encapsulation, seems complicated. More parameter efficient and less computitional heavy.
+	\item GroupCaps ~\cite{cvpr/ChenJSWS18}, not really sure what they are doing. Probabliy too much.
+\end{itemize}
+
 \section{Introduction}
+
+What is a CapsNets.
+Why were they introduced.
+Misconception, as there is a technical and a conceptual definition.
+Inflated usage of the name CapsNet.
+Good reviews
+Bad reviews.
+Our paper.
+
+Hard to give a general statement about the state of CapsNet, as there are both technical as well as semantic developments.
+It it works, it is good! Here there is a conceptual component to it, that makes it hard!
+
+\begin{itemize}
+	\item The Future of deep learning
+	\item Deep Learning for AI
+	\item Jeff Hawkins: 1000 Brains
+	\item How to grow a brain
+	\item Keynote TALK
+\end{itemize}
+
+Clear the clutter!
+\begin{itemize}
+	\item Technical definition
+	\item THere is a conceptual definition -> see real CapsNet paper!
+	\item Lots of architectures derive from that conceptual definition.
+	\item ONce we throw it overboard, it might be better to look somewhere else.
+\end{itemize}
 
 The Capsule Network (CapsNet) \cite{nips/SabourFH17} was introduced for overcome the limitations prevalent Convolutional Network (ConvNet).
 Limitations of ConvNets in reference to beeing fooled easily and robustness to affine transformations ect.
@@ -261,6 +347,14 @@ Prime Caps:
 	\item Entenglement literature does not suggest, that CNN per se learn interpret able features.
 	\item Why should it be different in this case?
 \end{itemize}
+
+\subsubsection*{Softmax}
+
+\begin{itemize}
+	\item SNR!
+	\item COnnection to Transformers, that do the opposite, which is great, as it allows each capsule to learn better!
+\end{itemize}
+
 \subsubsection*{PrimeCaps creation and connection to input}
 \begin{itemize}
 	\item Experimental flaw: PrimeCaps are densly populated. Always! No sparsity!
@@ -277,6 +371,9 @@ Prime Caps:
 	\item Dead capsules rarely activate
 \end{itemize}
 
+\subsection*{RBA limits the depths of the CapsNet}
+...
+
 \subsection*{The squashing and Routing leads to information loss}
 two scenarios:
 \begin{itemize}
@@ -284,6 +381,8 @@ two scenarios:
 	\item dense but weak activation: no parse-tree and also no depth due to information loss
 \end{itemize}
 
+\subsection*{Dynamics}
+Measure dynamics. Show that there isn't much. if enforced, that leads to problems!
 
 
 \section{Actual Paper}
