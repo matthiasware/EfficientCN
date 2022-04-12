@@ -81,8 +81,9 @@
 
 \begin{abstract}
   We challenge the dynamic parse-tree assumption in the Capsule Neural Network.
-  We show that there exists a discrepancy between the semantics of CapsNets and its technical implementation and explain why the CapsNet does not scale to larger tasks.
-  We show that analytically and empirically.
+  We show that there exists a discrepancy between the semantics of CapsNets and its technical implementation.
+  We explain why the CapsNet does not scale to larger tasks.
+  We show that the CapsNet model sucks and proof that analytically!
 \end{abstract}
 
 \section{Introduction}
@@ -187,7 +188,7 @@ Contrary to benefits, some limitations found in literature and observation that 
 	\item GroupCaps ~\cite{cvpr/ChenJSWS18}, not really sure what they are doing. Probabliy too much.
 \end{itemize}
 
-\section{The Semantic CapsNet: Of Parse Trees and Drand/gons}
+\section{The Semantic CapsNet: Of Parse Trees and Dragons}
 
 What is a parse-tree.
 Where does it come from: Human vision, geon theory, hinton stuff.
@@ -233,17 +234,49 @@ Parse tree:
 	\item For complex parse-trees, depth is required.
 \end{itemize}
 
+Implementation of a parse-tree in CapsNets:
+\begin{itemize}
+	\item Nodes via Capsules. = Vectors. Capsules represent dedicated objects, primecaps full receptive field.
+	\item No dynamic allocation possible, fixed number of capsules in each layers that can be either active or inactive. Sparse activation.
+	\item Activeness via norm. Probabilistic interpretation.
+	\item Instatiation parameters via direction. The values in the vectors are conceptually thought of beeing the instatiation parameters of the part, the capsule stands for!
+	\item Activeness implemented via a squashing function that ensures that the length of the capsule vector in in $[0,1)$.
+	\item Capsule activateed via routing.
+	\item Coupling coefficients calculated via a routing algorithm.
+	\item Coupling Ideally strong couplings for a clear parse-tree to emerge. Strong agreement. Non-iterative algorithms this can be done via softmax temperature, iterative algorithms that is the number of iterations can be directly linked to stronger couplings.
+	\item Ensure that each capsule is routed, softmax over coupling coefficients.
+	\item Coupling coefficients calculated via a routing algorithm.
+	\item Hierarchical: multiple layers of Capsules.
+	\item Sparse but strong activation via squashing function. Dynamic allocation not possible. therefore switch.
+	\item Dynamic routing via calculation of coupling coefficients via agreement.
+	\item Strong coupling via softmax temperature or number of iterations.
+\end{itemize}
+
+What do we want for a strong parse-tree to emerge:
+\begin{itemize}
+	\item Sparse but strong activation of the capsules
+	\item Strong coupling coefficients
+	\item Dynamic, as this should allow to reuse some parts. Semantically makes sense.
+	\item Mulilayer
+\end{itemize}
+
+\subsubsection*{Model Class}
+\begin{itemize}
+	\item Backbone, receptive field requirement!
+	\item Vectorized capsules
+	\item Coupling coefficients determined by routing
+	\item Bias
+	\item Softmax
+	\item Squash
+\end{itemize}
+
 
 \section{The Actual Paper}
 
-Observations
+Results:
 \begin{itemize}
 	\item PrimeCaps activations are not sparse!
 	\item Also a single layer of CapsNet does not yield a parse tree.
-\end{itemize}
-
-Results:
-\begin{itemize}
 	\item Misconception of technical implementation and the motivation semantics around CapsNet
 	\item Popular Science hails CapsNet. We want to shine light on the matter.
 	\item Routing By Agreement limits the maximal possible depth and therefore expressiveness of CapsNets. Getting a parse-tree from features to output is therefore a difficult challenge. 
@@ -271,87 +304,6 @@ Results:
 	\item No evidence for interpretable part-whole hierachy in learned capsnets. This may be the result of bad backbones. Better results with deeper CapsNets, but this requires a working routing.
 	\item The Bias prevents dynamic routing of capsules! With a Bias, the routing becomes static!
 	\item Inverse Pyramid: Complex objects are made out of simple objects, not Coomplex objects are made of simple objects.
-\end{itemize}
-
-
-\section{Conclusion}
-
-Strong semantic attachment, evidence for the parse-tree occurrence should be demonstrated. Otherwise the metrics for comparisons should be adjusted accordingly.
-With this model class, the idea of parsing a complex object into a hierachy of its parts can not be confirmed.
-
-\section{Introduction}
-
-With this model class, the idea of parsing a complex object into a hierachy of its parts can not be confirmed.
-
-\section{Background and Related Work}
-\subsection*{Transformer Analogy}
-\subsection*{Capsule Network with Dynamic Routing}
-\subsection*{Efficient-CapsNet}
-\subsection*{Capsule Network Follow-Ups}
-
-\subsection*{Parse-Tree}
-
-what is a parse tree?
-\begin{itemize}
-	\item Nodes
-	\item Hierachy of Nodes
-	\item Each lower level node is linked to a parent node
-	\item part-whole relationship
-\end{itemize}
-why do we want a parse tree? Obvious reasons, hypothesized reasons or hopes. These hopes rely on the assumption that such a sematic concept would emerge.
-\begin{itemize}
-	\item Grammar of images
-	\item Interpretability
-	\item Debugging of neural networks
-	\item Transferability
-	\item Robustness
-	\item allows inference, as discrete
-	\item allows insights in learning
-	\item conceptual learning
-	\item ...
-\end{itemize}
-
-Implementation of a parse-tree in CapsNets:
-\begin{itemize}
-	\item Nodes via Capsules. = Vectors. Capsules represent dedicated objects, primecaps full receptive field.
-	\item No dynamic allocation possible, fixed number of capsules in each layers that can be either active or inactive. Sparse activation.
-	\item Activeness via norm. Probabilistic interpretation.
-	\item Instatiation parameters via direction. The values in the vectors are conceptually thought of beeing the instatiation parameters of the part, the capsule stands for!
-	\item Activeness implemented via a squashing function that ensures that the length of the capsule vector in in $[0,1)$.
-	\item Capsule activateed via routing.
-	\item Coupling coefficients calculated via a routing algorithm.
-	\item Coupling Ideally strong couplings for a clear parse-tree to emerge. Strong agreement. Non-iterative algorithms this can be done via softmax temperature, iterative algorithms that is the number of iterations can be directly linked to stronger couplings.
-	\item Ensure that each capsule is routed, softmax over coupling coefficients.
-	\item Coupling coefficients calculated via a routing algorithm.
-	\item Hierarchical: multiple layers of Capsules.
-	\item Sparse but strong activation via squashing function. Dynamic allocation not possible. therefore switch.
-	\item Dynamic routing via calculation of coupling coefficients via agreement.
-	\item Strong coupling via softmax temperature or number of iterations.
-\end{itemize}
-
-What do we want for a strong parse-tree to emerge:
-\begin{itemize}
-	\item Sparse but strong activation of the capsules
-	\item Strong coupling coefficients
-	\item Dynamic, as this should allow to reuse some parts. Semantically makes sense.
-	\item Mulilayer
-\end{itemize}
-
-\subsection*{Model Class}
-\begin{itemize}
-	\item Backbone, receptive field requirement!
-	\item Vectorized capsules
-	\item Coupling coefficients determined by routing
-	\item Bias
-	\item Softmax
-	\item Squash
-\end{itemize}
-
-
-\section{Questions to answer}
-\begin{itemize}
-	\item Why don't they scale?
-	\item What about the parse-tree!
 \end{itemize}
 
 \subsection{Why don't they scale?}
@@ -421,26 +373,6 @@ two scenarios:
 Measure dynamics. Show that there isn't much. if enforced, that leads to problems!
 
 
-\section{Actual Paper}
-We show that the methods, that aim to reach that goal limit efficient and effective training.
-Furthermore adjusting those methods to a certain degree comes with the downside of preventing the parse-tree of taking form.
-In the sum all those arguments lead to the conclusion that the Parse-Tree cannot be realised with CapsNets, in contrary to common believe.
-Multiple reasons for the parse-tree to not work, we disregard the idea in this case.
-
-We found:
-\begin{itemize}
-	\item No parse tree in the current implementations
-	\item Technical implementation has some limitations.
-\end{itemize}
-
-
-\subsection{Notes}
-\begin{itemize}
-	\item From observation to method to explaination
-	\item From parse-tree to observation to explaination
-	\item From method to observation to explaination
-\end{itemize}
-
 \subsection{RBA limits the depth of a CN}
 
 
@@ -502,7 +434,10 @@ number of active capsules with agreement factor for 12 layer
 \begin{itemize}
 	\item Vanishing gradient leads to dead capsules
 \end{itemize}
-\subsection{The squashing and Routing lead to information loss}
+\subsection{The squashing and Routing lead to infoWe show that the methods, that aim to reach that goal limit efficient and effective training.
+	Furthermore adjusting those methods to a certain degree comes with the downside of preventing the parse-tree of taking form.
+	In the sum all those arguments lead to the conclusion that the Parse-Tree cannot be realised with CapsNets, in contrary to common believe.
+	Multiple reasons for the parse-tree to not work, we disregard the idea in this case.rmation loss}
 two scenarios:
 \begin{itemize}
 	\item sparse but strong activation: dead capsules
@@ -543,30 +478,27 @@ Inactive capsules learn really really slow. This becomes increasingly a problem 
 	\item Network has all reasons to use all its capacity
 \end{itemize}
 
-\subsection{Further conceptual problems}
+\section{Conclusion}
+
+Strong semantic attachment, evidence for the parse-tree occurrence should be demonstrated. Otherwise the metrics for comparisons should be adjusted accordingly.
+With this model class, the idea of parsing a complex object into a hierarchy of its parts can not be confirmed.
+
+We found:
+\begin{itemize}
+	\item No parse tree in the current implementations
+	\item Technical implementation has some limitations.
+\end{itemize}
+
+We show that the methods, that aim to reach that goal limit efficient and effective training.
+Furthermore adjusting those methods to a certain degree comes with the downside of preventing the parse-tree of taking form.
+In the sum all those arguments lead to the conclusion that the Parse-Tree cannot be realised with CapsNets, in contrary to common believe.
+Multiple reasons for the parse-tree to not work, we disregard the idea in this case.
+
 \begin{itemize}
 	\item Universal Capsule might be conceptually better
 	\item Problem of multiple instances of parts in one image. e.g legs
 \end{itemize}
 
-\section{Further Insights}
-
-
-\section{Ideas}
-
-\section{Experiments}
-\subsection{Datasets}
-\begin{itemize}
-	\item MNIST
-	\item (CIFAR10)
-\end{itemize}
-
-\subsection{Models}
-\begin{itemize}
-	\item Efficient-CapsNets
-	\item Routing-By-Agreement
-	\item Fix backbone for these two architectures.
-\end{itemize}
 
 
 %\bibliographystyle{apalike}
