@@ -30,8 +30,8 @@
 
 \newtheorem{theorem}{Theorem}
 
-\title{
-	Why CapsNets don't scale! \\
+\title{                                                                                                                                          
+	Why CapsNets are hard to get right!
 %	\large
 %	Challenging the dynamic parse-tree assumption in Capsule Neural Networks
 }
@@ -80,47 +80,75 @@
 \maketitle
 
 \begin{abstract}
+  WRITE LIKE A BLOGPOST! FUCK THE REST 
+  Why haven't CapsNet taken off? What are the issues?
   We challenge the dynamic parse-tree assumption in the Capsule Neural Network.
   We show that there exists a discrepancy between the semantics of CapsNets and its technical implementation.
   We explain why the CapsNet does not scale to larger tasks.
-  We show that the CapsNet model sucks and proof that analytically!
+  We show that the CapsNet model sucks
+  Why haven't CapsNet taken off? W and proof that analytically!
 \end{abstract}
 
 \section{Introduction}
 
-The Capsule Neural Network (CapsNet)~\cite{nips/SabourFH17} was introduced to overcome some of the limitations of the prevalent Convolutional Network (ConvNet) model family.
+Why CapsNets were introduced: CNN success, issues and limitations.
+Problem with Concepts.
+Transition to CapsNets and their contributions: (Transforming Autoencoder, CapsNets, EM Routing, other three follow ups) to show the origin.
+
+Vivid scene, applications in science community.
+The idea also resonated well within popular science community (AAAI Keynote TALK, The Future of deep learning, Deep Learning for AI, Jeff Hawkins: 1000 Brains, How to grow a brain) to show why its generally important to write about this.
+
+Small success on smaller datasets, Looking at the state of the ART, on ImageNet nope!
+Haven't lived up in terms of tasks and results.
+CNN still rocking the field, Transformer, other models, that are fairly new
+
+Looking into literature, confronted with extremely difficult task of sorting the ideas apart, raising the question, what are CapsNets in the first place? Inflated Usage, strange metrics.
+
+To make matters worse, negative results on Capsules, however only on selected work. No general statement has been given?
+
+So we have a discrepancy.
+Utterly Confusing field.
+
+Lay out the paper
+We argue This is based on the misconception of CapsNets and that the reason lies in the vagueness of the definition.
+CpasNets are hard to grasp, as there exists a Conceptual vs technical definition
+The heart of CapsNets = Semantic component, Parse-Tree idea.
+The syntactic component.
+Ideas close to the synatax face the issue of performing well.
+Ideas that go beyond the idea, better performance, but then the metrics do not apply! inadequate baselines.
+No one focused on the dynamic parse-tree.
+We focus on the original implementation, but will give insights on follow-ups.
+Benefits come from their semantic component, assumption. Never shown to come true
+Issues with the technical implementation.
+
+Why this work and problems with this contribution:
+\begin{itemize}
+	\item The concept of CapsNet
+	\item Explain our issues with CapsNets. Conceptual and Technical.
+	\item Warn other researches about misconceptions
+	\item Inspire new researches by showing them the issues with CapsNets
+	\item setting a lower bound impossible. raise an issue!
+	\item vagueness of the whole field.
+	\item since we call our self CapsNet we have all the benefits.
+	\item technical limitations
+	\item conceptual limitations
+	\item we cannot proof anything! However, as we feel there is an elephant in the room.
+	\item raise awareness for metrics and unfair comparisons and bad baselines
+\end{itemize}
+
+What we don't
+\begin{itemize}
+	\item Survey
+	\item No general proof.
+	\item Don not discredit other peoples work!
+\end{itemize}
+
+To the best of our knowledge, the Parse-Tree issue has not been addressed so far. Elephant in the room!
+
+
+
+The Capsule Neural Network (CapsNet) as introduced in~\cite{nips/SabourFH17} was specifically designed to overcome some of the limitations of the prevalent Convolutional Network (ConvNet) model family.
 Those limitations include a lack of robustness to affine transformations, susceptibility to adversarial attacks, a general lack of interpretability, when it comes to understanding a networks decision making process, a sheer endless data hunger and parameter inefficiency etc. [TODO: add references and more limitations, later: show how a parse-tree would solve these issues!].
-
-It was hypothesized that these limitations can be solved via a parse-tree.
-
-The key motivation of the CapsNet is the ability to dynamically deconstruct a scene into a part-whole hierarchy or parse-tree, where a complex object is deconstructed in smaller more simpler parts.
-The process of dynamically creating such a part-whole hierarchy finds analogy in parsing a string according to some context-free-grammar.
-The CapsNet is specifically designed to provide a kind of grammar for images.
-
-
-What is a CapsNets.
-Why were they introduced.
-Why CapsNets are hard to grasp: Conceptual vs technical definition
-Misconception, as there is a technical and a conceptual definition.
-Vagueness of the definition
-The idea also resonated well within popular science community (AAAI Keynote TALK, The Future of deep learning, Deep Learning for AI, Jeff Hawkins: 1000 Brains, How to grow a brain)
-Inflated usage of the name CapsNet.
-Good reviews
-Bad reviews.
-Why don't they scale? Why no SOTA?
-Our paper.
-
-Questions:
-Why don't they scale?
-Why aren't they SOTA?
-Can CapsNet create a dynamic parse tree?
-
-
-To the best of our knowledge no one dared to answer this question.
-We show technical limitations
-We show conceptual limitations.
-
-Why this work is relevant?
 
 \section{Related Work and Follow-Ups}
 
@@ -189,6 +217,10 @@ Contrary to benefits, some limitations found in literature and observation that 
 \end{itemize}
 
 \section{The Semantic CapsNet: Of Parse Trees and Dragons}
+
+The key motivation of the CapsNet is the ability to dynamically deconstruct a scene into a part-whole hierarchy or parse-tree, where a complex object is deconstructed in smaller more simpler parts.
+The process of dynamically creating such a part-whole hierarchy finds analogy in parsing a string according to some context-free-grammar.
+The CapsNet is specifically designed to provide a kind of grammar for images.
 
 What is a parse-tree.
 Where does it come from: Human vision, geon theory, hinton stuff.
@@ -304,6 +336,7 @@ Results:
 	\item No evidence for interpretable part-whole hierachy in learned capsnets. This may be the result of bad backbones. Better results with deeper CapsNets, but this requires a working routing.
 	\item The Bias prevents dynamic routing of capsules! With a Bias, the routing becomes static!
 	\item Inverse Pyramid: Complex objects are made out of simple objects, not Coomplex objects are made of simple objects.
+	\item Technical complexity!
 \end{itemize}
 
 \subsection{Why don't they scale?}
