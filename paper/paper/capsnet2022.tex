@@ -91,12 +91,32 @@
 
 \section{Introduction}
 
-Why CapsNets were introduced: CNN success, issues and limitations.
-Problem with Concepts.
-Transition to CapsNets and their contributions: (Transforming Autoencoder, CapsNets, EM Routing, other three follow ups) to show the origin.
+The Capsule Neural Network (CapsNet) as introduced in~\cite{nips/SabourFH17} was specifically designed to overcome some of the limitations of the prevalent Convolutional Network (ConvNet) model family ~\cite{neco/LeCunBDHHHJ89}.
 
-Vivid scene, applications in science community.
-The idea also resonated well within popular science community (AAAI Keynote TALK, The Future of deep learning, Deep Learning for AI, Jeff Hawkins: 1000 Brains, How to grow a brain) to show why its generally important to write about this.
+Those limitations include a lack of robustness to affine transformations and novel viewpoints,
+the susceptibility to adversarial attacks,
+exponential inefficiencies,
+a general lack of interpretability in the understanding a networks decision making process, etc. [TODO add references and more]
+
+The Capsule Neural Network (CapsNet) as introduced in~\cite{nips/SabourFH17} was specifically designed to address some of these limitations, showing much better robustness to affine transformations than their ConvNets baseline and offer better feature transfer-ability learn a part-whole relationship (distributed representation, and sparked a flood of follow up work. [TODO: some follow up work]
+~\cite{iclr/HintonSF18} showed that CapsNets showed great performance to genereralize to unseen viewpoints and are robust to white box adversarial attacks
+
+~\cite{corr/Ancheng2018} CN features offer better "transferability" than the standard "CNN". 
+~\cite{nips/LenssenFL18} CNs provide interpretable and equivariant representations
+~\cite{miccai/Jimenez-Sanchez18} CNs are more robust to class imbalances
+~\cite{nips/KosiorekSTH19} Object capsule presences are highly informative of the object class
+~\cite{nips/KosiorekSTH19} CNs allow Geometric Reasoning
+~\cite{cvpr/GuT20} CNs extrapolate better to affine transformations
+~\cite{corr/Lin2018} CNs allow more meaningful embeddings and output capsules are less coupled compared to neurons in standard CNNs
+
+Resonated well in popular science community:
+~\cite{comacm/Bengio2021} one future direction for the field
+~\cite{book/hawkins2021}
+~\cite{book/Hiesinger2021}
+
+Despite these initial positive develpments and positive results on smaller datasets, CapsNets do not seem to achieve SOTA on larger tasks.
+Flow-Based, Diffusion models seems
+Initially developed for computer vision tasks, the SOTA seems to be donimated in 
 
 Small success on smaller datasets, Looking at the state of the ART, on ImageNet nope!
 Haven't lived up in terms of tasks and results.
@@ -141,13 +161,13 @@ What we don't
 	\item Survey
 	\item No general proof.
 	\item Don not discredit other peoples work!
-\end{itemize}
+\end{itemize}	
 
 To the best of our knowledge, the Parse-Tree issue has not been addressed so far. Elephant in the room!
 
 
 
-The Capsule Neural Network (CapsNet) as introduced in~\cite{nips/SabourFH17} was specifically designed to overcome some of the limitations of the prevalent Convolutional Network (ConvNet) model family.
+
 Those limitations include a lack of robustness to affine transformations, susceptibility to adversarial attacks, a general lack of interpretability, when it comes to understanding a networks decision making process, a sheer endless data hunger and parameter inefficiency etc. [TODO: add references and more limitations, later: show how a parse-tree would solve these issues!].
 
 \section{Related Work and Follow-Ups}
@@ -217,6 +237,8 @@ Contrary to benefits, some limitations found in literature and observation that 
 \end{itemize}
 
 \section{The Semantic CapsNet: Of Parse Trees and Dragons}
+
+Transforming Autoencoder and earlier work
 
 The key motivation of the CapsNet is the ability to dynamically deconstruct a scene into a part-whole hierarchy or parse-tree, where a complex object is deconstructed in smaller more simpler parts.
 The process of dynamically creating such a part-whole hierarchy finds analogy in parsing a string according to some context-free-grammar.
