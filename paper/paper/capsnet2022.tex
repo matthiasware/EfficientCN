@@ -306,6 +306,7 @@ Implementation of a parse-tree in CapsNets:
 	\item Activeness via norm. Probabilistic interpretation.
 	\item instantiation parameters via direction. The values in the vectors are conceptually thought of being the instantiation parameters of the part, the capsule stands for!
 	\item Activeness implemented via a squashing function that ensures that the length of the capsule vector in in $[0,1)$.
+	\item The squashing function is required to force bipolar response and is necessary to knock capsules out. Furthermore it is required to allow the probabilistic interpretation of the capsule norm and the interpretation of a objects presence.
 	\item Capsule activated via routing.
 	\item Coupling coefficients calculated via a routing algorithm.
 	\item Coupling Ideally strong couplings for a clear parse-tree to emerge. Strong agreement. Non-iterative algorithms this can be done via softmax temperature, iterative algorithms that is the number of iterations can be directly linked to stronger couplings.
@@ -353,6 +354,14 @@ Shallow CNN backbone:
 	\item Shallow CNN must be followed by deeper CN layers. Has some limitations see RBA section.
 \end{itemize}
 
+\begin{itemize}
+
+	\item Benefit of one additional layer of routings seems unclear!
+	\item CNN seem to deversify instead of consolidating.
+	\item No incentives for PrimeCaps to be inactive
+	\item Network has all reasons to use all its capacity
+\end{itemize}
+
 Deeper CNN backbone:
 \begin{itemize}
 	\item More abstract features
@@ -373,6 +382,7 @@ Prime Caps:
 	\item Entenglement literature does not suggest, that CNN per se learn interpret able features.
 	\item Show that Capsule for one sample activates for a certain part in the input and then show that it activates for another part in the transformed image.
 	\item Semantic Issues: Multiple instances of the same Obje
+	\item CNN deversify instead of consolidating.
 \end{itemize}
 
 \subsubsection*{Softmax}
@@ -473,54 +483,6 @@ number of active capsules with agreement factor for 12 layer
 	\item 4: 16777216
 \end{itemize}
 
-\subsection{The Squashing results in vanishing gradient}
-\begin{itemize}
-	\item Vanishing gradient leads to dead capsules
-\end{itemize}
-\subsection{The squashing and Routing lead to infoWe show that the methods, that aim to reach that goal limit efficient and effective training.
-	Furthermore adjusting those methods to a certain degree comes with the downside of preventing the parse-tree of taking form.
-	In the sum all those arguments lead to the conclusion that the Parse-Tree cannot be realised with CapsNets, in contrary to common believe.
-	Multiple reasons for the parse-tree to not work, we disregard the idea in this case.rmation loss}
-two scenarios:plainnat
-\begin{itemize}
-	\item sparse but strong activation: dead capsules
-	\item dense but weak activation: no parse-tree and also no depth due to information loss
-\end{itemize}
-\subsection{What about the dynamics}
-
-
-However all routes, active and inactive capsules are routed.
-
-on the one hand, in order for a parse tree to emerge, we want
-\begin{itemize}
-	\item sparse activation
-	\item strong couplings
-\end{itemize}
-this can be achieved via Stronger agreement via softmax temperature or number of routing iterations.
-However: This makes the depth of the network dependent on the number of capsules used.
-
-
-Since depth is logarithmic dependent on the number of PrmeCaps, The number of PrimeCaps rises exponentially with depth in order to sustain a healthy information flow. This is in stark contrast to the narrative that a large number of complex objects can be composed by a relative small number of less complex objects.
-Even keeping the number of capsules in each layer the same becomes challenging.
-
-\subsection{Sparse Capsule activation \& Squashing Function}
-The squashing function is required to force bipolar response and is necessary to knock capsules out. Furthermore it is required to allow the probabilistic interpretation of the capsule norm and the interpretation of a objects presence.
-
-A problem with the squashing function is the vanishing gradient!
-Inactive capsules learn really really slow. This becomes increasingly a problem when making a CapsNet deeper! It usually also gets sparser.
-
-\subsection{Backbone and PrimeCaps}
-\begin{itemize}
-	\item CapsNet require to access the whole receptive field.
-	\item Two layer CNN
-	\item Multiple layer CNN
-	\item PrimeCaps are always active.
-	\item Benefit of one additional layer of routings seems unclear!
-	\item CNN seem to deversify instead of consolidating.
-	\item No incentives for PrimeCaps to be inactive
-	\item Network has all reasons to use all its capacity
-\end{itemize}
-
 \section{Conclusion}
 
 Strong semantic attachment, evidence for the parse-tree occurrence should be demonstrated. Otherwise the metrics for comparisons should be adjusted accordingly.
@@ -540,6 +502,7 @@ Multiple reasons for the parse-tree to not work, we disregard the idea in this c
 \begin{itemize}
 	\item Universal Capsule might be conceptually better
 	\item Problem of multiple instances of parts in one image. e.g legs
+	\item GLOM
 \end{itemize}
 
 
