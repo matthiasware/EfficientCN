@@ -283,24 +283,25 @@ What is a CapsNet? Technical definition
 Show that it was designed to implement the parse tree.
 Show how it can be scaled up.
 
+Components
 \begin{itemize}
-	\item Capsule: dedicated part
+	\item Capsule: dedicated part, vector / matrix, instantiation parameter
 	\item Multiple layers of those
 	\item Routing algorithm to assign lower level capsules to a parent.
 \end{itemize}
 
-Parse tree:
+What do we want for a strong parse-tree to emerge:
 \begin{itemize}
-	\item Sparse capsule activation
+	\item Sparse but strong activation of the capsules
 	\item Strong coupling coefficients
-	\item Dynamic assignment. Different input, different routing.
+	\item Dynamic assignments, Different input, different routing.
 	\item For complex parse-trees, depth is required.
 \end{itemize}
 
 Implementation of a parse-tree in CapsNets:
 \begin{itemize}
 	\item Nodes via Capsules. = Vectors. Capsules represent dedicated objects
-	\item primecaps full receptive field.
+	\item PrimeCaps full receptive field.
 	\item No dynamic allocation of memory is possible, fixed number of capsules in each layers that can be either active or inactive. Sparse activation.
 	\item Activeness via norm. Probabilistic interpretation.
 	\item instantiation parameters via direction. The values in the vectors are conceptually thought of being the instantiation parameters of the part, the capsule stands for!
@@ -314,14 +315,6 @@ Implementation of a parse-tree in CapsNets:
 	\item Sparse but strong activation via squashing function. Dynamic allocation not possible. therefore switch.
 	\item Dynamic routing via calculation of coupling coefficients via agreement.
 	\item Strong coupling via softmax temperature or number of iterations.
-\end{itemize}
-
-What do we want for a strong parse-tree to emerge:
-\begin{itemize}
-	\item Sparse but strong activation of the capsules
-	\item Strong coupling coefficients
-	\item Dynamic, as this should allow to reuse some parts. Semantically makes sense.
-	\item Mulilayer
 \end{itemize}
 
 %TODO ADD VISUALIZATION of CpasNet architecture
@@ -403,14 +396,16 @@ Prime Caps:
 
 \begin{itemize}
 	\item SNR!
-	\item COnnection to Transformers, that do the opposite, which is great, as it allows each capsule to learn better!
+	\item Connection to Transformers, that do the opposite, which is great, as it allows each capsule to learn better!
 \end{itemize}
 
-\subsubsection*{PrimeCaps creation and connection to input}
+\subsubsection*{PrimeCaps}
 \begin{itemize}
-	\item Experimental flaw: PrimeCaps are densly populated. Always! No sparsity!
-	\item CNN usually diversify. Learn features. Unclear why the CN layers should change that behaviour.
-	\item SHow that Capsule for one sample activates for a certain part in the input and then show that it activates for another part in the transformed image.
+	\item PrimeCaps are not sparse, but dense, depending on the Backbone.
+	\item This contrasts the semantics
+	\item CNN usually diversify. . Unclear why the CN layers should change that behaviour.
+	\item Show that Capsule for one sample activates for a certain part in the input and then show that it activates for another part in the transformed image.
+	\item Semantic Issues: Multiple instances of the same Obje
 \end{itemize}
 
 \subsection*{The Squashing results in vanishing gradient}
