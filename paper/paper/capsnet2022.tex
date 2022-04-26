@@ -26,14 +26,16 @@
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 \usepackage{xcolor}         % colors
+\usepackage{verbatim}		% Comments
 
 
 \newtheorem{theorem}{Theorem}
 
 \title{                                                                                                                                          
-	Why CapsNets are hard to get right!
-%	\large
-%	Challenging the dynamic parse-tree assumption in Capsule Neural Networks
+	Why CapsNets are hard to get right! \\
+	\vspace{0.5cm}
+	\large
+	Challenging  the dynamic parse-tree assumption  in Capsule Neural Networks
 }
 
 % The \author macro works with any number of authors. There are two commands
@@ -81,19 +83,25 @@
 
 \begin{abstract}
   Write the paper like a blog post!
-  Why haven't CapsNet taken off? What are the issues?
-  We challenge the dynamic parse-tree assumption in the Capsule Neural Network.
-  We show that there exists a discrepancy between the semantics of CapsNets and its technical implementation.
-  We explain why the CapsNet does not scale to larger tasks.
-  We show that the CapsNet model sucks and proof that analytically!
+  Why haven't CapsNet taken off?
+  What are the issues?
+  Challenge the dynamic parse-tree assumption in the Capsule Neural Network.
+  Show that there exists a discrepancy between the semantics of CapsNets and its technical implementation.
+  Explain why the CapsNet does not scale to larger tasks.
+  Sow that the CapsNet model sucks and proof that analytically!
 \end{abstract}
 
-\section{TODO}
-\begin{itemize}
-	\item Rework Results: Put every result in subsection and write comment
-	\item Add better less exhaustive introduction
-	\item Rework related work
-\end{itemize}
+\begin{comment}
+	TODO
+	- Rework results
+	- Reread the CapsNet paper
+	- Think about motivation for parse trees, then motivate experiements accordingly
+	- Add better less exhaustive introduction
+	- Rework related work
+	
+	IDEA:
+	- Title in parse-tree form
+\end{comment}
 
 \section{Introduction}
 
@@ -332,60 +340,69 @@ Implementation of a parse-tree in CapsNets:
 \end{itemize}
 
 \section{Results}
-
-\subsection*{MISC}
+\subsection{Miscellaneous and Ideas}
 \begin{itemize}
-	\item Technical complexity
-	\item Parameter inefficient
+	\item Build argument around technical complexity of the approaches
+	\item Discuss parameter- and computational inefficiencies
+	\item Investigate the Picasso problem (\textbf{THIS})
 \end{itemize}
-\subsection*{Higher Level Capsules}
-\begin{itemize}
-	\item  No evidence for interpretable part-whole hierachy in learned capsnets. This may be the result of bad backbones. Better results with deeper CapsNets, but this requires a working routing
-\end{itemize}
-\subsubsection*{Feature extraction problem and PrimeCaps}
-Usually CNN backbone with the requirement of a full receptive field as each Capsule must see everything.
-Shallow CNN backbone:
-\begin{itemize}
-	\item Less abstract features
-	\item No meaningful features in backbone but deep Parse-Tree not possible due to routing limits.
-	\item Capsule explosion with rise in input size. The larger the input, the more capsules there are.
-	\item Furthermore less abstract features may break the assumption that each capsule stands for a dedicated object, as edges occur more often.
-	\item This make routing extremely expensive. [TODO complexity of routing]
-	\item Shallow CNN must be followed by deeper CN layers. Has some limitations see RBA section.
-\end{itemize}
+\subsection{There is not evidence that supports the parse-tree}
+This should actually be the implication of the other results.
 
+\subsection{Issues regarding the Backbone and PrimeCaps}
+\textbf{Observations}:
 \begin{itemize}
-
-	\item Benefit of one additional layer of routings seems unclear!
-	\item CNN seem to deversify instead of consolidating.
-	\item No incentives for PrimeCaps to be inactive
-	\item Network has all reasons to use all its capacity
+	\item Usually, there is a ConvNet backbone that extracts features from the image.
+	\item These features are then reshaped and constitute the first layer of Capsules, the PrimeCaps
+	\item Each one of these PrimeCaps must access the full receptive field.
+	\item Two options for backbone: shallow or deep ConvNet.
 \end{itemize}
-
-Deeper CNN backbone:
+\textbf{Case}: Shallow ConvNet backbone results in:
 \begin{itemize}
-	\item More abstract features
-	\item Loss of trackability. Feature to Output
-	\item Still not easy to implement since pooling layers are prohibited from a conceptual perspective.
-	\item Shifts more work to the CNN.
-	\item Using pooling features breaks with the conceptual component.
-	\item Unclear of the benefit of CapsNet layers, reference work that showed no additional benefit.
-	\item Also from interpretable perspective there might not be one.
-\end{itemize}
-
-Prime Caps:
-\begin{itemize}
-	\item PrimeCaps are not sparse, but dense, depending on the Backbone.
-	\item This contrasts the semantics
-	\item CNN usually diversify. . Unclear why the CN layers should change that behaviour.
-	\item CNN uses full capacity
-	\item Entenglement literature does not suggest, that CNN per se learn interpret able features.
+	\item Less abstract PrimeCaps, which is conceptually problematic due to inverse pyramid principle. Edges occur more often! 
+	\item Scaling issues, as the feature maps are way too large. Calculate receptive field implications for different image sizes, number of prime caps and parameters and dimension of prime caps.
+	\item, [Show on larger image sizes] and we get either
+	\begin{itemize}
+		\item Capsule Explosion, -> Computationally expensive routing %TODO calc routing complexity
+		\item Capsule dimensional explosion: Computationally expensive routing and breaks with the concept.
+	\end{itemize}
+	\item Shifts the task of building more abstract and compositional objects to the routing algorithm. And as we see later, also this is limited.
+	\item Sparse activation of the PrimeCaps possible
+	\item Therefore, since this approach does not scale, deeper backbones might be the solution.
 	\item Show that Capsule for one sample activates for a certain part in the input and then show that it activates for another part in the transformed image.
-	\item Semantic Issues: Multiple instances of the same Obje
-	\item CNN deversify instead of consolidating.
 \end{itemize}
 
-\subsubsection*{Softmax}
+\textbf{Case}: Deeper ConvNet backbone results in:
+\begin{itemize}
+	\item More abstract PrimeCaps possible
+	\item All the benefits and issues with ConvNets, especially diversification.
+	\item Loss of traceability. Feature to Output
+	\item Still not easy to implement since pooling layers are prohibited from a conceptual perspective. Using pooling breaks with the concept.
+	\item Shifts more work to the CNN. Hypothesis is actually, that all the work is done in the backbone. [Some experiments with ResNet exist and can be referenced]
+	\item Experiments show, that PrimeCaps are not at all sparse, but rather dense, which breaks with the semantics. Also since all PrimeCaps are active, always, they must be routed!
+\end{itemize}
+
+Notes on ConvNets
+\begin{itemize}
+	\item ConvNets usually diversify and don`t consolidate. The diversification of the ConvNets might be shown analytically.
+	\item Does the transition from place to rate coding really take place? And where?
+	\item Entenglement literature does not suggest, that CNN per se learn interpretable features.
+	The diversification of the ConvNets might be shown analytically.
+\end{itemize}
+
+Central arguments
+\begin{itemize}
+	\item CapsNets with shallow backbones do not scale
+	\item CapsNets with deeper backbones do not profit from routing and the PrimeCaps are noisy. 
+\end{itemize}
+
+Open questions:
+\begin{itemize}
+	\item Can we show that we cannot attribute certain features to a PrimeCaps? E.g. Can we show that information about the color "red" might be scattered around many Capsules?
+	\item Can we come up with a stronger theoretical claim?
+\end{itemize}
+
+\subsection{The Softmax routing}
 
 \begin{itemize}
 	\item SNR!
@@ -504,8 +521,6 @@ Multiple reasons for the parse-tree to not work, we disregard the idea in this c
 	\item Problem of multiple instances of parts in one image. e.g legs
 	\item GLOM
 \end{itemize}
-
-
 
 %\bibliographystyle{apalike}
 \bibliographystyle{unsrt}
