@@ -332,48 +332,28 @@ Implementation of a parse-tree in CapsNets:
 
 \section{Results}
 
-Result summary
+\subsection*{MISC}
 \begin{itemize}
-	\item Observation: PrimeCaps activations are not sparse! Explain with CNN? This contrasts the semantic idea.
-	\item The depth of routing-by-agreement CNs are logarithmically limited depending on the number of PrimeCaps in best case! This prevents the CN from getting deeper! So no complex parse tree in this case or a huge number of primecaps required! However, conceptually it would make sense to have a limited number of primecaps that can be used to create an unlimited number of complex objects.
-	\item The stronger the agreement, the shallower the architecture
-	\item A Bias term allows depth but prevents parse-tree from forming.
-	\item The squashing function prevents gradient / information flow and parameter learning.
-	\begin{itemize}
-		\item Dense Setting: = "Uniform routing", capsules are equally squashed. This limits depth and expressiveness of parse-tree.
-		\item Sparse Setting: Dead capsules stay dead, alive capsules stay alive, because of vanishing gradient. This also limits depth and expressiveness of parse-tree.
-	\end{itemize}
-	\item Show in both cases experimentally
-	\begin{itemize}
-		\item The activation norm of capsules gets sparser and lower over the layers!
-		\item The norm of the gradients for Capsules
-		\item The loss lowers step wise, The capsules in upper layers take much longer to train.
-	\end{itemize}
-	\item Common parse-trees are largely of a static nature!
-	\item No meaningful features in backbone but deep Parse-Tree not possible due to routing limits.
-	\item Strong coupling coefficients are not given automatically by the algorithms, but can be enforced via softmax temperature or more iterations in the routing rounds.
-	\item However this result in sparse capsules and bad performance.
-	\item Strong coupling coefficients do not necessarily yield a dynamic parse tree!
-	\item Even inactive capsules are forced to route uniformly. This results in a bad signal to noise ratio and prevents effective learning.
-	\item No evidence for interpretable part-whole hierachy in learned capsnets. This may be the result of bad backbones. Better results with deeper CapsNets, but this requires a working routing.
-	\item The Bias prevents dynamic routing of capsules and the routing becomes static!
-	\item Inverse Pyramid: Complex objects should be made out of simple objects
-	\item Technical complexity!
-	\item Parameter Inefficient
+	\item Technical complexity
+	\item Parameter inefficient
 \end{itemize}
-
-\subsection{Why don't they scale?}
+\subsection*{Higher Level Capsules}
+\begin{itemize}
+	\item  No evidence for interpretable part-whole hierachy in learned capsnets. This may be the result of bad backbones. Better results with deeper CapsNets, but this requires a working routing
+\end{itemize}
 \subsubsection*{Feature extraction problem and PrimeCaps}
 Usually CNN backbone with the requirement of a full receptive field as each Capsule must see everything.
-For a shallow CNN backbone:
+Shallow CNN backbone:
 \begin{itemize}
 	\item Less abstract features
+	\item No meaningful features in backbone but deep Parse-Tree not possible due to routing limits.
 	\item Capsule explosion with rise in input size. The larger the input, the more capsules there are.
 	\item Furthermore less abstract features may break the assumption that each capsule stands for a dedicated object, as edges occur more often.
 	\item This make routing extremely expensive. [TODO complexity of routing]
 	\item Shallow CNN must be followed by deeper CN layers. Has some limitations see RBA section.
 \end{itemize}
-For a deeper CNN backbone:
+
+Deeper CNN backbone:
 \begin{itemize}
 	\item More abstract features
 	\item Loss of trackability. Feature to Output
@@ -383,13 +363,16 @@ For a deeper CNN backbone:
 	\item Unclear of the benefit of CapsNet layers, reference work that showed no additional benefit.
 	\item Also from interpretable perspective there might not be one.
 \end{itemize}
+
 Prime Caps:
 \begin{itemize}
-	\item Experimental flaw: PrimeCaps are densly populated.
-	\item CNN usually diversify [REFERENCE]. Learn features. Unclear why the CN layers should change that behaviour.
+	\item PrimeCaps are not sparse, but dense, depending on the Backbone.
+	\item This contrasts the semantics
+	\item CNN usually diversify. . Unclear why the CN layers should change that behaviour.
 	\item CNN uses full capacity
 	\item Entenglement literature does not suggest, that CNN per se learn interpret able features.
-	\item Why should it be different in this case?
+	\item Show that Capsule for one sample activates for a certain part in the input and then show that it activates for another part in the transformed image.
+	\item Semantic Issues: Multiple instances of the same Obje
 \end{itemize}
 
 \subsubsection*{Softmax}
@@ -397,52 +380,54 @@ Prime Caps:
 \begin{itemize}
 	\item SNR!
 	\item Connection to Transformers, that do the opposite, which is great, as it allows each capsule to learn better!
-\end{itemize}
-
-\subsubsection*{PrimeCaps}
-\begin{itemize}
-	\item PrimeCaps are not sparse, but dense, depending on the Backbone.
-	\item This contrasts the semantics
-	\item CNN usually diversify. . Unclear why the CN layers should change that behaviour.
-	\item Show that Capsule for one sample activates for a certain part in the input and then show that it activates for another part in the transformed image.
-	\item Semantic Issues: Multiple instances of the same Obje
+	\item Strong coupling coefficients are not given automatically by the algorithms, but can be enforced via softmax temperature or more iterations in the routing rounds.
+	\item However this result in sparse capsules and bad performance.
+	\item Strong coupling coefficients do not necessarily yield a dynamic parse tree!
+	\item Even inactive capsules are forced to route uniformly. This results in a bad signal to noise ratio and prevents effective learning.
 \end{itemize}
 
 \subsection*{The Squashing results in vanishing gradient}
 \begin{itemize}
 	\item Capsules only activate when other capsules route to them, by squashing.
-	\item Squashing leads to vanishing gradient for inactive capsules.
-	\item Vanishing gradient leads to dead capsules
+	\item Squashing leads to vanishing gradient / no information flow for inactive capsules.
 	\item Vanishing gradient leads to dead capsules
 	\item Dead capsules rarely activate
+	\item Dead capsule don't learn.
 \end{itemize}
-
-\subsection*{RBA limits the depths of the CapsNet}
-...
 
 \subsection*{The squashing and Routing leads to information loss}
 two scenarios:
 \begin{itemize}
-	\item sparse but strong activation: dead capsules
-	\item dense but weak activation: no parse-tree and also no depth due to information loss
+	\item Dense Setting: = "Uniform routing", capsules are equally squashed. This limits depth and expressiveness of parse-tree.
+	\item Sparse Setting: Dead capsules stay dead, alive capsules stay alive, because of vanishing gradient. This also limits depth and expressiveness of parse-tree.
+\end{itemize}
+Show in both cases experimentally
+\begin{itemize}
+	\item The activation norm of capsules gets sparser and lower over the layers!
+	\item The norm of the gradients for Capsules
+	\item The loss lowers step wise, The capsules in upper layers take much longer to train.
 \end{itemize}
 
 \subsection*{Dynamics}
-Measure dynamics. Show that there isn't much. if enforced, that leads to problems!
+Common parse-trees are largely of a static nature!
+Measure dynamics.
+Show that there isn't much. 
+If enforced, that leads to problems!
+The Bias prevents dynamic routing of capsules and the routing becomes static!
 
-
-\subsection{RBA limits the depth of a CN}
-
-
-Quite intuitive, with wide implications.
-Routing, that is based on agreement is limits the depth of the CN logarithmically with base agreement factor!
+\subsection*{RBA limits the depths of the CapsNet}
+ 
+Routing, that is based on agreement limits the depth of the CN logarithmically with base agreement factor, depending on the number of PrimeCaps!
+This prevents the CN from getting deeper!
 There are multiple arguments for deeper CapsNets
 \begin{itemize}
-	\item Complex parse-trees
+	\item Complex parse-trees, requires either weak agreemetn or tons of primecaps.
+	\item conceptually it would make sense to have a limited number of primecaps that can be used to create an unlimited number of complex objects.
 	\item Minimizing the impact of the ConvNet backbone. It was also shown that in this case, CapsNets do not really yield a benefit ~\cite{acml/PaikKK19}.
 	\item Depth is required for abstract features to form.
 	\item Practical trend for deeper architectures.
 	\item There is also theoretical evidence, that depth is necessary.
+	\item A Bias term allows depth but prevents parse-tree from forming.
 \end{itemize}
 We show that RBA limits the possible depth of CN.
 
