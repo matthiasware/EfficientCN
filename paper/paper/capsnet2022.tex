@@ -187,8 +187,6 @@ Why this work?
 	\item We cannot proof anything, however, as we feel, there is an elephant in the room that should be addressed
 \end{itemize}
 
-\section{What is a CapsNet?}
-
 \section{Related Work and Follow-Ups}
 
 \subsubsection*{[A Short History of Progress]}
@@ -258,9 +256,6 @@ what is a parse tree?
 	\item part-whole relationship
 \end{itemize}
 why do we want a parse tree?
-Picasso Problem in CNNs. Does it even exist?
-\url{https://www.sciencedirect.com/science/article/abs/pii/S0141938222000439}
-Obvious reasons, hypothesized reasons or hopes, relying on the assumption that such a sematic concept would emerge.
 \begin{itemize}
 	\item Inverse graphics
 	\item Picasso Problem \url{https://www.sciencedirect.com/science/article/abs/pii/S0141938222000439}
@@ -272,7 +267,7 @@ Obvious reasons, hypothesized reasons or hopes, relying on the assumption that s
 	\item allows inference, as discrete
 	\item allows insights in learning
 	\item conceptual learning
-	\item ...
+	\item Semantic concepts and distentangled representation
 \end{itemize}
 
 \section{The Technical CapsNet: Of Routing and Capsules}
@@ -291,18 +286,19 @@ Parse tree:
 \begin{itemize}
 	\item Sparse capsule activation
 	\item Strong coupling coefficients
-	\item Dynamic assignment. Differnt input, different routing.
+	\item Dynamic assignment. Different input, different routing.
 	\item For complex parse-trees, depth is required.
 \end{itemize}
 
 Implementation of a parse-tree in CapsNets:
 \begin{itemize}
-	\item Nodes via Capsules. = Vectors. Capsules represent dedicated objects, primecaps full receptive field.
-	\item No dynamic allocation possible, fixed number of capsules in each layers that can be either active or inactive. Sparse activation.
+	\item Nodes via Capsules. = Vectors. Capsules represent dedicated objects
+	\item primecaps full receptive field.
+	\item No dynamic allocation of memory is possible, fixed number of capsules in each layers that can be either active or inactive. Sparse activation.
 	\item Activeness via norm. Probabilistic interpretation.
-	\item Instatiation parameters via direction. The values in the vectors are conceptually thought of beeing the instatiation parameters of the part, the capsule stands for!
+	\item instantiation parameters via direction. The values in the vectors are conceptually thought of being the instantiation parameters of the part, the capsule stands for!
 	\item Activeness implemented via a squashing function that ensures that the length of the capsule vector in in $[0,1)$.
-	\item Capsule activateed via routing.
+	\item Capsule activated via routing.
 	\item Coupling coefficients calculated via a routing algorithm.
 	\item Coupling Ideally strong couplings for a clear parse-tree to emerge. Strong agreement. Non-iterative algorithms this can be done via softmax temperature, iterative algorithms that is the number of iterations can be directly linked to stronger couplings.
 	\item Ensure that each capsule is routed, softmax over coupling coefficients.
@@ -321,7 +317,10 @@ What do we want for a strong parse-tree to emerge:
 	\item Mulilayer
 \end{itemize}
 
-\subsubsection*{Model Class}
+%TODO ADD VISUALIZATION of CpasNet architecture
+%TODO ADD training precedure
+
+\subsubsection*{Model Class in this work}
 \begin{itemize}
 	\item Backbone, receptive field requirement!
 	\item Vectorized capsules
@@ -331,21 +330,15 @@ What do we want for a strong parse-tree to emerge:
 	\item Squash
 \end{itemize}
 
-
 \section{Results}
 
 Result summary
 \begin{itemize}
 	\item Observation: PrimeCaps activations are not sparse! Explain with CNN? This contrasts the semantic idea.
-	\item A single layer of CapsNet does not yield a parse tree.
-	\item Misconception of technical implementation and the motivation semantics around CapsNet
-	\item Popular Science hails CapsNet. We want to shine light on the matter.
-	\item Routing By Agreement limits the maximal possible depth and therefore expressiveness of CapsNets. Getting a parse-tree from features to output is therefore a difficult challenge. 
-	\item The depth of routing-by-agreement CNs are logarithmically limited depending on the number of PrimeCaps in best case! This prevents the CN from getting deeper! So no complex parse tree in this case or a huge number of primecaps required!
-	\item A Bias term allows depth but prevents parse-tree from forming.
+	\item The depth of routing-by-agreement CNs are logarithmically limited depending on the number of PrimeCaps in best case! This prevents the CN from getting deeper! So no complex parse tree in this case or a huge number of primecaps required! However, conceptually it would make sense to have a limited number of primecaps that can be used to create an unlimited number of complex objects.
 	\item The stronger the agreement, the shallower the architecture
-	\item The squashing function prevents gradient flow: strong couplings and weak couplings.
-	\item The Squashing function limits information flow and parameter learning because of vanishing gradient!
+	\item A Bias term allows depth but prevents parse-tree from forming.
+	\item The squashing function prevents gradient / information flow and parameter learning.
 	\begin{itemize}
 		\item Dense Setting: = "Uniform routing", capsules are equally squashed. This limits depth and expressiveness of parse-tree.
 		\item Sparse Setting: Dead capsules stay dead, alive capsules stay alive, because of vanishing gradient. This also limits depth and expressiveness of parse-tree.
@@ -357,15 +350,16 @@ Result summary
 		\item The loss lowers step wise, The capsules in upper layers take much longer to train.
 	\end{itemize}
 	\item Common parse-trees are largely of a static nature!
-	\item No meaningful features in backbone but deep Parse-Tree not possible
-	\item Show that strong coupling coefficients are not given automatically by the algorithms, but can be enforced via softmax temperature or more iterations in the routing rounds.
-	\item However this result in sparse capsules.
+	\item No meaningful features in backbone but deep Parse-Tree not possible due to routing limits.
+	\item Strong coupling coefficients are not given automatically by the algorithms, but can be enforced via softmax temperature or more iterations in the routing rounds.
+	\item However this result in sparse capsules and bad performance.
 	\item Strong coupling coefficients do not necessarily yield a dynamic parse tree!
 	\item Even inactive capsules are forced to route uniformly. This results in a bad signal to noise ratio and prevents effective learning.
 	\item No evidence for interpretable part-whole hierachy in learned capsnets. This may be the result of bad backbones. Better results with deeper CapsNets, but this requires a working routing.
-	\item The Bias prevents dynamic routing of capsules! With a Bias, the routing becomes static!
-	\item Inverse Pyramid: Complex objects are made out of simple objects, not Coomplex objects are made of simple objects.
+	\item The Bias prevents dynamic routing of capsules and the routing becomes static!
+	\item Inverse Pyramid: Complex objects should be made out of simple objects
 	\item Technical complexity!
+	\item Parameter Inefficient
 \end{itemize}
 
 \subsection{Why don't they scale?}
