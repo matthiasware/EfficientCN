@@ -96,7 +96,7 @@
   Challenge the dynamic parse-tree assumption in the Capsule Neural Network.
   Show that there exists a discrepancy between the semantics of CapsNets and its technical implementation.
   Explain why the CapsNet does not scale to larger tasks.
-  Sow that the CapsNet model sucks and proof that analytically!
+  Show that the CapsNet model sucks and proof that analytically!
 \end{abstract}
 
 \begin{comment}
@@ -126,7 +126,7 @@ the susceptibility to adversarial attacks,
 exponential inefficiencies
 and a general lack of interpretability in the networks decision making process. %TODO: add references%
 
-The CapsNet was specifically designed to address some of these limitations and demonstrated SOTA classification accuracy on MNIST with less parameters and stronger robustness to affine transformations, compared to their ConvNet`s baseline, and sparked a flood of follow-up research.
+The CapsNet was specifically designed to address some of these limitations and demonstrated SOTA classification accuracy on MNIST with less parameters and stronger robustness to affine transformations, compared to their ConvNet`s baseline. This work sparked a flood of follow-up research.
 
 % GOOD CAPSNETS RESULT
 Results demonstrating advantages of CapsNets over baseline ConvNet`s include:
@@ -306,21 +306,11 @@ It can be "deduced" from its Semantics, as it is designed to implement the parse
 
 Components
 \begin{itemize}
-	\item Capsule: dedicated parts or objects, vector / matrix
-	\item Backbone: Feature extraction, CNN,  receptive field requirement!
-	\item Routing Algorithm, softmax and coupling
-	\item Squashing function
-	\item Softmax
+	\item Capsule: dedicated parts or objects, implemented as vector / matrix
 	\item Multiple layers of those (hierarchical)
-	\item Routing algorithm to assign lower level capsules to a parent.
-\end{itemize}
-
-What do we want for a strong parse-tree to emerge:
-\begin{itemize}
-	\item Sparse but strong activation of the capsules
-	\item Strong coupling coefficients
-	\item Dynamic assignments, Different input, different routing.
-	\item For complex parse-trees, depth is required.
+	\item Backbone: Feature extraction, ConvNet with receptive field requirement!
+	\item Routing Algorithm: calculates the coupling to assign lower level capsules to higher level capsules.
+	\item Squashing function: regulates the norm of the capsules.
 \end{itemize}
 
 Implementation of a parse-tree in CapsNets:
@@ -341,9 +331,10 @@ Implementation of a parse-tree in CapsNets:
 
 For the emergence of a clear parse-tree we need:
 \begin{itemize}
-	\item Sparse but strong activation of the Capsules [we can measure this]
-	\item Strong but dynamic routing coefficients / coupling coefficients. [we can measure this]. Strong can be steered by agreement and softmax. Dynamic is more a hypothetical property.
+	\item Strong but sparse activation of the Capsules [we can measure this]
+	\item Strong and dynamic routing coefficients / coupling coefficients. [we can measure this]. Strong can be steered by agreement and softmax. Dynamic is more a hypothetical property.
 	\item Non-iterative algorithms this can be done via softmax temperature, iterative algorithms that is the number of iterations can be directly linked to stronger couplings.
+	\item Depth, otherwise no complex parse-tree
 \end{itemize}
 
 %TODO ADD VISUALIZATION of CpasNet architecture
