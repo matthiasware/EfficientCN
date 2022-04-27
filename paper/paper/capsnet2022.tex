@@ -269,46 +269,49 @@ The work in ~\cite{cvpr/GuT021} showed that the individual parts of the CapsNets
 ~\cite{eccv/LiGDOW18} Neural Capsule Encapsulation, seems complicated. More parameter efficient and less computational heavy.
 GroupCaps ~\cite{cvpr/ChenJSWS18}, not really sure what they are doing. Probabliy too much.
 
-\section{The Semantic CapsNet: Of Parse Trees and Dragons}
+\section{Capsule Neural Network}
+\subsection{The Semantic CapsNet: Of Parse Trees and Dragons}
 
-The key motivation of the CapsNet is the ability to dynamically deconstruct a scene into a part-whole hierarchy or parse-tree, where a complex object is deconstructed in smaller more simpler parts.
+The key motivation behind the CapsNet is the parse-tree, which is created by dynamically deconstructing a 2d image scene into a part-whole hierarchy. A complex object is deconstructed in smaller simpler objects or parts.
 The process of dynamically creating such a part-whole hierarchy finds analogy in parsing a string according to some context-free-grammar.
 The CapsNet is specifically designed to provide a kind of grammar for images.
 More background: Human vision, geon theory, Hinton stuff.
 %TODO: Add cool visualization of a parse tree
 
-what is a parse tree?
+Parts of a parse-tree:
 \begin{itemize}
-	\item Nodes: Stores istantiation parameters
-	\item Hierachy of Nodes
-	\item Each lower level node is linked to a parent node
-	\item part-whole relationship
+	\item Nodes: Stores instantiation parameters
+	\item Each lower level node is linked to a parent node by an edge to create a part-whole relationship
+	\item The overall hierachy of Nodes creates a parse-tree.
 \end{itemize}
-why do we want a parse tree?
+Why do we want a parse tree?
 \begin{itemize}
-	\item Inverse graphics
-	\item Picasso Problem \url{https://www.sciencedirect.com/science/article/abs/pii/S0141938222000439}
-	\item Grammar of images
-	\item Interpretability
+	\item Shady biological or psychological reasons. [Simply cite Hinton.]
+	\item Inverse graphics is cool! [Cite cool references that do real inverse graphics]
+	\item This would probably solve the Picasso Problem [\url{https://www.sciencedirect.com/science/article/abs/pii/S0141938222000439}]
+	\item Grammar of images and Interpretability
 	\item Debugging of neural networks
 	\item Transferability
 	\item Robustness
-	\item allows inference, as discrete
-	\item allows insights in learning
-	\item conceptual learning
-	\item Semantic concepts and distentangled representation
+	\item Parameter efficiency
+	\item Allows probabilistic inference, as nodes are discrete objects.
+	\item Allows conceptual learning and disentangled representations.
 \end{itemize}
 
-\section{The Syntactic CapsNet: Of Capsules, Routing and Squashing}
+The \textbf{parse-tree} is what we call the \textbf{Semantics} of CapsNets.
 
-What is a CapsNet? Technical definition
-Show that it was designed to implement the parse tree.
-Show how it can be scaled up.
+\subsection{The Syntactic CapsNet: Of Capsules, Routing and Squashing}
+The \textbf{implementation} is what we call the \textbf{Syntax} of the CapsNet.
+It can be "deduced" from its Semantics, as it is designed to implement the parse-tree.
 
 Components
 \begin{itemize}
-	\item Capsule: dedicated part, vector / matrix, instantiation parameter
-	\item Multiple layers of those
+	\item Capsule: dedicated parts or objects, vector / matrix
+	\item Backbone: Feature extraction, CNN,  receptive field requirement!
+	\item Routing Algorithm, softmax and coupling
+	\item Squashing function
+	\item Softmax
+	\item Multiple layers of those (hierarchical)
 	\item Routing algorithm to assign lower level capsules to a parent.
 \end{itemize}
 
@@ -322,22 +325,25 @@ What do we want for a strong parse-tree to emerge:
 
 Implementation of a parse-tree in CapsNets:
 \begin{itemize}
-	\item Nodes via Capsules. = Vectors. Capsules represent dedicated objects
-	\item PrimeCaps full receptive field.
-	\item No dynamic allocation of memory is possible, fixed number of capsules in each layers that can be either active or inactive. Sparse activation.
-	\item Activeness via norm. Probabilistic interpretation.
-	\item instantiation parameters via direction. The values in the vectors are conceptually thought of being the instantiation parameters of the part, the capsule stands for!
-	\item Activeness implemented via a squashing function that ensures that the length of the capsule vector in in $[0,1)$.
-	\item The squashing function is required to force bipolar response and is necessary to knock capsules out. Furthermore it is required to allow the probabilistic interpretation of the capsule norm and the interpretation of a objects presence.
-	\item Capsule activated via routing.
-	\item Coupling coefficients calculated via a routing algorithm.
-	\item Coupling Ideally strong couplings for a clear parse-tree to emerge. Strong agreement. Non-iterative algorithms this can be done via softmax temperature, iterative algorithms that is the number of iterations can be directly linked to stronger couplings.
-	\item Ensure that each capsule is routed, softmax over coupling coefficients.
-	\item Coupling coefficients calculated via a routing algorithm.
-	\item Hierarchical: multiple layers of Capsules.
-	\item Sparse but strong activation via squashing function. Dynamic allocation not possible. therefore switch.
-	\item Dynamic routing via calculation of coupling coefficients via agreement.
-	\item Strong coupling via softmax temperature or number of iterations.
+	\item Nodes are represented as active Capsules.Vectors.
+	\item The capsules in the first layer are called PrimeCaps.
+	\item PrimeCaps require full receptive field over the input image.
+	\item Before the PrimeCaps, there is a feature extraction backbone. This is often a simple ConvNet.
+	\item Since no dynamic allocation of memory is possible, we need a fixed number of capsules in each layers that can be either active or inactive.
+	\item Activeness implemented via a squashing function that ensures that the length / norm of the capsule vector is in $[0,1)$.
+	\item Thus, the norm has a probabilistic interpretation of activeness.
+	\item The squashing function is also required to force bipolar response and to knock capsules out. 
+	\item The instantiation parameters of an object, that a capsule represents, are given via the vector direction.
+	\item Capsules activate via routing.
+	\item Coupling coefficients of lower and higher layer capsules calculated via a routing algorithm.
+	\item To ensure that each capsule is routed, we take the softmax over coupling coefficients.
+\end{itemize}
+
+For the emergence of a clear parse-tree we need:
+\begin{itemize}
+	\item Sparse but strong activation of the Capsules [we can measure this]
+	\item Strong but dynamic routing coefficients / coupling coefficients. [we can measure this]. Strong can be steered by agreement and softmax. Dynamic is more a hypothetical property.
+	\item Non-iterative algorithms this can be done via softmax temperature, iterative algorithms that is the number of iterations can be directly linked to stronger couplings.
 \end{itemize}
 
 %TODO ADD VISUALIZATION of CpasNet architecture
