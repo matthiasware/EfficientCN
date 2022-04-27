@@ -31,11 +31,19 @@
 
 \newtheorem{theorem}{Theorem}
 
-\title{                                                                                                                                          
+\title{                                                                                                    \large                                     
 	Why CapsNets are hard to get right! \\
-	\vspace{0.5cm}
-	\large
-	Challenging  the dynamic parse-tree assumption  in Capsule Neural Networks
+	or \\
+	Challenging  the dynamic parse-tree in Capsule Neural Networks \\
+	or \\
+	Why CapsNets don't scale! \\
+	or \\
+	Why CapsNets suck! \\
+	or \\
+	The Syntax - Semantics Mismatch in Capsule Neural Networks
+	\\
+	or \\
+	The Semantic Completeness Problem with Capsule Neural Networks
 }
 
 % The \author macro works with any number of authors. There are two commands
@@ -98,8 +106,10 @@
 	- Think about motivation for parse trees, then motivate experiements accordingly
 	- Add better less exhaustive introduction
 	- Rework related work
+	\url{https://en.wikipedia.org/wiki/Completeness_(logic)}
 	
 	TODO Meta:
+	- Argument around Syntax and Semantics like with logical Systems
 	- Choose a central argument that builds the core of the overall argumentation line
 	- Build everythign else around that argument.
 	
@@ -289,7 +299,7 @@ why do we want a parse tree?
 	\item Semantic concepts and distentangled representation
 \end{itemize}
 
-\section{The Technical CapsNet: Of Routing and Capsules}
+\section{The Syntactic CapsNet: Of Capsules, Routing and Squashing}
 
 What is a CapsNet? Technical definition
 Show that it was designed to implement the parse tree.
@@ -333,22 +343,12 @@ Implementation of a parse-tree in CapsNets:
 %TODO ADD VISUALIZATION of CpasNet architecture
 %TODO ADD training precedure
 
-\subsubsection*{Model Class in this work}
-\begin{itemize}
-	\item Backbone, receptive field requirement!
-	\item Vectorized capsules
-	\item Coupling coefficients determined by routing
-	\item Bias
-	\item Softmax
-	\item Squash
-\end{itemize}
-
 \section{Results}
-\subsection{Miscellaneous and Ideas}
+\subsection{Miscellaneous}
 \begin{itemize}
-	\item Build argument around technical complexity of the approaches
-	\item Discuss parameter- and computational inefficiencies
-	\item Investigate the Picasso problem (\textbf{THIS}), as this should actually be solved by CapsNets.
+	\item Build argument around technical complexity of the approaches. E.g. In comparison Transformers or ConvNets are dead easy.
+	\item Discuss parameter- and computational inefficiencies, especially in relation to the technical complexity argumentS.
+	\item Investigate the Picasso problem (\textbf{THIS}). AFAIK nobody really tried to examine this problem neither for ConvNets not CapsNets.
 \end{itemize}
 
 \subsection{Issues regarding the Backbone and PrimeCaps}
@@ -403,10 +403,11 @@ Therefore since the approach of using shallow backbone is limited and does not s
 	\item CapsNets with deeper backbones do not profit from routing and the PrimeCaps are dense and noisy. 
 \end{itemize}
 
-\subsection{The Squashing of Capsules results in a vanishing gradient}
+\subsection{The Squashing of Capsules result in Vanishing Gradient Problem}
 \textbf{Open questions}
 \begin{itemize}
 	\item Can we show this analytically? Have a look at sigmoid or tanh activations. I think it was proven for these functions.
+	\item Especially with iterative routing, this should be an issue.
 	\item How to show this experimentally? Easiest to use a synthetic set-up.
 \end{itemize}
 
@@ -477,40 +478,57 @@ This prevents the CapsNet from getting deeper!
 	\item We either need a exponentially rising number of PrimeCaps or a weak agreement.
 \end{itemize}
 
-\subsection{Issues regarding the Softmax}
-%TODO: Unify section with Routing section, as the arguments overlap
+\subsection{Issues regarding the Softmax Routing}
+%TODO: Unify partly section with Routing section, as the arguments overlap
 \begin{itemize}
 	\item There is a connection to Transformers. CapsNet calculate the softmax over the transposed attention matrix.
 	\item There is no way to ignore input
-	\item Furthermore we might get a really bad SNR for a larger number of Capsules.
+	\item Inactive capsules are forced to route uniformly. This results in a bad signal to noise ratio for a large number of Capsules and prevents effective learning.  [When does the SNR become an Issue?]
 	\item Coupling coefficients can be controlled via softmax temperature or number of iterations in the routing rounds.
 	\item However this result in sparse capsules and bad performance.
 	\item Strong coupling coefficients do not necessarily yield a dynamic parse tree!
 	\item Even inactive capsules are forced to route uniformly. This results in a bad signal to noise ratio and prevents effective learning.
 \end{itemize}
 
-\subsection{Information loss}
-...
-
-\subsection*{The squashing and Routing leads to information loss}
-two scenarios:
+\subsection{Mass Capsule Starvation}
 \begin{itemize}
+	\item With strong couplings we get tons of dead capsules already in the Capsule layer after the PrimeCaps.
+	\item Does this worsen when deepening?
+	\item I thinks this is caused both by the Squashing with its implied vanishing gradient, as well es the routing algorithm. Especially strong couplings should be responsible for this.
+\end{itemize}
+
+\textbf{Results}
+\begin{itemize}
+	\item Dead capsules are wasted resources.
+	\item It also limits the expressiveness of the Network
+	\item It prevents the network from working dynamic, as routes tend to statify.
+\end{itemize}
+\subsection{Information Seepage with Deep CapsNet}
+\begin{itemize}
+	\item The deeper the CapsNet, the smaller the overall information [= sum of norms of Capsule Vectors]
+	\item This is probably an combinatorial effect, caused by both, squashing and routing.
 	\item Dense Setting: = "Uniform routing", capsules are equally squashed. This limits depth and expressiveness of parse-tree.
 	\item Sparse Setting: Dead capsules stay dead, alive capsules stay alive, because of vanishing gradient. This also limits depth and expressiveness of parse-tree.
+	\item Show in both cases experimentally
+	\begin{itemize}
+		\item The activation norm of capsules gets sparser and lower over the layers!
+		\item The norm of the gradients for Capsules
+		\item The loss lowers step wise, The capsules in upper layers take much longer to train.
+	\end{itemize}
 \end{itemize}
-Show in both cases experimentally
+
+\textbf{Results}
 \begin{itemize}
-	\item The activation norm of capsules gets sparser and lower over the layers!
-	\item The norm of the gradients for Capsules
-	\item The loss lowers step wise, The capsules in upper layers take much longer to train.
+	\item CapsNet don't scale in depth.
+	\item Slow learning of later Capsules, some even never get activated at all!
 \end{itemize}
 
 \subsection{Parse-Trees aren't dynamic}
-Common parse-trees are largely of a static nature!
-Measure dynamics.
-Show that there isn't much. 
-If enforced, that leads to problems!
-The Bias prevents dynamic routing of capsules and the routing becomes static!
+\begin{itemize}
+	\item Common parse-trees are largely of a static nature!
+	\item Measure dynamics.
+	\item The Bias prevents dynamic routing of capsules and the routing becomes static!
+\end{itemize}
 
 \subsection{There is not evidence that supports the parse-tree}
 Actually, this should be the implication of the other results.
