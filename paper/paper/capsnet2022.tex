@@ -115,49 +115,50 @@
 	- Title in parse-tree form
 \end{comment}
 \section{Introduction}
-Must be short and catchy
-Is all about the parse-tree
-Introduces the CapsNet.
-Gives a short overview of several issues regarding CapsNet
-Gives summary of what this paper is all about.
 
-Roter Faden:
-What is a CapsNet?
-- Both implementation but as authors explicitly state: a concept
-- Parse-Tree: 
-Why was it introduced?
+% Guiding thread
+% After the introduction it should be clear:
+% 1) What we do!
+% 2) Why we do that!
+% 3) What are the results!
+
+% What is a CapsNet? [= define such that our work makes sense]
+The Capsule Neural Network (CapsNet)~\cite{nips/SabourFH17} is often cited as a technical model for computer vision tasks, but specifically, and as the authors state, the CapsNet is an instantiation of a biologically inspired, hypothetical system, that aims to dynamically construct a parse-tree from an image scene, where a complex object within the scene is deconstructed into smaller more simpler objects, that stand in part-whole relation to each other.
+% TODO refine that sentence since too complicated
+% Maybe add: This is important, since this defines the CapsNet conceptually or semantically and not syntactically.
+
+% Why was it introduced? [= motivation 1.]
 - ConvNet failures and limitations
 - Concepts and some more arguments
-What was the scientific response? = This gives motivation to this work
-- Promising results
-- popular science interest.
-What is the issue? [Cliffhanger]
-- There are no results on larger tasks! Transformers have takken off in the same time, CapsNet stated that it is the beginning of research.
+% What was the consequence? [= motivation 2.]
+- Good results
+- Promising follow-ups
+- Popular science interest
+% What is the issue [= motivation 3.] For this I need the parse tree to be mentioned before
+- There are no results on larger tasks! Transformers have taken off in the same time, CapsNet stated that it is the beginning of research.
+- Why don't they scale? No exhaustive study.
 - There is no work examining the parse tree!
+- It was always assumed.
 
-What we do:
+% What we do []
 - CapsNet: Syntax and Semantics explain
-- Related work and some misconception and discrepancies that make it hard to write about CapsNets
 - Examine the question: how to scale the CapsNet. Depth, Larger Input sizes, Larger datasets
-- Parse Tree
+- Examine the Parse Tree assumption
+- Related work and some misconception and discrepancies that make it hard to write about CapsNets
 
+Our investigation reveal
 What are the results:
 - Conceptual and technical mismatch
+- Conceptual misconceptions within the literature
 - Scaling with this particular technical version is hard.
 - Scaling the backbone does not yield any benefits
-- Scaling the CapsNet has severse issues.
+- Scaling the CapsNet has severe issues.
 - No sign of a parse tree
 
-Conclude, that the CapsNet idea is great, there is a mismatch between the concept and the implementation. 
-Although we could not look into every CapsNet variant out there. We urge other researches to do so and stick to the rules!
+The last section concludes and discusses future work.
 
-Parse Tree has not been examined so far that is what we do.
-What is a parse tree
-Why do we want it?
-How the caps net aims to achieve it
-How it can be scaled
-Several conceptual as well as technical limitations with that approach.
-Invite other researches to show that their work is able to produce such a parse tree.
+We conclude that parse-tree, the holy grail of CapsNets has yet been shown to exist, as we did not find any proof of it. [This sentence is great, as it pushes the work to other authors].
+We do not wish to discredit other peoples work, encourage authors and the scientific community to help and find it.
 
 \section{The Capsule Neural Network}
 \section{Related Work}
