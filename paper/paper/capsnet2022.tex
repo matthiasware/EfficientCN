@@ -96,13 +96,11 @@
   Challenge the dynamic parse-tree assumption in the Capsule Neural Network.
   Show that there exists a discrepancy between the semantics of CapsNets and its technical implementation.
   Explain why the CapsNet does not scale to larger tasks.
-  Sow that the CapsNet model sucks and proof that analytically!
+  Show that the CapsNet model sucks and proof that analytically!
 \end{abstract}
 
 \begin{comment}
 	TODO
-	- Rework results
-	- Reread the CapsNet paper
 	- Think about motivation for parse trees, then motivate experiements accordingly
 	- Add better less exhaustive introduction
 	- Rework related work
@@ -116,8 +114,56 @@
 	IDEA:
 	- Title in parse-tree form
 \end{comment}
-
 \section{Introduction}
+
+% Guiding thread
+% After the introduction it should be clear:
+% 1) What we do!
+% 2) Why we do that!
+% 3) What are the results!
+
+% What is a CapsNet? [= define such that our work makes sense]
+The Capsule Neural Network (CapsNet)~\cite{nips/SabourFH17} is often refereed to as technical model for computer vision tasks, but specifically, and as the authors state, the CapsNet is an instantiation of a biologically inspired, hypothetical system, that aims to dynamically construct a parse-tree from an image scene, where a complex object within the scene is deconstructed into smaller more simpler objects, that stand in part-whole relation to each other.
+% TODO refine that sentence since too complicated
+% Maybe add: This is important, since this defines the CapsNet conceptually or semantically and not syntactically.
+
+% Why was it introduced? [= motivation 1.]
+- ConvNet failures and limitations
+- Concepts and some more arguments
+% What was the consequence? [= motivation 2.]
+- Good results
+- Promising follow-ups
+- Popular science interest
+% What is the issue [= motivation 3.] For this I need the parse tree to be mentioned before
+- There are no results on larger tasks! Transformers have taken off in the same time, CapsNet stated that it is the beginning of research.
+- Why don't they scale? No exhaustive study.
+- There is no work examining the parse tree!
+- It was always assumed.
+
+% What we do []
+- CapsNet: Syntax and Semantics explain
+- Examine the question: how to scale the CapsNet. Depth, Larger Input sizes, Larger datasets
+- Examine the Parse Tree assumption
+- Related work and some misconception and discrepancies that make it hard to write about CapsNets
+
+Our investigation reveal
+What are the results:
+- Conceptual and technical mismatch
+- Conceptual misconceptions within the literature
+- Scaling with this particular technical version is hard.
+- Scaling the backbone does not yield any benefits
+- Scaling the CapsNet has severe issues.
+- No sign of a parse tree
+
+The last section concludes and discusses future work.
+
+We conclude that parse-tree, the holy grail of CapsNets has yet been shown to exist, as we did not find any proof of it. [This sentence is great, as it pushes the work to other authors].
+We do not wish to discredit other peoples work, encourage authors and the scientific community to help and find it.
+
+\section{The Capsule Neural Network}
+\section{Related Work}
+\section{Results}
+\section{Introduction Old}
 
 The Capsule Neural Network (CapsNet)~\cite{nips/SabourFH17} was vowed to succeed the Convolutional Neural Network (ConvNet)~\cite{neco/LeCunBDHHHJ89} as the predominant method for computer vision tasks, due to its ability to overcome some of the ConvNet`s limitations. %TODO: schlechter satz, wer sage das?%
 These limitations include
@@ -126,7 +172,7 @@ the susceptibility to adversarial attacks,
 exponential inefficiencies
 and a general lack of interpretability in the networks decision making process. %TODO: add references%
 
-The CapsNet was specifically designed to address some of these limitations and demonstrated SOTA classification accuracy on MNIST with less parameters and stronger robustness to affine transformations, compared to their ConvNet`s baseline, and sparked a flood of follow-up research.
+The CapsNet was specifically designed to address some of these limitations and demonstrated SOTA classification accuracy on MNIST with less parameters and stronger robustness to affine transformations, compared to their ConvNet`s baseline. This work sparked a flood of follow-up research.
 
 % GOOD CAPSNETS RESULT
 Results demonstrating advantages of CapsNets over baseline ConvNet`s include:
@@ -306,21 +352,11 @@ It can be "deduced" from its Semantics, as it is designed to implement the parse
 
 Components
 \begin{itemize}
-	\item Capsule: dedicated parts or objects, vector / matrix
-	\item Backbone: Feature extraction, CNN,  receptive field requirement!
-	\item Routing Algorithm, softmax and coupling
-	\item Squashing function
-	\item Softmax
+	\item Capsule: dedicated parts or objects, implemented as vector / matrix
 	\item Multiple layers of those (hierarchical)
-	\item Routing algorithm to assign lower level capsules to a parent.
-\end{itemize}
-
-What do we want for a strong parse-tree to emerge:
-\begin{itemize}
-	\item Sparse but strong activation of the capsules
-	\item Strong coupling coefficients
-	\item Dynamic assignments, Different input, different routing.
-	\item For complex parse-trees, depth is required.
+	\item Backbone: Feature extraction, ConvNet with receptive field requirement!
+	\item Routing Algorithm: calculates the coupling to assign lower level capsules to higher level capsules.
+	\item Squashing function: regulates the norm of the capsules.
 \end{itemize}
 
 Implementation of a parse-tree in CapsNets:
@@ -341,9 +377,10 @@ Implementation of a parse-tree in CapsNets:
 
 For the emergence of a clear parse-tree we need:
 \begin{itemize}
-	\item Sparse but strong activation of the Capsules [we can measure this]
-	\item Strong but dynamic routing coefficients / coupling coefficients. [we can measure this]. Strong can be steered by agreement and softmax. Dynamic is more a hypothetical property.
+	\item Strong but sparse activation of the Capsules [we can measure this]
+	\item Strong and dynamic routing coefficients / coupling coefficients. [we can measure this]. Strong can be steered by agreement and softmax. Dynamic is more a hypothetical property.
 	\item Non-iterative algorithms this can be done via softmax temperature, iterative algorithms that is the number of iterations can be directly linked to stronger couplings.
+	\item Depth, otherwise no complex parse-tree
 \end{itemize}
 
 %TODO ADD VISUALIZATION of CpasNet architecture
