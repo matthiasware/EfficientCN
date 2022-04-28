@@ -114,8 +114,55 @@
 	IDEA:
 	- Title in parse-tree form
 \end{comment}
-
 \section{Introduction}
+Must be short and catchy
+Is all about the parse-tree
+Introduces the CapsNet.
+Gives a short overview of several issues regarding CapsNet
+Gives summary of what this paper is all about.
+
+Roter Faden:
+What is a CapsNet?
+- Both implementation but as authors explicitly state: a concept
+- Parse-Tree: 
+Why was it introduced?
+- ConvNet failures and limitations
+- Concepts and some more arguments
+What was the scientific response? = This gives motivation to this work
+- Promising results
+- popular science interest.
+What is the issue? [Cliffhanger]
+- There are no results on larger tasks! Transformers have takken off in the same time, CapsNet stated that it is the beginning of research.
+- There is no work examining the parse tree!
+
+What we do:
+- CapsNet: Syntax and Semantics explain
+- Related work and some misconception and discrepancies that make it hard to write about CapsNets
+- Examine the question: how to scale the CapsNet. Depth, Larger Input sizes, Larger datasets
+- Parse Tree
+
+What are the results:
+- Conceptual and technical mismatch
+- Scaling with this particular technical version is hard.
+- Scaling the backbone does not yield any benefits
+- Scaling the CapsNet has severse issues.
+- No sign of a parse tree
+
+Conclude, that the CapsNet idea is great, there is a mismatch between the concept and the implementation. 
+Although we could not look into every CapsNet variant out there. We urge other researches to do so and stick to the rules!
+
+Parse Tree has not been examined so far that is what we do.
+What is a parse tree
+Why do we want it?
+How the caps net aims to achieve it
+How it can be scaled
+Several conceptual as well as technical limitations with that approach.
+Invite other researches to show that their work is able to produce such a parse tree.
+
+\section{The Capsule Neural Network}
+\section{Related Work}
+\section{Results}
+\section{Introduction Old}
 
 The Capsule Neural Network (CapsNet)~\cite{nips/SabourFH17} was vowed to succeed the Convolutional Neural Network (ConvNet)~\cite{neco/LeCunBDHHHJ89} as the predominant method for computer vision tasks, due to its ability to overcome some of the ConvNet`s limitations. %TODO: schlechter satz, wer sage das?%
 These limitations include
