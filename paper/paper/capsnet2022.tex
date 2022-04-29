@@ -123,17 +123,19 @@
 % 3) What are the results!
 
 % What is a CapsNet? [= define such that our work makes sense]
-The Capsule Neural Network (CapsNet)~\cite{nips/SabourFH17} is often cited as technical model for computer vision tasks, but moreover, and as the authors state specifically, the CapsNet is the instantiation of a biologically inspired, hypothetical system, that aims to dynamically construct a part-whole hierarchy from an image scene. This hierarchy is also called parse-tree, as  a complex objects within the scene is deconstructed into smaller and simpler objects, that stand in part-whole relation to each other.
+The Capsule Neural Network (CapsNet)~\cite{nips/SabourFH17} is often cited as technical model for computer vision tasks, but moreover, and as the authors state specifically, the CapsNet is the instantiation of a biologically inspired, hypothetical system, that aims to dynamically construct a part-whole hierarchy of objects from an image scene. This hierarchy is also called parse-tree, as a complex object within the scene is deconstructed into simpler objects and that stand in part-whole relation to each other.
 
-This distinction is crucial as this defines CapsNets conceptually and not formally or technically.
+This distinction is crucial as it defines CapsNets conceptually and not technically. CapsNet are equipped with a clear semantics and each technical approach to CapsNets is obliged so proof sufficiency in this regard. 
 
 % BEGINNING OF MOTIVATION
 % Why was it introduced? [= motivation 1.]
-As the Convolutional Neural Network (ConvNet)~\cite{neco/LeCunBDHHHJ89}, the predominant model for computer vision at that time, was found to suffer from several limitations, including
+The CapsNet was specifically designed to succeed and supplement the Convolutional Neural Network (ConvNet)~\cite{neco/LeCunBDHHHJ89} as the predominant model for computer vision, as the latter was found to suffer from several limitations, including
 a lack of robustness to affine transformations and novel viewpoints on the input data, 
 the susceptibility to adversarial attacks,
 exponential inefficiencies
-and a general lack of interpretability in the networks decision making process, the CapsNet was specifically designed to overcome some of these limitations and demonstrated SOTA classification accuracy on MNIST with less parameters and stronger robustness to affine transformations, compared to their ConvNet`s baseline. This work sparked a flood of follow-up research.
+and a general lack of interpretability in the networks decision making process.
+
+With its introduction, the CapsNet demonstrated SOTA classification accuracy on MNIST with less parameters and stronger robustness to affine transformations, compared to their ConvNet`s baseline. This sparked a flood of follow-up research.
 
 % What was the response to CapsNets? [= motivation 2.]
 Results demonstrating advantages of CapsNets over baseline ConvNets include:
@@ -185,26 +187,27 @@ In this work we examine the parse-tree assumption in the original CapsNet, as we
 
 We start with a semantic definition of the parse-tree, followed by a technical analysis of how the CapsNet model technically aims to achieve it.
 
-From there we investigate the question of how the CapsNet can be scaled and how the implementation is sufficient to yield a parse-tree.
-This is the question of sufficiency.
+From there we investigate the question of how the CapsNet can be scaled in such a way, that the ability to create a parse-tree can be assured and we give reasons why this is important.
+It is the question of sufficiency and necessity.
 
 Out investigation reveals:
 \begin{itemize}
-	\item There is a mismatch between the concept of the CapsNet and its implementation.
-	\item Scaling with this particular technical version is hard.
-	\item Scaling the backbone does not yield any benefits
-	\item Scaling the CapsNet has severe issues.
-	\item No sign of a parse tree
+	\item There is a mismatch between the CapsNet`s semantics and it´s implementation.
+	\item The conceptual CapsNet is generally limited in depth which prevents scaling beyond a certain point.
+	\item The implementation of the CapsNet suffers from several limitations, namely:
+	\begin{itemize}
+		\item A vanishing gradient, that hinders effective training
+		\item Mass capsule Starvation
+		\item Information Seepage within deeper Capsule layers
+		\item Lack of dynamicness
+		\item ... see below
+	\end{itemize}
+	\item There is no sign of an emerging parse tree.
 \end{itemize}
 
-We give an overview of related work and model advancement where appropriate, but note, that a exhaustive investigation, including all versions of the CapsNets, is difficult as the literature is vast and diverse. However our claims are general enough to cover many implementations out there.
-
-We think there is a elephant in the room, that needs to be addressed!
+We give an overview of related work and include model advancement where appropriate, but note, that a exhaustive investigation that includes all versions of the CapsNets, is difficult as the literature is vast and approaches diverse. However our claims are general enough to cover many implementations out there that suffer from the same issues found here.
 
 The last section concludes and discusses future work.
-
-We conclude that parse-tree, the holy grail of CapsNets has yet been shown to exist, as we did not find any proof of it. [This sentence is great, as it pushes the work to other authors].
-We do not wish to discredit other peoples work, encourage authors and the scientific community to help and find it.
 
 \section{The Capsule Neural Network}
 \subsection{The Semantic CapsNet: Of Parse Trees and Dragons}
