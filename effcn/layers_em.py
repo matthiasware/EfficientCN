@@ -97,7 +97,7 @@ class ConvCaps(nn.Module):
         self.b_a = nn.Parameter(torch.zeros(ch_out), requires_grad=True)
         self.w = nn.Parameter(torch.rand([1, ch_in, hw_out[0], hw_out[0], P, P, ch_out]), requires_grad=True)
 
-        #torch.nn.init.kaiming_normal_(self.w)
+        torch.nn.init.normal_(self.w)
 
         #conv with static kernel
         self.conv_stat = nn.Conv2d(in_channels=ch_in, out_channels=ch_in, kernel_size=K, stride=stride, bias=False, padding=0)
