@@ -123,59 +123,20 @@
 % 3) What are the results!
 
 % What is a CapsNet? [= define such that our work makes sense]
-The Capsule Neural Network (CapsNet)~\cite{nips/SabourFH17} is often refereed to as technical model for computer vision tasks, but specifically, and as the authors state, the CapsNet is an instantiation of a biologically inspired, hypothetical system, that aims to dynamically construct a parse-tree from an image scene, where a complex object within the scene is deconstructed into smaller more simpler objects, that stand in part-whole relation to each other.
-% TODO refine that sentence since too complicated
-% Maybe add: This is important, since this defines the CapsNet conceptually or semantically and not syntactically.
+The Capsule Neural Network (CapsNet)~\cite{nips/SabourFH17} is often cited as technical model for computer vision tasks, but moreover, and as the authors state specifically, the CapsNet is the instantiation of a biologically inspired, hypothetical system, that aims to dynamically construct a part-whole hierarchy from an image scene. This hierarchy is also called parse-tree, as  a complex objects within the scene is deconstructed into smaller and simpler objects, that stand in part-whole relation to each other.
 
+This distinction is crucial as this defines CapsNets conceptually and not formally or technically.
+
+% BEGINNING OF MOTIVATION
 % Why was it introduced? [= motivation 1.]
-- ConvNet failures and limitations
-- Concepts and some more arguments
-% What was the consequence? [= motivation 2.]
-- Good results
-- Promising follow-ups
-- Popular science interest
-% What is the issue [= motivation 3.] For this I need the parse tree to be mentioned before
-- There are no results on larger tasks! Transformers have taken off in the same time, CapsNet stated that it is the beginning of research.
-- Why don't they scale? No exhaustive study.
-- There is no work examining the parse tree!
-- It was always assumed.
-
-% What we do []
-- CapsNet: Syntax and Semantics explain
-- Examine the question: how to scale the CapsNet. Depth, Larger Input sizes, Larger datasets
-- Examine the Parse Tree assumption
-- Related work and some misconception and discrepancies that make it hard to write about CapsNets
-
-Our investigation reveal
-What are the results:
-- Conceptual and technical mismatch
-- Conceptual misconceptions within the literature
-- Scaling with this particular technical version is hard.
-- Scaling the backbone does not yield any benefits
-- Scaling the CapsNet has severe issues.
-- No sign of a parse tree
-
-The last section concludes and discusses future work.
-
-We conclude that parse-tree, the holy grail of CapsNets has yet been shown to exist, as we did not find any proof of it. [This sentence is great, as it pushes the work to other authors].
-We do not wish to discredit other peoples work, encourage authors and the scientific community to help and find it.
-
-\section{The Capsule Neural Network}
-\section{Related Work}
-\section{Results}
-\section{Introduction Old}
-
-The Capsule Neural Network (CapsNet)~\cite{nips/SabourFH17} was vowed to succeed the Convolutional Neural Network (ConvNet)~\cite{neco/LeCunBDHHHJ89} as the predominant method for computer vision tasks, due to its ability to overcome some of the ConvNet`s limitations. %TODO: schlechter satz, wer sage das?%
-These limitations include
+As the Convolutional Neural Network (ConvNet)~\cite{neco/LeCunBDHHHJ89}, the predominant model for computer vision at that time, was found to suffer from several limitations, including
 a lack of robustness to affine transformations and novel viewpoints on the input data, 
 the susceptibility to adversarial attacks,
 exponential inefficiencies
-and a general lack of interpretability in the networks decision making process. %TODO: add references%
+and a general lack of interpretability in the networks decision making process, the CapsNet was specifically designed to overcome some of these limitations and demonstrated SOTA classification accuracy on MNIST with less parameters and stronger robustness to affine transformations, compared to their ConvNet`s baseline. This work sparked a flood of follow-up research.
 
-The CapsNet was specifically designed to address some of these limitations and demonstrated SOTA classification accuracy on MNIST with less parameters and stronger robustness to affine transformations, compared to their ConvNet`s baseline. This work sparked a flood of follow-up research.
-
-% GOOD CAPSNETS RESULT
-Results demonstrating advantages of CapsNets over baseline ConvNet`s include:
+% What was the response to CapsNets? [= motivation 2.]
+Results demonstrating advantages of CapsNets over baseline ConvNets include:
 a better transferability of CapsNet features~\cite{corr/Ancheng2018},
 the ability to generalize to novel viewpoints and robustness to white box adversarial attacks~\cite{iclr/HintonSF18},
 a looser coupling of the output features~\cite{corr/Lin2018}.
@@ -186,7 +147,7 @@ Furthermore it has been shown that CapsNet deliver interpretable and equivariant
 
 The CapsNet idea also resonated well with the popular science community~\cite{book/hawkins2021},~\cite{book/Hiesinger2021} and it was even featured in the ACM Turing Lecture~\cite{comacm/Bengio2021} to be a future direction to the field of deep learning and AI.
 
-% DISCREPANCIES
+% What is the issue [= motivation 3.] For this I need the parse tree to be mentioned before
 Despite these promising results and positive vibes, we found several discrepancies regarding the whole CapsNet field.
 
 % DISCREPANCY: CapsNets do not achieve SOTA
@@ -198,13 +159,14 @@ Furthermore, many CapsNet approaches don't report on ImageNet, but prefer to ben
 Especially SOTA CapsNet results are only claimed on these. %TODO add references%
 As other non-CapsNet approaches usually do not report on these, this results in disjoint metrics, making general claims hard.
 This issue has recently been acknowledged in~\cite{cvpr/GuT021}, where it was demonstrated, that a stronger ConvNet baseline still outperforms the CapsNet on any evaluated task, reaching SOTA relatively cheaply.
-There seems to be bubbly trend within the CapsNet community to refer and compare only to peers within their group.
+There seems to be bubbly trend within the CapsNet community to refer and compare only to works within their peer group.
 
 % DISCREPANCY: CapsNets: A technical mess!
 % TODO for more details i must descripe the CapsNet before. Otherwise it does not make sense to list all the diferences
-Another discrepancy lies within the vagueness and broad usage of the term itself.
-The original work~\cite{nips/SabourFH17} provides a semantic, biologically inspired motivation , from which their technical model implementation is deduced. Retrospectively, this implementation was later entitled "CapsNet".
-From there things complicate, as follow-up work, despite significant technical differences is also termed CapsNet, raising the questions: What are CapsNets actually? And What aren't?
+Another discrepancy lies within the vagueness and broad usage of the term itself. As stated above, the original work~\cite{nips/SabourFH17} provides a conceptual motivation, from which their technical model implementation is deduced. Retrospectively, this implementation was later entitled "CapsNet". However, to the best of our knowledge, it has never been shown if this specific implementation is sufficient to yield a system, that has the general parse-tree ability.
+
+Things further complicate, as follow-up work are also termed CapsNet, despite severe technical differences and outstanding proof of yielding any parse-tree like properties. Sufficiency and Necessity! It was assumed.
+%TODO add references
 
 % DISCREPANCY: CapsNets: Negative results!
 % TODO for more detalis i must describe the CapsNet before. Otherwise it does not make sense to list all the negative stuff
@@ -216,106 +178,35 @@ The work in ~\cite{cvpr/GuT021} showed that the individual parts of the CapsNets
 ~\cite{iclr/Gu2021} designed a first specific attack on CapsNets and
 \cite{prl/PeerSR21} show that RBA is limited in depth!
 
-%Lay out the paper
-In this paper we argue that the misconception regarding the CapsNets lies in the vagueness of the definition.
-In its core the original CapsNet provides a semantic definition, namely parsing objects into part-whole hierachies or parse-trees.
-From this the technical implementation is derived.
+% END OF MOTIVATION
 
+% WHAT WE DO
+In this work we examine the parse-tree assumption in the original CapsNet, as we believe, that this is the real cause for all these misconception surrounding the topic.
 
-CapsNets are hard to grasp, as there exists a semantic component.
-The heart of CapsNets = Semantic component, Parse-Tree idea.
-The syntactic component.
-Ideas close to the synatax face the issue of performing well.
-Ideas that go beyond the idea, better performance, but then the metrics do not apply! inadequate baselines.
-No one focused on the dynamic parse-tree.
-We focus on the original implementation, but will give insights on follow-ups.
-Benefits come from their semantic component, assumption. Never shown to come true
-Issues with the technical implementation.
-To the best of our knowledge, the Parse-Tree issue has not been addressed so far. Elephant in the room!
+We start with a semantic definition of the parse-tree, followed by a technical analysis of how the CapsNet model technically aims to achieve it.
 
-What we do?
+From there we investigate the question of how the CapsNet can be scaled and how the implementation is sufficient to yield a parse-tree.
+This is the question of sufficiency.
+
+Out investigation reveals:
 \begin{itemize}
-	\item TOPIC: Parse-Tree. What it is and why it is important.
-	\item What are CapsNets? Semantics and Syntax: This makes them hard
-	\item The concept of CapsNets: Parse-Trees
-	\item The implementation of CapsNets
-	\item Follow Up work and Misconceptions about CapsNets
-	\item Technical Limitations of the approach
-	\item Semantic limitations of the approach
-	\item Focus on the original implementation, but will give insights on follow-ups.
+	\item There is a mismatch between the concept of the CapsNet and its implementation.
+	\item Scaling with this particular technical version is hard.
+	\item Scaling the backbone does not yield any benefits
+	\item Scaling the CapsNet has severe issues.
+	\item No sign of a parse tree
 \end{itemize}
 
-What we don't:
-\begin{itemize}
-	\item Survey
-	\item Cannot proof that CapsNet do not work
-	\item No claim of exhaustiveness
-	\item Don't discredit other peoples work!
-\end{itemize}
+We give an overview of related work and model advancement where appropriate, but note, that a exhaustive investigation, including all versions of the CapsNets, is difficult as the literature is vast and diverse. However our claims are general enough to cover many implementations out there.
 
-Why this work?
-\begin{itemize}
-	\item The field is confusing as hell, and we disentangle.
-	\item In exchange with other researches, several misconceptions!
-	\item Explain technical and conceptual issues with CapsNets.
-	\item Inspire new research by demonstrating issues with CapsNets
-	\item We cannot proof anything, however, as we feel, there is an elephant in the room that should be addressed
-\end{itemize}
+We think there is a elephant in the room, that needs to be addressed!
 
-\section{Related Work and Follow-Ups}
+The last section concludes and discusses future work.
 
-\subsubsection*{[A Short History of Progress]}
-~\cite{cogsci/Hinton79} Some reference to the hierachy of parts.
-~\cite{icann/HintonKW11} Transforming Autoencoders
-~\cite{nips/SabourFH17} CapsNet.
-~\cite{iclr/HintonSF18} EM Routing
-~\cite{nips/KosiorekSTH19} SCAE
-~\cite{nips/HahnPK19} Self-Routing Capsule Networks
-~\cite{nips/AhmedT19} Star-Caps: No clue what to do with them.
-~\cite{iclr/TsaiSGS2} Inverted Dot-Product Attention Routing.
-~\cite{corr/Hinton2021} GLOM
-~\cite{icml/SabourTYHF21} Flow Capsules: Learning PrimeCaps
-~\cite{iclr/Wang018} framed the routing in ~\cite{nips/SabourFH17} as an optimization problems.
- \cite{prl/PeerSR21} show that RBA is limited in depth!
-~\cite{corr/Rawlinson2018} introduced an unsupervised learning scheme for CapsNet. Furthermore they show that is is necessary to introduce sparsity alongside unsupervised training. Otherwise Capsules don't specialize. Labels create sparsity.
-The work~\cite{corr/Michels19} showed that CapsNet can be fooled as easily as ConvNets.
-~\cite{acml/PaikKK19} showed that increasing depth did not improve accuracy. However theey used ResNet-34 backbone. They prosume
-capsules are more appropriate to represent high-level concepts than low-level concepts
-such as lines and edges, because they are more informative and their part-whole
-relations are less ambiguous than those of low-level concepts. They find the link polarization problem [OptimCaps and AttnCaps] suffer from the same problem. EMCaps are observed to suffer from the same problem.
-~\cite{prl/PeerSR21} showed limitations of CapsNet when going deeper. They propose a Bias. However a bias term prevents the routing and emerging of a parse-tree.
-The receptive field problem was also recognized in ~\cite{spl/XiangZTZX18}, the authors propose a MultiScale Architecture to reduce parameters, still this work relies on dynamic routing.
-~\cite{cvpr/GuT021} emprical sutdy on the individual parts of the CapsNet. Better ConvNet baslines required. CapsNet are not more robust 
-Hard to give a general statement about the state of CapsNet, as there are both technical as well as semantic developments.
-It it works, it is good! Here there is a conceptual component to it, that makes it hard!
-than ConvNets.
-~\cite{iclr/TsaiSGS20} Inverted Dot- \cite{prl/PeerSR21} show that RBA is limited in depth!Product Attention Routing. No Activation, So what about the parse-tree? Layer-Norm will prevent sparsity.
-~\cite{cvpr/RajasegaranJJJS19} Gooing deeper
+We conclude that parse-tree, the holy grail of CapsNets has yet been shown to exist, as we did not find any proof of it. [This sentence is great, as it pushes the work to other authors].
+We do not wish to discredit other peoples work, encourage authors and the scientific community to help and find it.
 
-GLOM ~\cite{corr/Hinton2021}
-
-\subsubsection*{[Negative Results]}
-Moreover, negative results regarding CapsNets emerged, questioning any of the promised benefits and technical progress altogether.
-~\cite{acml/PaikKK19} showed that increasing depth did not improve accuracy and routing algorithms do not provide any benefit when it comes to accuracy in image classification.
-~\cite{corr/michels2019} showed that CapsNet can be as easily fooled as ConvNets.
-~\cite{ieee/Gu2020} revealed, that removing dynamic routing improves transformation robustness.
-The work in ~\cite{cvpr/GuT021} showed that the individual parts of the CapsNets have contradictory effects on the performance in different tasks. Furthermore they showed, that with the right baseline, the CapsNet is not generally superior to ConvNets.
-~\cite{iclr/Gu2021} designed a first specific attack on CapsNets and
-\cite{prl/PeerSR21} show that RBA is limited in depth!
-
-
-\subsubsection*{[Read Carefully and think about impact on the paper]}
-~\cite{iclr/TsaiSGS20} Inverted Dot-Product Attention Routing. No Activation, So what about the parse-tree? Layer-Norm will prevent sparsity. It may be necessary to implement and test this method!
-~\cite{nips/AhmedT19} Star-Caps: No clue what to do with them.
-~\cite{iclr/TsaiSGS20} Inverted Dot-Product Attention Routing.
- ~\cite{cvpr/RajasegaranJJJS19} Going Deeper with Capsule Networks
-~\cite{nips/LenssenFL18} provably equivariance
-
-\subsubsection*{[Read and/or include]}
-~\cite{eccv/LiGDOW18} Neural Capsule Encapsulation, seems complicated. More parameter efficient and less computational heavy.
-GroupCaps ~\cite{cvpr/ChenJSWS18}, not really sure what they are doing. Probabliy too much.
-
-\section{Capsule Neural Network}
+\section{The Capsule Neural Network}
 \subsection{The Semantic CapsNet: Of Parse Trees and Dragons}
 
 The key motivation behind the CapsNet is the parse-tree, which is created by dynamically deconstructing a 2d image scene into a part-whole hierarchy. A complex object is deconstructed in smaller simpler objects or parts.
@@ -385,6 +276,59 @@ For the emergence of a clear parse-tree we need:
 
 %TODO ADD VISUALIZATION of CpasNet architecture
 %TODO ADD training precedure
+
+\section{Related Work and Follow-Ups}
+
+\subsubsection*{[A Short History of Progress]}
+~\cite{cogsci/Hinton79} Some reference to the hierachy of parts.
+~\cite{icann/HintonKW11} Transforming Autoencoders
+~\cite{nips/SabourFH17} CapsNet.
+~\cite{iclr/HintonSF18} EM Routing
+~\cite{nips/KosiorekSTH19} SCAE
+~\cite{nips/HahnPK19} Self-Routing Capsule Networks
+~\cite{nips/AhmedT19} Star-Caps: No clue what to do with them.
+~\cite{iclr/TsaiSGS20} Inverted Dot-Product Attention Routing.
+~\cite{corr/Hinton2021} GLOM
+~\cite{icml/SabourTYHF21} Flow Capsules: Learning PrimeCaps
+~\cite{iclr/Wang018} framed the routing in ~\cite{nips/SabourFH17} as an optimization problems.
+\cite{prl/PeerSR21} show that RBA is limited in depth!
+~\cite{corr/Rawlinson2018} introduced an unsupervised learning scheme for CapsNet. Furthermore they show that is is necessary to introduce sparsity alongside unsupervised training. Otherwise Capsules don't specialize. Labels create sparsity.
+The work~\cite{corr/Michels19} showed that CapsNet can be fooled as easily as ConvNets.
+~\cite{acml/PaikKK19} showed that increasing depth did not improve accuracy. However theey used ResNet-34 backbone. They prosume
+capsules are more appropriate to represent high-level concepts than low-level concepts
+such as lines and edges, because they are more informative and their part-whole
+relations are less ambiguous than those of low-level concepts. They find the link polarization problem [OptimCaps and AttnCaps] suffer from the same problem. EMCaps are observed to suffer from the same problem.
+~\cite{prl/PeerSR21} showed limitations of CapsNet when going deeper. They propose a Bias. However a bias term prevents the routing and emerging of a parse-tree.
+The receptive field problem was also recognized in ~\cite{spl/XiangZTZX18}, the authors propose a MultiScale Architecture to reduce parameters, still this work relies on dynamic routing.
+~\cite{cvpr/GuT021} emprical sutdy on the individual parts of the CapsNet. Better ConvNet baslines required. CapsNet are not more robust 
+Hard to give a general statement about the state of CapsNet, as there are both technical as well as semantic developments.
+It it works, it is good! Here there is a conceptual component to it, that makes it hard!
+than ConvNets.
+~\cite{iclr/TsaiSGS20} Inverted Dot- \cite{prl/PeerSR21} show that RBA is limited in depth!Product Attention Routing. No Activation, So what about the parse-tree? Layer-Norm will prevent sparsity.
+~\cite{cvpr/RajasegaranJJJS19} Gooing deeper
+
+GLOM ~\cite{corr/Hinton2021}
+
+\subsubsection*{[Negative Results]}
+Moreover, negative results regarding CapsNets emerged, questioning any of the promised benefits and technical progress altogether.
+~\cite{acml/PaikKK19} showed that increasing depth did not improve accuracy and routing algorithms do not provide any benefit when it comes to accuracy in image classification.
+~\cite{corr/michels2019} showed that CapsNet can be as easily fooled as ConvNets.
+~\cite{ieee/Gu2020} revealed, that removing dynamic routing improves transformation robustness.
+The work in ~\cite{cvpr/GuT021} showed that the individual parts of the CapsNets have contradictory effects on the performance in different tasks. Furthermore they showed, that with the right baseline, the CapsNet is not generally superior to ConvNets.
+~\cite{iclr/Gu2021} designed a first specific attack on CapsNets and
+\cite{prl/PeerSR21} show that RBA is limited in depth!
+
+
+\subsubsection*{[Read Carefully and think about impact on the paper]}
+~\cite{iclr/TsaiSGS20} Inverted Dot-Product Attention Routing. No Activation, So what about the parse-tree? Layer-Norm will prevent sparsity. It may be necessary to implement and test this method!
+~\cite{nips/AhmedT19} Star-Caps: No clue what to do with them.
+~\cite{iclr/TsaiSGS20} Inverted Dot-Product Attention Routing.
+~\cite{cvpr/RajasegaranJJJS19} Going Deeper with Capsule Networks
+~\cite{nips/LenssenFL18} provably equivariance
+
+\subsubsection*{[Read and/or include]}
+~\cite{eccv/LiGDOW18} Neural Capsule Encapsulation, seems complicated. More parameter efficient and less computational heavy.
+GroupCaps ~\cite{cvpr/ChenJSWS18}, not really sure what they are doing. Probabliy too much.
 
 \section{Results}
 \subsection{Miscellaneous}
