@@ -68,12 +68,11 @@ def calc_field_delta(x_shape, rec_fld):
     """
     input:  x_shape  -> shape of the input tensor
             rec_fld  -> receptive field from primecap neurons
-    output: delta_rf -> delta of receptive field and image size 
+    output: delta_hw -> delta of receptive field and image size 
     """
     delta_h = rec_fld[0] - x_shape[2] 
     delta_w = rec_fld[1] - x_shape[3] 
-    delta_rf = (delta_h, delta_w)
-    return delta_rf
+    return [delta_h, delta_w]
 
 def calc_caps_nr(img_shape, caps_dims=None):
     """
@@ -119,13 +118,13 @@ def bb_pc_vals(model, x, caps_dims=None, print_vals=False):
 
     res = model(x)
     layer_vals_h, layer_vals_w = layer_conv(model)
-    rec_field = (calc_receptive_field(layer_vals_h), calc_receptive_field(layer_vals_w))
+    rec_field = [calc_receptive_field(layer_vals_h), calc_receptive_field(layer_vals_w)]
     field_delta = calc_field_delta(x_shape=x.shape, rec_fld=rec_field)
     caps_shapes = calc_caps_nr(img_shape=res.shape, caps_dims=caps_dims)
     params = count_parameters(model)
 
     if print_vals == True:
-        print("nr. of parmeters:    {}".format(params))
+        print("nr. of parmeters:    {}, {} Mio".format(params, (params*1e-6)))
         print("image output shape:  {}".format(res.shape))
         print("layer values 'h':    {}".format(layer_vals_h))
         print("layer values 'w':    {}".format(layer_vals_w))
