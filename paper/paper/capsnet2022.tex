@@ -1,0 +1,550 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2021
+
+% ready for submission
+\usepackage{neurips_2021}
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2021}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+%     \usepackage[final]{neurips_2021}
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2021}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\usepackage{verbatim}		% Comments
+
+
+\newtheorem{theorem}{Theorem}
+
+\title{                                                                                                    \large                                     
+	Why CapsNets are hard to get right! \\
+	or \\
+	Challenging  the dynamic parse-tree in Capsule Neural Networks \\
+	or \\
+	Why CapsNets don't scale! \\
+	or \\
+	Why CapsNets suck! \\
+	or \\
+	The Syntax - Semantics Mismatch in Capsule Neural Networks
+	\\
+	or \\
+	The Semantic Completeness Problem with Capsule Neural Networks
+}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+\author{%
+  David S.~Hippocampus\thanks{Use footnote for providing further information
+    about author (webpage, alternative address)---\emph{not} for acknowledging
+    funding agencies.} \\
+  Department of Computer Science\\
+  Cranberry-Lemon University\\
+  Pittsburgh, PA 15213 \\
+  \texttt{hippo@cs.cranberry-lemon.edu} \\Read Carefully and think about impact on the paper
+  % examples of more authors
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \AND
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  Write the paper like a blog post!
+  Why haven't CapsNet taken off?
+  What are the issues?
+  Challenge the dynamic parse-tree assumption in the Capsule Neural Network.
+  Show that there exists a discrepancy between the semantics of CapsNets and its technical implementation.
+  Explain why the CapsNet does not scale to larger tasks.
+  Show that the CapsNet model sucks and proof that analytically!
+\end{abstract}
+
+\begin{comment}
+	TODO
+	- Think about motivation for parse trees, then motivate experiements accordingly
+	- Add better less exhaustive introduction
+	- Rework related work
+	\url{https://en.wikipedia.org/wiki/Completeness_(logic)}
+	
+	TODO Meta:
+	- Argument around Syntax and Semantics like with logical Systems
+	- Choose a central argument that builds the core of the overall argumentation line
+	- Build everythign else around that argument.
+	
+	IDEA:
+	- Title in parse-tree form
+\end{comment}
+\section{Introduction}
+
+% Guiding thread
+% After the introduction it should be clear:
+% 1) What we do!
+% 2) Why we do that!
+% 3) What are the results!
+
+% What is a CapsNet? [= define such that our work makes sense]
+The Capsule Neural Network (CapsNet)~\cite{nips/SabourFH17} is often cited as technical model for computer vision tasks, but moreover, and as the authors state specifically, the CapsNet is the instantiation of a biologically inspired, hypothetical system, that aims to dynamically construct a part-whole hierarchy of objects from an image scene. This hierarchy is also called parse-tree, as a complex object within the scene is deconstructed into simpler objects and that stand in part-whole relation to each other.
+
+This distinction is crucial as it defines CapsNets conceptually and not technically. CapsNet are equipped with a clear semantics and each technical approach to CapsNets is obliged so proof sufficiency in this regard. 
+
+% BEGINNING OF MOTIVATION
+% Why was it introduced? [= motivation 1.]
+The CapsNet was specifically designed to succeed and supplement the Convolutional Neural Network (ConvNet)~\cite{neco/LeCunBDHHHJ89} as the predominant model for computer vision, as the latter was found to suffer from several limitations, including
+a lack of robustness to affine transformations and novel viewpoints on the input data, 
+the susceptibility to adversarial attacks,
+exponential inefficiencies
+and a general lack of interpretability in the networks decision making process.
+
+With its introduction, the CapsNet demonstrated SOTA classification accuracy on MNIST with less parameters and stronger robustness to affine transformations, compared to their ConvNet`s baseline. This sparked a flood of follow-up research.
+
+% What was the response to CapsNets? [= motivation 2.]
+Results demonstrating advantages of CapsNets over baseline ConvNets include:
+a better transferability of CapsNet features~\cite{corr/Ancheng2018},
+the ability to generalize to novel viewpoints and robustness to white box adversarial attacks~\cite{iclr/HintonSF18},
+a looser coupling of the output features~\cite{corr/Lin2018}.
+the strong robustness to class imbalances~\cite{miccai/Jimenez-Sanchez18} and
+the ability to better extrapolate to affine transformations~\cite{cvpr/GuT20}.
+
+Furthermore it has been shown that CapsNet deliver interpretable and equivariant object representations~\cite{nips/LenssenFL18}, meaningful embeddings~\cite{corr/Lin2018} and that object capsule presences are highly informative of the object class and allow for geometric reasoning~\cite{nips/KosiorekSTH19}.
+
+The CapsNet idea also resonated well with the popular science community~\cite{book/hawkins2021},~\cite{book/Hiesinger2021} and it was even featured in the ACM Turing Lecture~\cite{comacm/Bengio2021} to be a future direction to the field of deep learning and AI.
+
+% What is the issue [= motivation 3.] For this I need the parse tree to be mentioned before
+Despite these promising results and positive vibes, we found several discrepancies regarding the whole CapsNet field.
+
+% DISCREPANCY: CapsNets do not achieve SOTA
+To this date, CapsNets don't scale. Although the CapsNet was introduced in the realm of computer vision, to the extend of our knowledge, the best performing CapsNet version~\cite{nips/AhmedT19} achieves only $60.07\%$ top-1 image classification accuracy on ImageNet~\cite{data/imagenet}, far behind the SOTA Transformer based approaches~\cite{corr/Wortsman2022} and  ConvNet~\cite{cvpr/Pham2021} with $90.88\%$ and  $90.02\%$ accuracy respectively.
+This raises the question: Why don't CapsNets scale, despite the immense research effort?
+
+% DISCREPANCY: Disjoint Metrics
+Furthermore, many CapsNet approaches don't report on ImageNet, but prefer to benchmark on much smaller datasets like MNIST or CIFAR10 or niche datasets like SmallSNORB. %TODO add references%
+Especially SOTA CapsNet results are only claimed on these. %TODO add references%
+As other non-CapsNet approaches usually do not report on these, this results in disjoint metrics, making general claims hard.
+This issue has recently been acknowledged in~\cite{cvpr/GuT021}, where it was demonstrated, that a stronger ConvNet baseline still outperforms the CapsNet on any evaluated task, reaching SOTA relatively cheaply.
+There seems to be bubbly trend within the CapsNet community to refer and compare only to works within their peer group.
+
+% DISCREPANCY: CapsNets: A technical mess!
+% TODO for more details i must descripe the CapsNet before. Otherwise it does not make sense to list all the diferences
+Another discrepancy lies within the vagueness and broad usage of the term itself. As stated above, the original work~\cite{nips/SabourFH17} provides a conceptual motivation, from which their technical model implementation is deduced. Retrospectively, this implementation was later entitled "CapsNet". However, to the best of our knowledge, it has never been shown if this specific implementation is sufficient to yield a system, that has the general parse-tree ability.
+
+Things further complicate, as follow-up work are also termed CapsNet, despite severe technical differences and outstanding proof of yielding any parse-tree like properties. Sufficiency and Necessity! It was assumed.
+%TODO add references
+
+% DISCREPANCY: CapsNets: Negative results!
+% TODO for more detalis i must describe the CapsNet before. Otherwise it does not make sense to list all the negative stuff
+Moreover, negative results regarding CapsNets emerged, questioning any of the promised benefits and technical progress altogether.
+~\cite{acml/PaikKK19} showed that increasing depth did not improve accuracy and routing algorithms do not provide any benefit when it comes to accuracy in image classification.
+~\cite{corr/michels2019} showed that CapsNet can be as easily fooled as ConvNets.
+~\cite{ieee/Gu2020} revealed, that removing dynamic routing improves transformation robustness.
+The work in ~\cite{cvpr/GuT021} showed that the individual parts of the CapsNets have contradictory effects on the performance in different tasks. Furthermore they showed, that with the right baseline, the CapsNet is not generally superior to ConvNets.
+~\cite{iclr/Gu2021} designed a first specific attack on CapsNets and
+\cite{prl/PeerSR21} show that RBA is limited in depth!
+
+% END OF MOTIVATION
+
+% WHAT WE DO
+In this work we examine the parse-tree assumption in the original CapsNet, as we believe, that this is the real cause for all these misconception surrounding the topic.
+
+We start with a semantic definition of the parse-tree, followed by a technical analysis of how the CapsNet model technically aims to achieve it.
+
+From there we investigate the question of how the CapsNet can be scaled in such a way, that the ability to create a parse-tree can be assured and we give reasons why this is important.
+It is the question of sufficiency and necessity.
+
+Out investigation reveals:
+\begin{itemize}
+	\item There is a mismatch between the CapsNet`s semantics and it´s implementation.
+	\item The conceptual CapsNet is generally limited in depth which prevents scaling beyond a certain point.
+	\item The implementation of the CapsNet suffers from several limitations, namely:
+	\begin{itemize}
+		\item A vanishing gradient, that hinders effective training
+		\item Mass capsule Starvation
+		\item Information Seepage within deeper Capsule layers
+		\item Lack of dynamicness
+		\item ... see below
+	\end{itemize}
+	\item There is no sign of an emerging parse tree.
+\end{itemize}
+
+We give an overview of related work and include model advancement where appropriate, but note, that a exhaustive investigation that includes all versions of the CapsNets, is difficult as the literature is vast and approaches diverse. However our claims are general enough to cover many implementations out there that suffer from the same issues found here.
+
+The last section concludes and discusses future work.
+
+\section{The Capsule Neural Network}
+\subsection{The Semantic CapsNet: Of Parse Trees and Dragons}
+
+The key motivation behind the CapsNet is the parse-tree, which is created by dynamically deconstructing a 2d image scene into a part-whole hierarchy. A complex object is deconstructed in smaller simpler objects or parts.
+The process of dynamically creating such a part-whole hierarchy finds analogy in parsing a string according to some context-free-grammar.
+The CapsNet is specifically designed to provide a kind of grammar for images.
+More background: Human vision, geon theory, Hinton stuff.
+%TODO: Add cool visualization of a parse tree
+
+Parts of a parse-tree:
+\begin{itemize}
+	\item Nodes: Stores instantiation parameters
+	\item Each lower level node is linked to a parent node by an edge to create a part-whole relationship
+	\item The overall hierachy of Nodes creates a parse-tree.
+\end{itemize}
+Why do we want a parse tree?
+\begin{itemize}
+	\item Shady biological or psychological reasons. [Simply cite Hinton.]
+	\item Inverse graphics is cool! [Cite cool references that do real inverse graphics]
+	\item This would probably solve the Picasso Problem [\url{https://www.sciencedirect.com/science/article/abs/pii/S0141938222000439}]
+	\item Grammar of images and Interpretability
+	\item Debugging of neural networks
+	\item Transferability
+	\item Robustness
+	\item Parameter efficiency
+	\item Allows probabilistic inference, as nodes are discrete objects.
+	\item Allows conceptual learning and disentangled representations.
+\end{itemize}
+
+The \textbf{parse-tree} is what we call the \textbf{Semantics} of CapsNets.
+
+\subsection{The Syntactic CapsNet: Of Capsules, Routing and Squashing}
+The \textbf{implementation} is what we call the \textbf{Syntax} of the CapsNet.
+It can be "deduced" from its Semantics, as it is designed to implement the parse-tree.
+
+Components
+\begin{itemize}
+	\item Capsule: dedicated parts or objects, implemented as vector / matrix
+	\item Multiple layers of those (hierarchical)
+	\item Backbone: Feature extraction, ConvNet with receptive field requirement!
+	\item Routing Algorithm: calculates the coupling to assign lower level capsules to higher level capsules.
+	\item Squashing function: regulates the norm of the capsules.
+\end{itemize}
+
+Implementation of a parse-tree in CapsNets:
+\begin{itemize}
+	\item Nodes are represented as active Capsules.Vectors.
+	\item The capsules in the first layer are called PrimeCaps.
+	\item PrimeCaps require full receptive field over the input image.
+	\item Before the PrimeCaps, there is a feature extraction backbone. This is often a simple ConvNet.
+	\item Since no dynamic allocation of memory is possible, we need a fixed number of capsules in each layers that can be either active or inactive.
+	\item Activeness implemented via a squashing function that ensures that the length / norm of the capsule vector is in $[0,1)$.
+	\item Thus, the norm has a probabilistic interpretation of activeness.
+	\item The squashing function is also required to force bipolar response and to knock capsules out. 
+	\item The instantiation parameters of an object, that a capsule represents, are given via the vector direction.
+	\item Capsules activate via routing.
+	\item Coupling coefficients of lower and higher layer capsules calculated via a routing algorithm.
+	\item To ensure that each capsule is routed, we take the softmax over coupling coefficients.
+\end{itemize}
+
+For the emergence of a clear parse-tree we need:
+\begin{itemize}
+	\item Strong but sparse activation of the Capsules [we can measure this]
+	\item Strong and dynamic routing coefficients / coupling coefficients. [we can measure this]. Strong can be steered by agreement and softmax. Dynamic is more a hypothetical property.
+	\item Non-iterative algorithms this can be done via softmax temperature, iterative algorithms that is the number of iterations can be directly linked to stronger couplings.
+	\item Depth, otherwise no complex parse-tree
+\end{itemize}
+
+%TODO ADD VISUALIZATION of CpasNet architecture
+%TODO ADD training precedure
+
+\section{Related Work and Follow-Ups}
+
+\subsubsection*{[A Short History of Progress]}
+~\cite{cogsci/Hinton79} Some reference to the hierachy of parts.
+~\cite{icann/HintonKW11} Transforming Autoencoders
+~\cite{nips/SabourFH17} CapsNet.
+~\cite{iclr/HintonSF18} EM Routing
+~\cite{nips/KosiorekSTH19} SCAE
+~\cite{nips/HahnPK19} Self-Routing Capsule Networks
+~\cite{nips/AhmedT19} Star-Caps: No clue what to do with them.
+~\cite{iclr/TsaiSGS20} Inverted Dot-Product Attention Routing.
+~\cite{corr/Hinton2021} GLOM
+~\cite{icml/SabourTYHF21} Flow Capsules: Learning PrimeCaps
+~\cite{iclr/Wang018} framed the routing in ~\cite{nips/SabourFH17} as an optimization problems.
+\cite{prl/PeerSR21} show that RBA is limited in depth!
+~\cite{corr/Rawlinson2018} introduced an unsupervised learning scheme for CapsNet. Furthermore they show that is is necessary to introduce sparsity alongside unsupervised training. Otherwise Capsules don't specialize. Labels create sparsity.
+The work~\cite{corr/Michels19} showed that CapsNet can be fooled as easily as ConvNets.
+~\cite{acml/PaikKK19} showed that increasing depth did not improve accuracy. However theey used ResNet-34 backbone. They prosume
+capsules are more appropriate to represent high-level concepts than low-level concepts
+such as lines and edges, because they are more informative and their part-whole
+relations are less ambiguous than those of low-level concepts. They find the link polarization problem [OptimCaps and AttnCaps] suffer from the same problem. EMCaps are observed to suffer from the same problem.
+~\cite{prl/PeerSR21} showed limitations of CapsNet when going deeper. They propose a Bias. However a bias term prevents the routing and emerging of a parse-tree.
+The receptive field problem was also recognized in ~\cite{spl/XiangZTZX18}, the authors propose a MultiScale Architecture to reduce parameters, still this work relies on dynamic routing.
+~\cite{cvpr/GuT021} emprical sutdy on the individual parts of the CapsNet. Better ConvNet baslines required. CapsNet are not more robust 
+Hard to give a general statement about the state of CapsNet, as there are both technical as well as semantic developments.
+It it works, it is good! Here there is a conceptual component to it, that makes it hard!
+than ConvNets.
+~\cite{iclr/TsaiSGS20} Inverted Dot- \cite{prl/PeerSR21} show that RBA is limited in depth!Product Attention Routing. No Activation, So what about the parse-tree? Layer-Norm will prevent sparsity.
+~\cite{cvpr/RajasegaranJJJS19} Gooing deeper
+
+GLOM ~\cite{corr/Hinton2021}
+
+\subsubsection*{[Negative Results]}
+Moreover, negative results regarding CapsNets emerged, questioning any of the promised benefits and technical progress altogether.
+~\cite{acml/PaikKK19} showed that increasing depth did not improve accuracy and routing algorithms do not provide any benefit when it comes to accuracy in image classification.
+~\cite{corr/michels2019} showed that CapsNet can be as easily fooled as ConvNets.
+~\cite{ieee/Gu2020} revealed, that removing dynamic routing improves transformation robustness.
+The work in ~\cite{cvpr/GuT021} showed that the individual parts of the CapsNets have contradictory effects on the performance in different tasks. Furthermore they showed, that with the right baseline, the CapsNet is not generally superior to ConvNets.
+~\cite{iclr/Gu2021} designed a first specific attack on CapsNets and
+\cite{prl/PeerSR21} show that RBA is limited in depth!
+
+
+\subsubsection*{[Read Carefully and think about impact on the paper]}
+~\cite{iclr/TsaiSGS20} Inverted Dot-Product Attention Routing. No Activation, So what about the parse-tree? Layer-Norm will prevent sparsity. It may be necessary to implement and test this method!
+~\cite{nips/AhmedT19} Star-Caps: No clue what to do with them.
+~\cite{iclr/TsaiSGS20} Inverted Dot-Product Attention Routing.
+~\cite{cvpr/RajasegaranJJJS19} Going Deeper with Capsule Networks
+~\cite{nips/LenssenFL18} provably equivariance
+
+\subsubsection*{[Read and/or include]}
+~\cite{eccv/LiGDOW18} Neural Capsule Encapsulation, seems complicated. More parameter efficient and less computational heavy.
+GroupCaps ~\cite{cvpr/ChenJSWS18}, not really sure what they are doing. Probabliy too much.
+
+\section{Results}
+\subsection{Miscellaneous}
+\begin{itemize}
+	\item Build argument around technical complexity of the approaches. E.g. In comparison Transformers or ConvNets are dead easy.
+	\item Discuss parameter- and computational inefficiencies, especially in relation to the technical complexity argumentS.
+	\item Investigate the Picasso problem (\textbf{THIS}). AFAIK nobody really tried to examine this problem neither for ConvNets not CapsNets.
+\end{itemize}
+
+\subsection{Issues regarding the Backbone and PrimeCaps}
+\textbf{Observations}:
+\begin{itemize}
+	\item Usually, there is a ConvNet backbone that extracts features from an image.
+	\item These features are then reshaped and constitute the first layer of Capsules, the PrimeCaps
+	\item Each one of these PrimeCaps must access the full receptive field.
+	\item Two options for backbone: shallow or deep ConvNet.
+\end{itemize}
+\textbf{Case 1}: A shallow ConvNet backbone results in:
+\begin{itemize}
+	\item Less abstract PrimeCaps, which is conceptually problematic due to inverse pyramid principle. Edges occur more often! 
+	\item Scaling issues, as the feature maps are way too large.
+	[Calculate receptive field implications for different image sizes, number of prime caps and parameters and dimension of prime caps.]. This then again results in:
+	\begin{itemize}
+		\item Capsule Explosion, -> Computationally expensive routing %TODO calc routing complexity
+		\item Capsule deimensio explosion: Computationally expensive routing and breaks with the concept of small capsules.
+	\end{itemize}
+	\item a shift in the task of building more abstract and compositional objects to the routing algorithm. And as we see later, also this is limited.
+	\item possibility of Sparsely activated PrimeCaps
+	\item Non interpretable Capsules [show experimentally?] Show that Capsule for one sample activates for a certain part in the input and then show that it activates for another part in the transformed image.
+\end{itemize}
+Therefore since the approach of using shallow backbone is limited and does not scale, we can choose a deeper ConvNet backbone. \\
+
+\textbf{Case 2}: Deeper ConvNet backbone results in:
+\begin{itemize}
+	\item More abstract PrimeCaps
+	\item All the benefits and issues with ConvNets, especially diversification.
+	\item Loss of traceability of Feature to output (really?)
+	\item Still not easy to implement since pooling layers are prohibited from a conceptual perspective. Using pooling breaks with the concept.
+	\item Shifts more work to the ConvNet. Hypothesis is, that all the work is done in the backbone. [Some experiments with ResNet exist and can be referenced]
+	\item Experiments show, that PrimeCaps are not at all sparse, but rather dense, which breaks with the semantics. Also since all PrimeCaps are active, always, they must be routed!
+\end{itemize}
+
+\textbf{Notes on ConvNets}
+\begin{itemize}
+	\item ConvNets usually diversify and don`t consolidate. The diversification of the ConvNets might be shown analytically.
+	\item Does the transition from place to rate coding really take place? And where?
+	\item Entanglement literature does not suggest, that CNN per se learn interpretable features.
+\end{itemize}
+
+\textbf{Open questions}:
+\begin{itemize}
+	\item Can we show that we cannot attribute certain features to a PrimeCaps? E.g. Can we show that information about the color "red" might be scattered around many Capsules?
+	\item Can we come up with a stronger theoretical claim?
+\end{itemize}
+
+\textbf{Results}:
+\begin{itemize}
+	\item CapsNets with shallow backbones do not scale conceptually as well as technically
+	\item CapsNets with deeper backbones do not profit from routing and the PrimeCaps are dense and noisy. 
+\end{itemize}
+
+\subsection{The Squashing of Capsules result in Vanishing Gradient Problem}
+\textbf{Open questions}
+\begin{itemize}
+	\item Can we show this analytically? Have a look at sigmoid or tanh activations. I think it was proven for these functions.
+	\item Especially with iterative routing, this should be an issue.
+	\item How to show this experimentally? Easiest to use a synthetic set-up.
+\end{itemize}
+
+\textbf{Argumentation}
+\begin{itemize}
+	\item Capsules only activate when other Capsules route to them, The squashing regulates this.
+	\item The squashing leads to information loss when going deeper.
+	\item Squashing leads to vanishing gradient for inactive capsules.
+	\item Vanishing gradient leads to dead capsules
+	\item Dead capsules rarely activate
+	\item Dead capsule don't learn.
+	\item Reference work that does not use squashing
+	\item Reference work that still uses squashing.
+\end{itemize}
+
+\textbf{Results}
+\begin{itemize}
+	\item Squashing prevents a CapsNet from getting deeper because of information leakage and also vanishing gradient.
+	\item This prevents the CapsNet from scaling.
+\end{itemize}
+
+\subsection{The Routing limits the depths of the CapsNet}
+
+Routing, that is based on agreement limits the depth of the CapsNet logarithmically with base agreement factor, depending on the number of PrimeCaps.
+This prevents the CapsNet from getting deeper!
+
+\textbf{Arguments for deeper CapsNets}
+\begin{itemize}
+	\item We want to minimize the impact of the ConvNet backbone. It was also shown that in this case, CapsNets do not really yield a benefit ~\cite{acml/PaikKK19}.
+	\item Depth is required for abstract features to form.
+	\item Practical trend for deeper architectures.
+	\item There is also theoretical evidence, that depth is necessary.
+\end{itemize}
+
+\begin{theorem}
+	The number of PrimeCaps rises exponentially with the number of capsule layers or
+	The depth of a CapsNet is logarithmically dependent on the number of primary capsules.
+	The base of the logarithm is the agreement factor.
+	Agreement factor is the average number of capsules that agree.
+\end{theorem}
+
+\textbf{Implications}
+\begin{itemize}
+	\item Routing beyond that limit gets pointless as there is only one Capsule left!
+	\item For deeper parse-trees, we require either weak agreement or tons of PrimeCaps [show that experimental]
+	\item Lots of PrimeCaps are not intuitive, as I want a limited number of simple PrimeCaps that can construct an unlimited number of complex Objects.
+	\item Conceptual issues, as stronger coupling coefficients require stronger agreement but strong agreement limits the depth of the Network.
+	\item Opposing requirements. Make it deeper or make the coupling stronger. But actually we want both!
+\end{itemize}
+
+\textbf{Experiments}
+\begin{itemize}
+	\item Make CapsNet deeper and wider and vary coupling strength [by softmax or by more routing iterations]
+	\item Show the number of capsules that are active on average.
+	\item Calculate the agreement factor!
+	\item Show the issues
+\end{itemize}
+
+\textbf{Notes}
+\begin{itemize}
+	\item Furthermore the work in \cite{prl/PeerSR21} or Efficient-CapsNet adds a Bias term to ensure a CapsNets to be layers.  From a technical perspective this works but this also undermines the dynamic routing, as Routing becomes static. [show HAT experimentally?]
+	\item No Routing CapsNet versions exist, but in this case we do not get a pars-tree.
+\end{itemize}
+
+\textbf{Results}
+\begin{itemize}
+	\item CapsNet does not scale in depth. 
+	\item We either need a exponentially rising number of PrimeCaps or a weak agreement.
+\end{itemize}
+
+\subsection{Issues regarding the Softmax Routing}
+%TODO: Unify partly section with Routing section, as the arguments overlap
+\begin{itemize}
+	\item There is a connection to Transformers. CapsNet calculate the softmax over the transposed attention matrix.
+	\item There is no way to ignore input
+	\item Inactive capsules are forced to route uniformly. This results in a bad signal to noise ratio for a large number of Capsules and prevents effective learning.  [When does the SNR become an Issue?]
+	\item Coupling coefficients can be controlled via softmax temperature or number of iterations in the routing rounds.
+	\item However this result in sparse capsules and bad performance.
+	\item Strong coupling coefficients do not necessarily yield a dynamic parse tree!
+	\item Even inactive capsules are forced to route uniformly. This results in a bad signal to noise ratio and prevents effective learning.
+\end{itemize}
+
+\subsection{Mass Capsule Starvation}
+\begin{itemize}
+	\item With strong couplings we get tons of dead capsules already in the Capsule layer after the PrimeCaps.
+	\item Does this worsen when deepening?
+	\item I thinks this is caused both by the Squashing with its implied vanishing gradient, as well es the routing algorithm. Especially strong couplings should be responsible for this.
+\end{itemize}
+
+\textbf{Results}
+\begin{itemize}
+	\item Dead capsules are wasted resources.
+	\item It also limits the expressiveness of the Network
+	\item It prevents the network from working dynamic, as routes tend to statify.
+\end{itemize}
+\subsection{Information Seepage with Deep CapsNet}
+\begin{itemize}
+	\item The deeper the CapsNet, the smaller the overall information [= sum of norms of Capsule Vectors]
+	\item This is probably an combinatorial effect, caused by both, squashing and routing.
+	\item Dense Setting: = "Uniform routing", capsules are equally squashed. This limits depth and expressiveness of parse-tree.
+	\item Sparse Setting: Dead capsules stay dead, alive capsules stay alive, because of vanishing gradient. This also limits depth and expressiveness of parse-tree.
+	\item Show in both cases experimentally
+	\begin{itemize}
+		\item The activation norm of capsules gets sparser and lower over the layers!
+		\item The norm of the gradients for Capsules
+		\item The loss lowers step wise, The capsules in upper layers take much longer to train.
+	\end{itemize}
+\end{itemize}
+
+\textbf{Results}
+\begin{itemize}
+	\item CapsNet don't scale in depth.
+	\item Slow learning of later Capsules, some even never get activated at all!
+\end{itemize}
+
+\subsection{Parse-Trees aren't dynamic}
+\begin{itemize}
+	\item Common parse-trees are largely of a static nature!
+	\item Measure dynamics.
+	\item The Bias prevents dynamic routing of capsules and the routing becomes static!
+\end{itemize}
+
+\subsection{There is not evidence that supports the parse-tree}
+Actually, this should be the implication of the other results.
+
+\section{Conclusion}
+
+We found:
+\begin{itemize}
+	\item No parse tree!
+	\item A Semantics Syntax mismatch
+	\item Severe technical issues, that prevent the CapsNet from scaling.
+	\item Severe conceptual misconceptions
+	\item Bad scientific practices within the CapsNet community
+\end{itemize}
+
+We conclude that CapsNets don't work and suck!
+
+\section{Future Work}
+\begin{itemize}
+	\item Universal Capsule might be a conceptually better idea, that sovles the conceptual problem, that a complex object has several simple object of the same type.
+	\item Transformers might be the better Capsules
+	\item GLOM
+	\item Holidays
+\end{itemize}
+
+%\bibliographystyle{apalike}
+\bibliographystyle{unsrt}
+\bibliography{references}
+\end{document}

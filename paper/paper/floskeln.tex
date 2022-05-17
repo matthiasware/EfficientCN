@@ -1,0 +1,193 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2021
+
+% ready for submission
+\usepackage{neurips_2021}
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2021}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+%     \usepackage[final]{neurips_2021}
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2021}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+
+
+\newtheorem{theorem}{Theorem}
+
+\title{                                                                                                                                          
+	Why CapsNets are hard to get right!
+	%	\large
+	%	Challenging the dynamic parse-tree assumption in Capsule Neural Networks
+}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+\author{%
+	David S.~Hippocampus\thanks{Use footnote for providing further information
+		about author (webpage, alternative address)---\emph{not} for acknowledging
+		funding agencies.} \\
+	Department of Computer Science\\
+	Cranberry-Lemon University\\
+	Pittsburgh, PA 15213 \\
+	\texttt{hippo@cs.cranberry-lemon.edu} \\Read Carefully and think about impact on the paper
+	% examples of more authors
+	% \And
+	% Coauthor \\
+	% Affiliation \\
+	% Address \\
+	% \texttt{email} \\
+	% \AND
+	% Coauthor \\
+	% Affiliation \\
+	% Address \\
+	% \texttt{email} \\
+	% \And
+	% Coauthor \\
+	% Affiliation \\
+	% Address \\
+	% \texttt{email} \\
+	% \And
+	% Coauthor \\
+	% Affiliation \\
+	% Address \\
+	% \texttt{email} \\
+}
+
+\begin{document}
+	
+\maketitle
+\section{Introduction Old}
+
+We conclude that parse-tree, the holy grail of CapsNets has yet been shown to exist, as we did not find any proof of it. [This sentence is great, as it pushes the work to other authors].
+We do not wish to discredit other peoples work, encourage authors and the scientific community to help and find it.
+
+% DISCREPANCY: CapsNets do not achieve SOTA
+To this date, CapsNets don't scale. Although the CapsNet was introduced in the realm of computer vision, to the extend of our knowledge, the best performing CapsNet version~\cite{nips/AhmedT19} achieves only $60.07\%$ top-1 image classification accuracy on ImageNet~\cite{data/imagenet}, far behind the SOTA Transformer based approaches~\cite{corr/Wortsman2022} and  ConvNet~\cite{cvpr/Pham2021} with $90.88\%$ and  $90.02\%$ accuracy respectively.
+This raises the question: Why don't CapsNets scale, despite the immense research effort?
+
+% DISCREPANCY: Disjoint Metrics
+Furthermore, many CapsNet approaches don't report on ImageNet, but prefer to benchmark on much smaller datasets like MNIST or CIFAR10 or niche datasets like SmallSNORB. %TODO add references%
+Especially SOTA CapsNet results are only claimed on these. %TODO add references%
+As other non-CapsNet approaches usually do not report on these, this results in disjoint metrics, making general claims hard.
+This issue has recently been acknowledged in~\cite{cvpr/GuT021}, where it was demonstrated, that a stronger ConvNet baseline still outperforms the CapsNet on any evaluated task, reaching SOTA relatively cheaply.
+There seems to be bubbly trend within the CapsNet community to refer and compare only to peers within their group.
+
+% DISCREPANCY: CapsNets: A technical mess!
+% TODO for more details i must descripe the CapsNet before. Otherwise it does not make sense to list all the diferences
+Another discrepancy lies within the vagueness and broad usage of the term itself.
+The original work~\cite{nips/SabourFH17} provides a semantic, biologically inspired motivation , from which their technical model implementation is deduced. Retrospectively, this implementation was later entitled "CapsNet".
+From there things complicate, as follow-up work, despite significant technical differences is also termed CapsNet, raising the questions: What are CapsNets actually? And What aren't?
+
+% DISCREPANCY: CapsNets: Negative results!
+% TODO for more detalis i must describe the CapsNet before. Otherwise it does not make sense to list all the negative stuff
+Moreover, negative results regarding CapsNets emerged, questioning any of the promised benefits and technical progress altogether.
+~\cite{acml/PaikKK19} showed that increasing depth did not improve accuracy and routing algorithms do not provide any benefit when it comes to accuracy in image classification.
+~\cite{corr/michels2019} showed that CapsNet can be as easily fooled as ConvNets.
+~\cite{ieee/Gu2020} revealed, that removing dynamic routing improves transformation robustness.
+The work in ~\cite{cvpr/GuT021} showed that the individual parts of the CapsNets have contradictory effects on the performance in different tasks. Furthermore they showed, that with the right baseline, the CapsNet is not generally superior to ConvNets.
+~\cite{iclr/Gu2021} designed a first specific attack on CapsNets and
+\cite{prl/PeerSR21} show that RBA is limited in depth!
+
+%Lay out the paper
+In this paper we argue that the misconception regarding the CapsNets lies in the vagueness of the definition.
+In its core the original CapsNet provides a semantic definition, namely parsing objects into part-whole hierachies or parse-trees.
+From this the technical implementation is derived.
+
+
+CapsNets are hard to grasp, as there exists a semantic component.
+The heart of CapsNets = Semantic component, Parse-Tree idea.
+The syntactic component.
+Ideas close to the synatax face the issue of performing well.
+Ideas that go beyond the idea, better performance, but then the metrics do not apply! inadequate baselines.
+No one focused on the dynamic parse-tree.
+We focus on the original implementation, but will give insights on follow-ups.
+Benefits come from their semantic component, assumption. Never shown to come true
+Issues with the technical implementation.
+To the best of our knowledge, the Parse-Tree issue has not been addressed so far. Elephant in the room!
+
+What we do?
+\begin{itemize}
+	\item TOPIC: Parse-Tree. What it is and why it is important.
+	\item What are CapsNets? Semantics and Syntax: This makes them hard
+	\item The concept of CapsNets: Parse-Trees
+	\item The implementation of CapsNets
+	\item Follow Up work and Misconceptions about CapsNets
+	\item Technical Limitations of the approach
+	\item Semantic limitations of the approach
+	\item Focus on the original implementation, but will give insights on follow-ups.
+\end{itemize}
+
+What we don't:
+\begin{itemize}
+	\item Survey
+	\item Cannot proof that CapsNet do not work
+	\item No claim of exhaustiveness
+	\item Don't discredit other peoples work!
+\end{itemize}
+
+Why this work?
+\begin{itemize}
+	\item The field is confusing as hell, and we disentangle.
+	\item In exchange with other researches, several misconceptions!
+	\item Explain technical and conceptual issues with CapsNets.
+	\item Inspire new research by demonstrating issues with CapsNets
+	\item We cannot proof anything, however, as we feel, there is an elephant in the room that should be addressed
+\end{itemize}
+\section{Passagen und Templates}
+
+The Capsule Neural Network (CapsNet)~\cite{nips/SabourFH17} was vowed to succeed the Convolutional Neural Network (ConvNet)~\cite{neco/LeCunBDHHHJ89} as the predominant method for computer vision tasks, due to its ability to  some of the ConvNet`s limitations. %TODO: schlechter satz, wer sage das?%
+These limitations include
+a lack of robustness to affine transformations and novel viewpoints on the input data, 
+the susceptibility to adversarial attacks,
+exponential inefficiencies
+and a general lack of interpretability in the networks decision making process. %TODO: add references%
+
+The CapsNet was specifically designed to address some of these limitations and demonstrated SOTA classification accuracy on MNIST with less parameters and stronger robustness to affine transformations, compared to their ConvNet`s baseline. This work sparked a flood of follow-up research.
+
+The original work~\cite{nips/SabourFH17} gives a clear conceptual motivation, namely parsing objects in images into a part-whole hierarchy.
+From this, the CapsNet model architecture is deduced and many hypothetical benefits are attributed to this ability.
+We believe this is the fundamental issue, that makes CapsNets actually hard.
+	
+Inflated usage.
+Vagueness of the definition
+\begin{itemize}
+	\item From a conceptual perspective: The idea of Hinton. Parse Tree. Why do people want this? Interpretable
+	\item From a technical perspective: Various implementations and advancements. Lots of technical stuff but a lack af ablation studies and general vagueness of the definition.
+\end{itemize}
+
+\subsubsection*{Model Class in this work}
+\begin{itemize}
+	\item Backbone, receptive field requirement!
+	\item Vectorized capsules
+	\item Coupling coefficients determined by routing
+	\item Bias
+	\item Softmax
+	\item Squash
+\end{itemize}
+
+%\bibliographystyle{apalike}
+\bibliographystyle{unsrt}
+\bibliography{references}
+\end{document}
