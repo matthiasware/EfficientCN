@@ -172,6 +172,64 @@ class BackboneHinton(nn.Module):
         return self.layers(x)
 
 
+class BackboneHiNoStride(nn.Module):
+    """
+        Backbone model from Efficient-CapsNet for MNIST
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Sequential(
+                        nn.Conv2d(1, 64, kernel_size=11, stride=1),
+                        nn.ReLU(inplace=True),
+                        nn.BatchNorm2d(64),
+                        nn.Conv2d(64, 256, kernel_size=10, stride=1, padding=0),
+                        nn.ReLU(inplace=True),
+                        nn.BatchNorm2d(256),
+        )
+
+    def forward(self, x):
+        """
+            IN:
+                x (b, 1, 28, 28)
+            OUT:
+                x (b, 256, 9, 9)
+        """
+        return self.layers(x)
+
+
+class BackboneHiDeep(nn.Module):
+    """
+        Backbone model from Efficient-CapsNet for MNIST
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Sequential(
+                        nn.Conv2d(1, 32, kernel_size=5, padding="valid"),
+                        nn.ReLU(inplace=True),
+                        nn.BatchNorm2d(32),
+                        nn.Conv2d(32, 64, kernel_size=5, padding="valid"),
+                        nn.ReLU(inplace=True),
+                        nn.BatchNorm2d(64),
+                        nn.Conv2d(64, 128, kernel_size=3, padding="valid"),
+                        nn.ReLU(inplace=True),
+                        nn.BatchNorm2d(128),
+                        nn.Conv2d(128, 256, kernel_size=3, stride=1, padding="valid"),
+                        nn.ReLU(inplace=True),
+                        nn.BatchNorm2d(256),
+        )
+
+    def forward(self, x):
+        """
+            IN:
+                x (b, 1, 28, 28)
+            OUT:
+                x (b, 128, 9, 9)
+        """
+        return self.layers(x)
+
+
 class CapsNet(nn.Module):
     """
         CapsNet Implementation for MNIST
@@ -211,6 +269,86 @@ class CapsNet(nn.Module):
         x_rec = self.decoder(u_h_masked)
         return u_h, x_rec
 
+
+class CapsNetNoStride(nn.Module):
+    """
+        CapsNet Implementation for MNIST
+        all parameters taken from the paper
+    """
+
+    def __init__(self):
+        super().__init__()
+        # values from paper, are fixed!
+        self.n_l = 128 # num of primary capsules
+        self.d_l = 8            # dim of primary capsules
+        self.n_h = 10           # num of output capsules
+        self.d_h = 16           # dim of output capsules
+        self.n_iter = 3
+
+        self.backbone = BackboneHiNoStride()
+        self.primcaps = PrimaryCapsLayer(c_in=256,c_out=128,d_l=self.d_l, kernel_size=9, stride=1)
+        self.digitcaps = CapsLayer(self.n_l, self.d_l, self.n_h, self. d_h, self.n_iter)
+        self.decoder = Decoder()
+
+    def forward(self, x, y_true=None):
+        """
+            IN:
+                x (b, 1, 28, 28)
+            OUT:
+                u_h
+                    (b, n_h, d_h)
+                    output caps
+                x_rec
+                    (b, 1, 28, 28)
+                    reconstruction of x
+        """
+        u_l = self.primcaps(self.backbone(x))
+        u_h = self.digitcaps(u_l)
+        #
+        u_h_masked = masking(u_h, y_true)
+        x_rec = self.decoder(u_h_masked)
+        return u_h, x_rec
+
+
+
+class CapsNetDeep(nn.Module):
+    """
+        CapsNet Implementation for MNIST
+        all parameters taken from the paper
+    """
+
+    def __init__(self):
+        super().__init__()
+        # values from paper, are fixed!
+        self.n_l = 1024         # num of primary capsules
+        self.d_l = 8            # dim of primary capsules
+        self.n_h = 10           # num of output capsules
+        self.d_h = 16           # dim of output capsules
+        self.n_iter = 3
+
+        self.backbone = BackboneHiDeep()
+        self.primcaps = PrimaryCapsLayer(c_in=256,c_out=64,d_l=self.d_l, kernel_size=9, stride=2)
+        self.digitcaps = CapsLayer(self.n_l, self.d_l, self.n_h, self. d_h, self.n_iter)
+        self.decoder = Decoder()
+
+    def forward(self, x, y_true=None):
+        """
+            IN:
+                x (b, 1, 28, 28)
+            OUT:
+                u_h
+                    (b, n_h, d_h)
+                    output caps
+                x_rec
+                    (b, 1, 28, 28)
+                    reconstruction of x
+        """
+        u_l = self.primcaps(self.backbone(x))
+        u_h = self.digitcaps(u_l)
+        #
+        u_h_masked = masking(u_h, y_true)
+        x_rec = self.decoder(u_h_masked)
+        return u_h, x_rec
 
 ######################################
 # CNN-R MNIST MODELS

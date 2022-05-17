@@ -1,6 +1,8 @@
 import time
 import datetime
 from pathlib import Path
+from itertools import permutations
+#
 import torch
 from torchvision import transforms
 import numpy as np
@@ -93,7 +95,6 @@ def calc_caps_nr(img_shape, caps_dims=None):
     #bs = np.zeros_like(caps_dims)
     #bs.fill(a[0])
     #caps_shapes = np.array([bs, caps_nr, caps_dims]).transpose().tolist()
-
     return caps_shapes
 
 def bb_pc_vals(model, x, caps_dims=None, print_vals=False):
@@ -115,7 +116,6 @@ def bb_pc_vals(model, x, caps_dims=None, print_vals=False):
             rec_field   -> area of the receptive field
             caps_shapes -> Number and Dimenson of PrimeCaps
     """
-
     res = model(x)
     layer_vals_h, layer_vals_w = layer_conv(model)
     rec_field = [calc_receptive_field(layer_vals_h), calc_receptive_field(layer_vals_w)]
@@ -133,3 +133,41 @@ def bb_pc_vals(model, x, caps_dims=None, print_vals=False):
         print("shape of primecaps:  {}".format(caps_shapes))    
 
     return params, res.shape, rec_field, field_delta, caps_shapes
+
+def calc_layer_combs(kernel_range, stride_range, layer_nr):
+    """
+    input: kernel_range -> kernel values for combination
+           stride_range -> stride values for combination
+           layer_nr     -> number of model layers 
+    output: layer_combs -> receptive fields and combinations
+    """
+    comb_ks = [[x,y] for y in stride_range for x in kernel_range]*layer_nr
+
+    comb_ksl = list(permutations(comb_ks,layer_nr))
+    comb_ksl = np.unique(np.array(comb_ksl),axis=0)
+
+    layer_combs = []
+    for i in comb_ksl:
+        layer_combs.append([calc_receptive_field(i),i.tolist()])
+    return layer_combs
+
+def rf_layer_combs(layer_combs, rf):
+    """
+    input: layer_combs -> receptive fields and combinations
+           rf          -> reference receptive fields
+    output: out -> combinations for choosen reference receptive field
+    """
+    A = np.array(layer_combs)
+    out = A[A[:,0]==rf].tolist()
+    return out
+
+
+def rf_layer_combs(layer_combs, rf):
+    """
+    input: layer_combs -> receptive fields and combinations
+           rf          -> reference receptive fields
+    output: out -> combinations for choosen reference receptive field
+    """
+    A = np.array(layer_combs)
+    out = A[A[:,0]==rf].tolist()
+    return out
