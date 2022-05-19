@@ -19,6 +19,18 @@ class Squash(nn.Module):
         return (1 - 1 / (torch.exp(x_norm) + self.eps)) * (x / (x_norm + self.eps))
 
 
+
+class SquashHinton(nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x): 
+        """
+        IN:  x(b, n, d)
+        OUT: squash(x(b,n,d))
+        """
+        return squash_hinton(x)
+
+
 class View(nn.Module):
     def __init__(self, shape):
         self.shape = shape
@@ -36,20 +48,23 @@ class PrimaryCaps(nn.Module):
         N: int number of primary capsules
         D: int primary capsules dimension (number of properties)
         s: int depthwise conv strides
+        sq: use predefined squashing function in prime caps
     """
 
-    def __init__(self, F, K, N, D, s=1):
+    def __init__(self, F, K, N, D, s=1, sq=True):
         super().__init__()
         self.F = F
         self.K = K
         self.N = N
         self.D = D
         self.s = s
+        self.sq = sq
         #
         self.dw_conv2d = nn.Conv2d(
             F, F, kernel_size=K, stride=s, groups=F, padding="valid")
         #
-        self.squash = Squash(eps=1e-20)
+        if sq == True:
+            self.squash = Squash(eps=1e-20)
 
     def forward(self, x):
         """
@@ -64,7 +79,8 @@ class PrimaryCaps(nn.Module):
 
         # (B,C,H,W) -> (B, N, D)
         x = x.view((-1, self.N, self.D))
-        x = self.squash(x)
+        if self.sq:
+            x = self.squash(x)
         return x
 
 
@@ -225,6 +241,7 @@ class AgreementRouting(nn.Module):
         super(AgreementRouting, self).__init__()
         self.n_iter = n_iter
         self.b = nn.Parameter(torch.zeros((n_l, n_h)))
+        self.squash =  SquashHinton()
 
     def forward(self, u_predict):
         v, _ = self.forward_debug(u_predict)
@@ -235,7 +252,7 @@ class AgreementRouting(nn.Module):
 
         c = F.softmax(self.b / 1, dim=-1)
         s = (c.unsqueeze(2) * u_predict).sum(dim=1)
-        v = squash_hinton(s)
+        v = self.squash(s)
 
         if self.n_iter > 0:
             b_batch = self.b.expand((batch_size, n_l, n_h))
@@ -245,7 +262,7 @@ class AgreementRouting(nn.Module):
 
                 c = F.softmax(b_batch.view(-1, n_h) / 1, dim=-1).view(-1, n_l, n_h, 1)
                 s = (c * u_predict).sum(dim=1)
-                v = squash_hinton(s)
+                v = self.squash(s)
         return v, c.squeeze()
 
 
@@ -280,13 +297,19 @@ class PrimaryCapsLayer(nn.Module):
     c_in: input channels
     c_out: output channels
     d_l: dimension of prime caps
+    sq: use predefined squashing function in prime caps
     """
-    def __init__(self, c_in, c_out, d_l, kernel_size, stride, padding='Valid'):
+    def __init__(self, c_in, c_out, d_l, kernel_size, stride, padding='valid', sq=True):
         super(PrimaryCapsLayer, self).__init__()
         self.conv = nn.Conv2d(c_in, c_out * d_l, kernel_size=kernel_size, stride=stride, padding=padding)
+
         self.c_in = c_in
         self.c_out = c_out
         self.d_l = d_l
+        self.sq = sq
+
+        if sq == True:
+            self.squash = SquashHinton()
 
     def forward(self, input):
         out = self.conv(input)
@@ -294,7 +317,8 @@ class PrimaryCapsLayer(nn.Module):
         out = out.view(N, self.c_out, self.d_l, H, W)
 
         # will output N x OUT_CAPS x OUT_DIM
-        out = out.permute(0, 1, 3, 4, 2)#.contiguous()
+        out = out.permute(0, 1, 3, 4, 2).contiguous()
         out = out.view(out.size(0), -1, out.size(4))
-        out = squash_hinton(out)
+        if self.sq == True:
+            out = self.squash(out)
         return out

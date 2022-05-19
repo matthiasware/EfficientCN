@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from .layers import Squash, PrimaryCaps, FCCaps, PrimaryCapsLayer, CapsLayer
+from .layers import Squash, SquashHinton, PrimaryCaps, FCCaps, PrimaryCapsLayer, CapsLayer
 from .functions import max_norm_masking, masking
 
 
@@ -43,7 +43,7 @@ class BaselineCNN(nn.Module):
         return output
 
 ######################################
-# CN MNIST MODELS
+# EffCN MNIST MODELS
 ######################################
 
 
@@ -147,6 +147,11 @@ class EffCapsNet(nn.Module):
         u_h_masked = masking(u_h, y_true)
         x_rec = self.decoder(u_h_masked)
         return u_h, x_rec
+
+
+######################################
+# CN MNIST MODELS
+######################################
 
 
 class BackboneHinton(nn.Module):
@@ -269,6 +274,120 @@ class CapsNet(nn.Module):
         x_rec = self.decoder(u_h_masked)
         return u_h, x_rec
 
+    def forward_pc_study(self, x, y_true=None):
+        """
+        IN as forward
+
+        OUT as forward + u_l, bb
+        """
+        bb = self.backbone(x)
+        u_l = self.primcaps(bb)
+        u_h = self.digitcaps(u_l)
+        #
+        u_h_masked = masking(u_h, y_true)
+        x_rec = self.decoder(u_h_masked)
+        return u_h, x_rec, u_l, bb
+
+#####################################
+# CN EffCN with BB PC  cross implemetations
+#####################################
+
+class CapsNetCross(nn.Module):
+    """
+        CapsNet Implementation for MNIST
+        all parameters taken from the paper
+    """
+
+    def __init__(self):
+        super().__init__()
+        # values from paper, are fixed!
+        self.n_l = 16#(32 * 6 * 6) # num of primary capsules
+        self.d_l = 8            # dim of primary capsules
+        self.n_h = 10           # num of output capsules
+        self.d_h = 16           # dim of output capsules
+        self.n_iter = 3
+
+        #self.backbone = BackboneHinton()
+        #self.primcaps = PrimaryCapsLayer(c_in=256,c_out=32,d_l=self.d_l, kernel_size=9, stride=2)
+
+        self.backbone = Backbone()
+        self.primcaps = PrimaryCaps(F=128, K=9, N=self.n_l, D=self.d_l, sq=False)  # F = n_l * d_l !!!
+        self.squash =  SquashHinton()
+
+        self.digitcaps = CapsLayer(self.n_l, self.d_l, self.n_h, self. d_h, self.n_iter)
+        self.decoder = Decoder()
+
+    def forward(self, x, y_true=None):
+        """
+            IN:
+                x (b, 1, 28, 28)
+            OUT:
+                u_h
+                    (b, n_h, d_h)
+                    output caps
+                x_rec
+                    (b, 1, 28, 28)
+                    reconstruction of x
+        """
+        x = self.backbone(x)
+        u_l = self.primcaps(x)
+        u_l = self.squash(u_l)
+        u_h = self.digitcaps(u_l)
+        print(u_l.shape, u_h.shape)
+        #
+        u_h_masked = masking(u_h, y_true)
+        x_rec = self.decoder(u_h_masked)
+        return u_h, x_rec
+
+
+
+class EffCapsNetCross(nn.Module):
+    """
+        EffCaps Implementation for MNIST
+        all parameters taken from the paper
+    """
+
+    def __init__(self):
+        super().__init__()
+        # values from paper, are fixed!
+        self.n_l = (32 * 6 * 6) #16  # num of primary capsules
+        self.d_l = 8   # dim of primary capsules
+        self.n_h = 10  # num of output capsules
+        self.d_h = 16  # dim of output capsules
+
+        self.backbone = BackboneHinton()
+        self.primcaps = PrimaryCapsLayer(c_in=256,c_out=32,d_l=self.d_l, kernel_size=9, stride=2, sq=False)
+        self.squash = Squash(eps=1e-20)
+        self.fcncaps = FCCaps(self.n_l, self.n_h, self.d_l, self.d_h)
+        self.decoder = Decoder()
+
+    def forward(self, x, y_true=None):
+        """
+            IN:
+                x (b, 1, 28, 28)
+            OUT:
+                u_h
+                    (b, n_h, d_h)
+                    output caps
+                x_rec
+                    (b, 1, 28, 28)
+                    reconstruction of x
+        """
+        x   = self.backbone(x)
+        u_l = self.primcaps(x)
+        u_l = self.squash(u_l)
+        u_h = self.fcncaps(u_l)
+        print(u_l.shape, u_h.shape)
+        #
+        u_h_masked = masking(u_h, y_true)
+        x_rec = self.decoder(u_h_masked)
+        return u_h, x_rec
+
+
+
+#####################################
+# CN with alternative BB PC implemetations
+#####################################
 
 class CapsNetNoStride(nn.Module):
     """
@@ -349,6 +468,7 @@ class CapsNetDeep(nn.Module):
         u_h_masked = masking(u_h, y_true)
         x_rec = self.decoder(u_h_masked)
         return u_h, x_rec
+
 
 ######################################
 # CNN-R MNIST MODELS

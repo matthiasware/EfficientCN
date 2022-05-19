@@ -28,7 +28,7 @@ from tqdm import tqdm
 from dotted_dict import DottedDict
 
 # local imports
-from effcn.models_mnist import CapsNet, CapsNetDeep, CapsNetNoStride
+from effcn.models_mnist import CapsNet, CapsNetNoStride, CapsNetDeep, CapsNetCross, EffCapsNetCross, EffCapsNet
 from effcn.functions import create_margin_loss, create_margin_loss_cnn_r
 from misc.utils import count_parameters
 from misc.optimizer import get_optimizer, get_scheduler
@@ -59,7 +59,7 @@ def default():
     num_epochs = 150
     num_workers = 2
     leraning_rate = 5e-4
-    model = 'CapsNet'  # EffCapsNet, CNN_CR_SF, CNN_CR, CNN_R, CapsNet
+    model = 'CapsNet'  # CapsNet, CapsNetNoStride, CapsNetDeep, CapsNetCross, EffCapsNetCross, EffCapsNet
 
     config = {
         'model': model,
@@ -249,7 +249,8 @@ def train(config=None):
     p_acc_plot = p_experiment / config.names.acc_plot
     p_loss_plot = p_experiment / config.names.loss_plot
 
-    if (config.model != 'MnistCNN_R') and (config.model != 'EffCapsNet') and (config.model != 'CNN_CR_SF') and (config.model != 'CNN_CR')and (config.model != 'CapsNet'):
+
+    if (config.model != 'CapsNetDeep') and (config.model != 'CapsNetNoStride') and (config.model != 'CapsNet') and (config.model != 'CapsNetCross') and (config.model != 'EffCapsNet') and (config.model != 'EffCapsNetCross'):
         print('Indicated model {} doesnt exist'.format(config.model))
         exit()
 
@@ -298,6 +299,12 @@ def train(config=None):
     # Model
     if config.model == 'CapsNet':
         model = CapsNet()
+    elif config.model == 'CapsNetCross':
+        model = CapsNetCross()
+    elif config.model == 'EffCapsNet':
+        model = EffCapsNet()
+    elif config.model == 'EffCapsNetCross':
+        model = EffCapsNetCross()
     elif config.model == 'CapsNetDeep':
         model = CapsNetDeep()
     elif config.model == 'CapsNetNoStride':
@@ -526,9 +533,9 @@ def train(config=None):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Run CapsNet, CapsNetDeep, CapsNetNoStride')
+        description='Run CapsNet, CapsNetDeep, CapsNetNoStride, CapsNetCross, EffCapsNetCross, EffCapsNet')
     parser.add_argument('--model', type=str, default='CapsNet', metavar='',
-                        required=False, help='Possible Models: CapsNet, CapsNetDeep, CapsNetNoStride')
+                        required=False, help='Possible Models: CapsNet, CapsNetDeep, CapsNetNoStride,  CapsNetCross, EffCapsNetCross, EffCapsNet')
     parser.add_argument('--lr', type=float, default=0.0005,
                         metavar='', required=False, help='learning rate')
     parser.add_argument('--bs', type=int, default=16,
@@ -541,7 +548,7 @@ if __name__ == '__main__':
                         metavar='', required=False, help='weight of reconstruction loss')
     parser.add_argument('--device', type=str, default='cuda:0',
                         metavar='', required=False, help='device')
-    parser.add_argument('--p_experiment', type=str, default='/mnt/data/experiments/EfficientCN/mnist',
+    parser.add_argument('--p_experiment', type=str, default='/mnt/data/experiments/CN_cross/mnist',
                         metavar='', required=False, help='path of experiment')
     args = parser.parse_args()
 
