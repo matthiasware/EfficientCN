@@ -339,6 +339,19 @@ class CapsNetCross(nn.Module):
         x_rec = self.decoder(u_h_masked)
         return u_h, x_rec
 
+    def forward_pc_study(self, x, y_true=None):
+        """
+        IN as forward
+
+        OUT as forward + u_l, bb
+        """
+        bb = self.backbone(x)
+        u_l = self.primcaps(bb)
+        u_h = self.digitcaps(u_l)
+        #
+        u_h_masked = masking(u_h, y_true)
+        x_rec = self.decoder(u_h_masked)
+        return u_h, x_rec, u_l, bb
 
 
 class EffCapsNetCross(nn.Module):
