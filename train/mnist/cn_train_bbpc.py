@@ -579,7 +579,7 @@ if __name__ == '__main__':
             'num_workers': 2,
             'num_vis': 16,
             'pin_memory': True,
-            'transform': transform_train,
+            'transform': transform_valid,
         },
         'valid': {
             'num_workers': 2,       # Either set num_worker high or pin_memory=True
