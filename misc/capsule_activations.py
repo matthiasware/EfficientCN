@@ -8,6 +8,38 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+class TwinAugmentation(nn.Module):
+    """
+        double random augmentation of a input 
+        value example:
+        rotade=30, translate=[0.2,0.2], scale=[0.9, 1.1], shear=[-3,3]
+    """
+    def __init__(self, rotade=None, translate=None, scale=None, shear=None):
+        
+        super().__init__()
+        self.transforms = T.Compose([
+                                T.RandomAffine(degrees=rotade,
+                                                translate=translate,
+                                                scale=scale,
+                                                shear=shear),
+                                ])
+    
+    def forward(self, x):
+        x1 = self.transforms(x)
+        x2 = self.transforms(x)
+        return x1, x2
+
+
+def cross_correlation(X1, X2):
+    """
+    normalized cross correlation of 2 Matrices (signal, capsuls)
+    """
+    X1_norm = (X1 - X1.mean(dim=0)) / X1.std(dim=0)
+    X2_norm = (X2 - X2.mean(dim=0)) / X2.std(dim=0)
+
+    c = torch.matmul(X1_norm.T, X2_norm) / X1.shape[0]
+    return c
+
 
 def show_imgrid(x,y=None,nrow=8):
     if y is not None and (y.shape[-1] % nrow) == 0:
@@ -51,22 +83,6 @@ def calc_pc_delta(pc1, pc2):
     norm_delta = delta.norm(dim=-1)
     return norm_delta
 
-
-def calc_pc_norm_kld(pc1, pc2):
-    """
-    generate norm over capsule dimension
-    subtract values of 2 inputs elementwise
-    generate norm over dims for scarlar output -> maybe some better way?
-
-    IN: pc1, pc2 -> PrimeCaps of 2 inputs (pc_no, pc_dim)
-        ||pc1||^2 -> P  
-        ||pc2||^2 -> Q  
-    OUT: kld  -> kld over norm
-    """
-    pc1 = pc1.norm(dim=-1)
-    pc2 = pc2.norm(dim=-1)
-    kld = F.kl_div(pc2.log(), pc1, None, None, 'sum')
-    return kld
 
 
 def calc_pc_corr(pc_ref, pc_corr):
@@ -204,3 +220,5 @@ def affine_shear(img, target, range=[-10.,10.,2]):
         l_target[i] = target
     
     return rot, l_target
+
+
